@@ -102,6 +102,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | D15 | Secretos de la API en user-secrets (desarrollo) y variables de entorno (Docker). `appsettings.json` sin cadena de conexión ni claves | 2026-10-21 | Santi |
 | D16 | Contextos con datos de infraestructura personal van en `private/` (ignorada), no en el repo | 2026-10-21 | Santi |
 | D17 | Contraseña de Postgres rotada (la anterior quedó en el historial público) | 2026-10-21 | Santi |
+| D18 | Open Food Facts (L7). Producto por código: `GET https://world.openfoodfacts.org/api/v3/product/{code}.json` (v3 recomendada, v2 deprecada). Lectura sin auth, pero con User-Agent propio (`AppName/Version (contacto)`). Límites: 15 req/min por IP para producto y 10 para búsqueda (no usar para buscar mientras se tipea); si se pasa, responde 503. Licencia: base ODbL, contenidos DbCL, imágenes CC-BY-SA. **Se puede guardar y reusar** (incluso comercialmente) mencionando la licencia y atribuyendo a Open Food Facts con link a https://openfoodfacts.org o a la página del producto; lo derivado se comparte en las mismas condiciones. Datos sin garantía y no aptos para uso médico. Fuentes: https://openfoodfacts.github.io/openfoodfacts-server/api/ y https://world.openfoodfacts.org/terms-of-use | 2026-10-21 | Lauti |
 
 ## Pendientes de decisión
 
@@ -113,7 +114,6 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | Hora exacta de entrega del martes 27 | Docente | Plan del lunes |
 | Proveedor del LLM y quién consigue la clave (verificar cuota y precios vigentes) | Los 3 | S9 |
 | ¿ARGENFOODS tiene descarga (Excel/CSV) o se copia a mano? | Santi | S3, L2 |
-| API, límites y licencia de Open Food Facts | Lauti / Santi | L7, S3 |
 | ¿Habrá CI (GitHub Actions)? | Javi | Regla de "CI verde antes de mergear" |
 | Cómo se registra la autoría con el docente, ya que el grupo figura de 5 | Javi / docente | Entrega |
 
