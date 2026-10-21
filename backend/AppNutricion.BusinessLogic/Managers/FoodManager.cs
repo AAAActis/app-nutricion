@@ -20,7 +20,13 @@ public class FoodManager(IFoodStore foodStore) : IFoodManager
 
     public Task<Food?> GetByIdAsync(int id, int? userId) => foodStore.GetByIdAsync(id, userId);
 
-    public Task<Food?> GetByBarcodeAsync(string? code, int? userId) => Task.FromResult<Food?>(null);
+    public Task<Food?> GetByBarcodeAsync(string? code, int? userId)
+    {
+        if (code is not { Length: >= 8 and <= 14 } || !code.All(char.IsAsciiDigit))
+            throw new ArgumentException("El código de barras debe tener entre 8 y 14 dígitos.", nameof(code));
+        // TODO(L7): respaldo con Open Food Facts.
+        return foodStore.GetByBarcodeAsync(code, userId);
+    }
 
     public decimal ConvertToGrams(Food food, decimal quantity, bool isUnits)
     {

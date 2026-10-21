@@ -24,4 +24,18 @@ public class FoodsController(IFoodManager foodManager) : ControllerBase
         var food = await foodManager.GetByIdAsync(id, UserId);
         return food is null ? NotFound() : FoodOutput.From(food);
     }
+
+    [HttpGet("barcode/{code}")]
+    public async Task<ActionResult<FoodOutput>> GetByBarcode(string code)
+    {
+        try
+        {
+            var food = await foodManager.GetByBarcodeAsync(code, UserId);
+            return food is null ? NotFound() : FoodOutput.From(food);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }
