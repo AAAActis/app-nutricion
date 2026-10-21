@@ -1,10 +1,13 @@
 using AppNutricion.Api.OpenApi;
+using AppNutricion.BusinessLogic.Registrations;
 using AppNutricion.DataAccess.Registrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Falta ConnectionStrings:DefaultConnection en user-secrets.");
 builder.Services.AddDataAccess(connectionString);
+builder.Services.AddBusinessLogic();
+builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
@@ -36,4 +39,5 @@ app.UseCors();
 
 app.MapHealthChecks("/health");
 
+app.MapControllers();
 app.Run();

@@ -3,3 +3,18 @@
 GET {{AppNutricion.Api_HostAddress}}/health
 
 ###
+
+GET {{AppNutricion.Api_HostAddress}}/api/foods/search?q=cafe&limit=10
+Accept: application/json
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/foods/1
+Accept: application/json
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/foods/barcode/7790001234567
+Accept: application/json
+
+###

@@ -1,7 +1,7 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-21 noche (Javi, rama `feature/api-esqueleto`: J1). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
+> Última actualización: 2026-10-21 noche (Lauti, rama `feature/alimentos-busqueda`: L1 y L3 en revisión; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
 > Verificado por Santi en su máquina: el compose levanta y `app-nutricion-db` queda `healthy`. El estado de ramas y del `.gitignore` se confirma en el PR de `fix/gitignore-utf8`.
 
 ## Objetivo
@@ -47,9 +47,9 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 
 | # | Tarea | Responsable | Estado | Rama o PR | Depende de |
 |---|---|---|---|---|---|
-| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | Pendiente | — | S2 (tabla `Foods`) |
+| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | En revisión | `feature/alimentos-busqueda` | S2 (tabla `Foods`) |
 | L2 | Carga del archivo `foods_seed`, idempotente (no duplica) | Lauti | Pendiente | — | S3, L1 |
-| L3 | Búsqueda por código de barras | Lauti | Pendiente | — | L1 |
+| L3 | Búsqueda por código de barras | Lauti | En revisión | `feature/alimentos-busqueda` | L1 |
 | L4 | Comidas: alta, edición, baja y lista; macros guardados al momento, tipo de comida, zona horaria | Lauti | Pendiente | — | J2, S2, L1 |
 | L5 | Copiar comidas del día anterior, favoritos y recientes | Lauti | Pendiente | — | L4 |
 | L6 | Resumen diario vs. objetivos (con lo que falta) y resumen semanal con racha | Lauti | Pendiente | — | L4, J8 |
@@ -148,7 +148,7 @@ Detalle en el `README.md`. Resumen:
 4. Cadena de conexión en user-secrets (comando en el README).
 5. `dotnet ef database update --project backend/AppNutricion.DataAccess --startup-project backend/AppNutricion.Api` → crea las 19 tablas.
 6. `dotnet build backend/AppNutricion.slnx` y `dotnet run --project backend/AppNutricion.Api` (`http://localhost:5286`).
-7. Tests: `dotnet test backend/AppNutricion.slnx` (no necesitan Postgres ni user-secrets). Swagger UI: `http://localhost:5286/swagger` (solo Development).
+7. Tests: `dotnet test backend/AppNutricion.slnx` (xUnit + Moq, en `backend/AppNutricion.Tests`, carpeta por módulo; no necesitan Postgres ni user-secrets). Swagger UI: `http://localhost:5286/swagger` (solo Development).
 
 ## PRÓXIMA SESIÓN · Santi
 
