@@ -1,4 +1,6 @@
+using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Managers;
+using Microsoft.Extensions.Logging.Abstractions;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
 using Moq;
@@ -14,7 +16,7 @@ public class FoodManagerTests
     {
         _store.Setup(s => s.SearchByNameAsync(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<int>()))
             .ReturnsAsync([new Food { Name = "Café" }]);
-        _manager = new FoodManager(_store.Object);
+        _manager = new FoodManager(_store.Object, Mock.Of<IOpenFoodFactsClient>(), NullLogger<FoodManager>.Instance);
     }
 
     [Theory]

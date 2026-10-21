@@ -20,8 +20,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Foods\Fixtures\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AppNutricion.BusinessLogic\AppNutricion.BusinessLogic.csproj" />
     <ProjectReference Include="..\AppNutricion.Entities\AppNutricion.Entities.csproj" />
+    <ProjectReference Include="..\AppNutricion.Presentation\AppNutricion.Presentation.csproj" />
   </ItemGroup>
 
 </Project>
