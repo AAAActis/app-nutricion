@@ -2,10 +2,11 @@ using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Helpers;
+using Microsoft.Extensions.Logging;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class FoodManager(IFoodStore foodStore) : IFoodManager
+public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFacts, ILogger<FoodManager> logger) : IFoodManager
 {
     private const int MinTermLength = 2;
     private const int DefaultLimit = 20;
@@ -24,9 +25,11 @@ public class FoodManager(IFoodStore foodStore) : IFoodManager
     {
         if (code is not { Length: >= 8 and <= 14 } || !code.All(char.IsAsciiDigit))
             throw new ArgumentException("El código de barras debe tener entre 8 y 14 dígitos.", nameof(code));
-        // TODO(L7): respaldo con Open Food Facts.
-        return foodStore.GetByBarcodeAsync(code, userId);
+        return GetStubAsync(code, userId);
     }
+
+    private async Task<Food?> GetStubAsync(string code, int? userId) =>
+        await foodStore.GetByBarcodeAsync(code, userId) ?? await openFoodFacts.GetByBarcodeAsync(code);
 
     public decimal ConvertToGrams(Food food, decimal quantity, bool isUnits)
     {

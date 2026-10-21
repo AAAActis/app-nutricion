@@ -13,10 +13,11 @@ public record FoodOutput(
     decimal CarbsPer100g,
     decimal FatPer100g,
     string? PortionName,
-    decimal? PortionWeightGrams)
+    decimal? PortionWeightGrams,
+    string? Attribution)
 {
     public static FoodOutput From(Food f) => new(
         f.Id, f.Name, f.Brand, f.Barcode, f.Source.ToString(),
         f.CaloriesPer100g, f.ProteinPer100g, f.CarbsPer100g, f.FatPer100g,
-        f.PortionName, f.PortionWeightGrams);
+        f.PortionName, f.PortionWeightGrams, null);
 }
