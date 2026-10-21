@@ -11,6 +11,12 @@ builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecu
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 
+// CORS: por defecto (lista vacía) solo mismo origen. Para habilitar otro frontend se agregan
+// sus orígenes en Cors:AllowedOrigins del appsettings del entorno o por variable de entorno.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+    policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
+
 var app = builder.Build();
 
 // Primero del pipeline: cualquier excepción no manejada sale como ProblemDetails 500 genérico
@@ -26,6 +32,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 
 app.MapHealthChecks("/health");
 
