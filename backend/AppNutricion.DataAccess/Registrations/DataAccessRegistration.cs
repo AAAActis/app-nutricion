@@ -1,4 +1,6 @@
 using AppNutricion.DataAccess.DataBaseContext;
+using AppNutricion.DataAccess.Interfaces;
+using AppNutricion.DataAccess.Stores;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +11,7 @@ public static class DataAccessRegistration
     public static IServiceCollection AddDataAccess(this IServiceCollection services, string connectionString)
     {
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
-        // Acá se registran los Stores a medida que aparezcan: services.AddScoped<IFoodStore, FoodStore>();
+        services.AddScoped<IFoodStore, FoodStore>();
         return services;
     }
 }
