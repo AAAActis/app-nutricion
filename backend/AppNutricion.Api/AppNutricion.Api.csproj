@@ -19,4 +19,10 @@
     <ProjectReference Include="..\AppNutricion.Presentation\AppNutricion.Presentation.csproj" />
   </ItemGroup>
 
+  <!-- foods_seed.json lo lee FoodSeedHostedService desde bin/.../SeedData al arrancar. -->
+  <ItemGroup>
+    <Content Update="SeedData\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="SeedData\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
