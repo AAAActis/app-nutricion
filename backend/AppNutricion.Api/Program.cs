@@ -1,3 +1,4 @@
+using AppNutricion.Api.OpenApi;
 using AppNutricion.DataAccess.Registrations;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +7,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDataAccess(connectionString);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 
@@ -21,6 +22,7 @@ app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "AppNutricion v1"));
 }
 
 app.UseHttpsRedirection();
