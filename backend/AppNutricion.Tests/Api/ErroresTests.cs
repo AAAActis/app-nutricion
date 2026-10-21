@@ -32,6 +32,17 @@ public class ErroresTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.DoesNotContain(nameof(InvalidOperationException), body);
     }
 
+    [Fact]
+    public async Task RutaInexistente_Devuelve404ComoProblemDetails()
+    {
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/ruta-que-no-existe");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
     // Agrega una ruta que lanza una excepción DESPUÉS de todo el pipeline de Program.cs,
     // así la excepción sube a través del manejador global de errores de la app.
     // El primer middleware imita a Kestrel: si nadie maneja la excepción, 500 sin cuerpo.
