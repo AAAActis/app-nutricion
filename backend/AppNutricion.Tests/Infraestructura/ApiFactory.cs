@@ -1,5 +1,9 @@
+using AppNutricion.BusinessLogic.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace AppNutricion.Tests.Infraestructura;
 
@@ -15,6 +19,16 @@ public class ApiFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment(Entorno);
         builder.UseSetting("ConnectionStrings:DefaultConnection", CadenaDeConexionFalsa);
+        builder.ConfigureTestServices(services =>
+        {
+            // El seed de alimentos escribe en la base al arrancar (si existe foods_seed.json).
+            var seed = services.Where(d => d.ServiceType == typeof(IHostedService)
+                                           && d.ImplementationType == typeof(FoodSeedHostedService)).ToList();
+            foreach (var descriptor in seed)
+            {
+                services.Remove(descriptor);
+            }
+        });
     }
 }
 
