@@ -12,6 +12,7 @@ public static class BusinessLogicRegistration
         services.AddScoped<IFoodManager, FoodManager>();
         services.AddScoped<IFoodSeedService, FoodSeedService>();
         services.AddHostedService<FoodSeedHostedService>();
+        services.AddHttpClient<IOpenFoodFactsClient, OpenFoodFactsService>(OpenFoodFactsService.Configure);
         return services;
     }
 }

@@ -1,4 +1,5 @@
 using AppNutricion.BusinessLogic.Interfaces;
+using AppNutricion.BusinessLogic.Validators;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Helpers;
@@ -25,11 +26,28 @@ public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFact
     {
         if (code is not { Length: >= 8 and <= 14 } || !code.All(char.IsAsciiDigit))
             throw new ArgumentException("El código de barras debe tener entre 8 y 14 dígitos.", nameof(code));
-        return GetStubAsync(code, userId);
+        return GetByValidBarcodeAsync(code, userId);
     }
 
-    private async Task<Food?> GetStubAsync(string code, int? userId) =>
-        await foodStore.GetByBarcodeAsync(code, userId) ?? await openFoodFacts.GetByBarcodeAsync(code);
+    // Si no está en nuestra base, se busca en Open Food Facts y se guarda (Source = OpenFoodFacts, ExternalId = código).
+    private async Task<Food?> GetByValidBarcodeAsync(string code, int? userId)
+    {
+        var food = await foodStore.GetByBarcodeAsync(code, userId);
+        if (food is not null) return food;
+
+        var external = await openFoodFacts.GetByBarcodeAsync(code);
+        if (external is null) return null;
+        if (FoodValidator.GetInvalidReason(external) is { } reason)
+        {
+            logger.LogWarning("Open Food Facts {Barcode} descartado: {Reason}", code, reason);
+            return null;
+        }
+        external.NormalizedName = TextNormalizer.Normalize(external.Name);
+        external.CreatedAt = DateTime.UtcNow;
+        // shortcut: dos pedidos simultáneos del mismo código nuevo chocan en el índice único (500); agregar reintento si pasa.
+        await foodStore.UpsertSeedAsync([external]);
+        return external;
+    }
 
     public decimal ConvertToGrams(Food food, decimal quantity, bool isUnits)
     {
