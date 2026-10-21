@@ -8,8 +8,13 @@ builder.Services.AddDataAccess(connectionString);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+// Primero del pipeline: cualquier excepción no manejada sale como ProblemDetails 500 genérico
+// (se loguea completa, pero al cliente no le llega ni el mensaje ni el stack trace).
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
