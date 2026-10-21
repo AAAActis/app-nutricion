@@ -47,7 +47,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 
 | # | Tarea | Responsable | Estado | Rama o PR | Depende de |
 |---|---|---|---|---|---|
-| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | Pendiente | — | S2 (tabla `Foods`) |
+| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | En curso | `feature/alimentos-busqueda` | S2 (tabla `Foods`) |
 | L2 | Carga del archivo `foods_seed`, idempotente (no duplica) | Lauti | Pendiente | — | S3, L1 |
 | L3 | Búsqueda por código de barras | Lauti | Pendiente | — | L1 |
 | L4 | Comidas: alta, edición, baja y lista; macros guardados al momento, tipo de comida, zona horaria | Lauti | Pendiente | — | J2, S2, L1 |
