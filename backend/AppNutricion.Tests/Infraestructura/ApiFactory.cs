@@ -12,6 +12,8 @@ namespace AppNutricion.Tests.Infraestructura;
 public class ApiFactory : WebApplicationFactory<Program>
 {
     public const string CadenaDeConexionFalsa = "Host=localhost;Database=no-se-usa-en-tests";
+    // 32 bytes o más: el mínimo que exige el arranque para HMAC-SHA256. Solo para tests.
+    public const string ClaveJwtFalsa = "clave-falsa-de-tests-con-32-bytes-o-mas!";
 
     protected virtual string Entorno => "Testing";
 
@@ -19,6 +21,7 @@ public class ApiFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment(Entorno);
         builder.UseSetting("ConnectionStrings:DefaultConnection", CadenaDeConexionFalsa);
+        builder.UseSetting("Jwt:Key", ClaveJwtFalsa);
         builder.ConfigureTestServices(services =>
         {
             // El seed de alimentos escribe en la base al arrancar (si existe foods_seed.json).
