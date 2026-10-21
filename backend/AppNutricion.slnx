@@ -4,4 +4,5 @@
   <Project Path="AppNutricion.DataAccess/AppNutricion.DataAccess.csproj" />
   <Project Path="AppNutricion.Entities/AppNutricion.Entities.csproj" />
   <Project Path="AppNutricion.Presentation/AppNutricion.Presentation.csproj" />
+  <Project Path="AppNutricion.Tests/AppNutricion.Tests.csproj" />
 </Solution>
