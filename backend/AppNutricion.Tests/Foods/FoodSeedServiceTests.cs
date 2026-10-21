@@ -63,6 +63,37 @@ public class FoodSeedServiceTests
         Assert.Single(_logger.Warnings);
     }
 
+    [Theory]
+    [InlineData("name", 201)]
+    [InlineData("externalId", 65)]
+    [InlineData("brand", 121)]
+    [InlineData("barcode", 33)]
+    [InlineData("portionName", 61)]
+    public async Task SeedAsync_TextoMasLargoQueLaColumna_SeDescarta(string field, int length)
+    {
+        var item = ValidItem();
+        item[field] = new string('x', length);
+
+        var summary = await _service.SeedAsync(ToJson(item));
+
+        Assert.Equal(1, summary.Discarded);
+        Assert.Empty(_saved ?? []);
+    }
+
+    [Fact]
+    public async Task SeedAsync_TextosEnElLargoMaximo_EsValido()
+    {
+        var item = ValidItem(new string('x', 64));
+        item["name"] = new string('x', 200);
+        item["brand"] = new string('x', 120);
+        item["barcode"] = new string('x', 32);
+        item["portionName"] = new string('x', 60);
+
+        var summary = await _service.SeedAsync(ToJson(item));
+
+        Assert.Equal(new(1, 0, 0), summary);
+    }
+
     [Fact]
     public async Task SeedAsync_ItemSinCampo_SeDescarta()
     {
