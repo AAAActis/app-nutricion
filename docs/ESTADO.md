@@ -47,13 +47,13 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 
 | # | Tarea | Responsable | Estado | Rama o PR | Depende de |
 |---|---|---|---|---|---|
-| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | En revisión | `feature/alimentos-busqueda` | S2 (tabla `Foods`) |
-| L2 | Carga del archivo `foods_seed`, idempotente (no duplica) | Lauti | Pendiente | — | S3, L1 |
-| L3 | Búsqueda por código de barras | Lauti | En revisión | `feature/alimentos-busqueda` | L1 |
+| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | Hecha | PR #5 | S2 (tabla `Foods`) |
+| L2 | Carga del archivo `foods_seed`, idempotente (no duplica) | Lauti | En curso | `feature/alimentos-seed-off` | S3, L1 |
+| L3 | Búsqueda por código de barras | Lauti | Hecha | PR #5 | L1 |
 | L4 | Comidas: alta, edición, baja y lista; macros guardados al momento, tipo de comida, zona horaria | Lauti | Pendiente | — | J2, S2, L1 |
 | L5 | Copiar comidas del día anterior, favoritos y recientes | Lauti | Pendiente | — | L4 |
 | L6 | Resumen diario vs. objetivos (con lo que falta) y resumen semanal con racha | Lauti | Pendiente | — | L4, J8 |
-| L7 | Respaldo con Open Food Facts (si no está en nuestra base, buscar en su API y guardar con su fuente) | Lauti | Pendiente | — | L1. Verificar antes API, límites y licencia |
+| L7 | Respaldo con Open Food Facts (si no está en nuestra base, buscar en su API y guardar con su fuente) | Lauti | En curso | `feature/alimentos-seed-off` | L1. Verificar antes API, límites y licencia |
 | L8 | Alimentos personalizados por usuario, separados de los compartidos | Lauti | Pendiente | — | L1 |
 | L9 | Recetas: combinación de alimentos con macros totales y por porción | Lauti | Pendiente | — | L1 |
 | L10 | Exportar historial de comidas a CSV | Lauti | Pendiente | — | L4 |
