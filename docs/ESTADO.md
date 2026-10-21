@@ -1,7 +1,7 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-21 tarde (Santi, rama `feature/db-modelo-datos`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
+> Última actualización: 2026-10-21 noche (Javi, rama `feature/api-esqueleto`: J1). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
 > Verificado por Santi en su máquina: el compose levanta y `app-nutricion-db` queda `healthy`. El estado de ramas y del `.gitignore` se confirma en el PR de `fix/gitignore-utf8`.
 
 ## Objetivo
@@ -27,7 +27,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 
 | # | Tarea | Responsable | Estado | Rama o PR | Depende de |
 |---|---|---|---|---|---|
-| J1 | Esqueleto en capas, Swagger, middleware de errores con formato único, health check, CORS, config por entorno | Javi | En curso (parcial): ya existe la solución con 5 proyectos y OpenAPI básico. `Program.cs` sigue siendo la plantilla `weatherforecast`. Falta Swagger UI, middleware de errores, health check, CORS y config | `main` (PR #1) | S1 |
+| J1 | Esqueleto en capas, Swagger, middleware de errores con formato único, health check, CORS, config por entorno | Javi | En revisión: proyecto `AppNutricion.Tests` (xUnit + `WebApplicationFactory`, sin Postgres). Sin `weatherforecast`. `GET /health` (solo vida del proceso, no chequea la base). Errores siempre como ProblemDetails (`application/problem+json`): 500 genérico sin mensaje ni stack trace, y 404/405 también. Swagger UI en `/swagger` con botón Authorize (Bearer JWT), **solo en Development**. CORS por `Cors:AllowedOrigins` (vacío = solo mismo origen). 10 tests | `feature/api-esqueleto` | S1 |
 | J2 | Registro con consentimiento, login, JWT, hash de contraseñas | Javi | Pendiente | — | J1, S2 |
 | J3 | Refresh token y logout | Javi | Pendiente | — | J2 |
 | J4 | Cambio de contraseña y de email | Javi | Pendiente | — | J2 |
@@ -133,11 +133,11 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 |---|---|---|---|
 | T1 | `.gitignore` en UTF-16: no ignoraba `bin/`, `obj/` ni `.env`; compilados en el repo | `.gitignore`, `backend/*/bin`, `backend/*/obj` | Alta → **resuelto en `fix/gitignore-utf8`** al mergear |
 | T2 | `.env`, `contexto.md` y un archivo de n8n siguen en el historial del repo **público** | commits `1d80b66` y `dd79c57` | Alta: contraseña rotada (D17); falta decidir repo privado o limpieza de historial |
-| T3 | `Program.cs` sigue siendo la plantilla `weatherforecast` (solo se le agregó el registro del `DbContext`); falta Swagger UI, middleware de errores, health check, CORS | `backend/AppNutricion.Api/Program.cs` | Media: es J1 |
-| T4 | No hay tests, CI ni Dockerfile (README y `docs/` ya están) | raíz del repo | Media: J11, S4, cada módulo |
+| T3 | ~~`Program.cs` sigue siendo la plantilla `weatherforecast`~~ → Swagger UI, errores ProblemDetails, `/health`, CORS | `backend/AppNutricion.Api/Program.cs` | Resuelto en `feature/api-esqueleto` |
+| T4 | No hay CI ni Dockerfile. Tests: ya existe `AppNutricion.Tests` (J1) | raíz del repo | Media: J11, S4 |
 | T5 | ~~Postgres publicado en todas las interfaces~~ → `127.0.0.1:5432:5432` | `docker-compose.yml` | Resuelto en `feature/db-modelo-datos` |
 | T6 | ~~`.env.example` incompleto~~ → marcadores de cadena de conexión, JWT y LLM | `.env.example` | Resuelto en `feature/db-modelo-datos` |
-| T7 | `appsettings.json` sin configuración por entorno | `backend/AppNutricion.Api/` | Baja: J1. La cadena de conexión va en user-secrets (D15), no ahí |
+| T7 | ~~`appsettings.json` sin configuración por entorno~~ → `appsettings.json` (base, segura para producción) + `appsettings.{Entorno}.json` + user-secrets (Development) + variables de entorno (Docker, p. ej. `Cors__AllowedOrigins__0`). Los tests corren en el entorno `Testing` | `backend/AppNutricion.Api/` | Resuelto en `feature/api-esqueleto` |
 
 ## Cómo levantar y probar el proyecto
 
@@ -148,7 +148,7 @@ Detalle en el `README.md`. Resumen:
 4. Cadena de conexión en user-secrets (comando en el README).
 5. `dotnet ef database update --project backend/AppNutricion.DataAccess --startup-project backend/AppNutricion.Api` → crea las 19 tablas.
 6. `dotnet build backend/AppNutricion.slnx` y `dotnet run --project backend/AppNutricion.Api` (`http://localhost:5286`).
-7. Tests: `<COMPLETAR: todavía no existen>`.
+7. Tests: `dotnet test backend/AppNutricion.slnx` (no necesitan Postgres ni user-secrets). Swagger UI: `http://localhost:5286/swagger` (solo Development).
 
 ## PRÓXIMA SESIÓN · Santi
 
