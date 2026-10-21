@@ -31,6 +31,24 @@ public class FoodManagerTests
     }
 
     [Fact]
+    public async Task SearchAsync_TerminoDeDosCaracteres_LlamaAlStore()
+    {
+        var result = await _manager.SearchAsync(" Té ", null, null);
+
+        Assert.NotEmpty(result);
+        _store.Verify(s => s.SearchByNameAsync("te", null, It.IsAny<int>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ReenviaElUserIdAlStore()
+    {
+        var food = new Food { Name = "Yogur" };
+        _store.Setup(s => s.GetByIdAsync(5, 7)).ReturnsAsync(food);
+
+        Assert.Same(food, await _manager.GetByIdAsync(5, 7));
+    }
+
+    [Fact]
     public async Task SearchAsync_TerminoConTildes_ElStoreRecibeElTerminoNormalizado()
     {
         await _manager.SearchAsync("  Café con LECHE ", 7, null);
