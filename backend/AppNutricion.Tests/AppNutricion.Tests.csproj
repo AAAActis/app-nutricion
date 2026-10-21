@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -24,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AppNutricion.Api\AppNutricion.Api.csproj" />
     <ProjectReference Include="..\AppNutricion.BusinessLogic\AppNutricion.BusinessLogic.csproj" />
     <ProjectReference Include="..\AppNutricion.Entities\AppNutricion.Entities.csproj" />
     <ProjectReference Include="..\AppNutricion.Presentation\AppNutricion.Presentation.csproj" />

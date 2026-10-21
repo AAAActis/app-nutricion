@@ -1,3 +1,4 @@
+using AppNutricion.Api.OpenApi;
 using AppNutricion.BusinessLogic.Registrations;
 using AppNutricion.DataAccess.Registrations;
 
@@ -8,43 +9,35 @@ builder.Services.AddDataAccess(connectionString);
 builder.Services.AddBusinessLogic();
 builder.Services.AddControllers();
 
-// Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
+builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
+
+// CORS: por defecto (lista vacía) solo mismo origen. Para habilitar otro frontend se agregan
+// sus orígenes en Cors:AllowedOrigins del appsettings del entorno o por variable de entorno.
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
+    policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Primero del pipeline: cualquier excepción no manejada sale como ProblemDetails 500 genérico
+// (se loguea completa, pero al cliente no le llega ni el mensaje ni el stack trace).
+app.UseExceptionHandler();
+// Los errores sin cuerpo (404, 405...) también salen como ProblemDetails: un solo formato de error.
+app.UseStatusCodePages();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "AppNutricion v1"));
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapHealthChecks("/health");
 
 app.MapControllers();
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
