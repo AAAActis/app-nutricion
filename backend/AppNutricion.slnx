@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="AppNutricion.Api/AppNutricion.Api.csproj" />
+  <Project Path="AppNutricion.BusinessLogic/AppNutricion.BusinessLogic.csproj" />
+  <Project Path="AppNutricion.DataAccess/AppNutricion.DataAccess.csproj" />
+  <Project Path="AppNutricion.Entities/AppNutricion.Entities.csproj" />
+  <Project Path="AppNutricion.Presentation/AppNutricion.Presentation.csproj" />
+</Solution>
