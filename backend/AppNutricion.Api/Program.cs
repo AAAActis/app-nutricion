@@ -15,6 +15,8 @@ var app = builder.Build();
 // Primero del pipeline: cualquier excepción no manejada sale como ProblemDetails 500 genérico
 // (se loguea completa, pero al cliente no le llega ni el mensaje ni el stack trace).
 app.UseExceptionHandler();
+// Los errores sin cuerpo (404, 405...) también salen como ProblemDetails: un solo formato de error.
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
