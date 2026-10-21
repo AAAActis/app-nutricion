@@ -154,6 +154,27 @@ public class FoodSeedServiceTests
     }
 
     [Fact]
+    public async Task SeedAsync_MacrosYPorcionConTresDecimales_SeRedondeanA2()
+    {
+        var item = ValidItem();
+        item["caloriesPer100g"] = 61.456;
+        item["proteinPer100g"] = 3.214;
+        item["carbsPer100g"] = 4.875;
+        item["fatPer100g"] = 3.335;
+        item["portionWeightGrams"] = 20.555;
+
+        await _service.SeedAsync(ToJson(item));
+
+        Assert.NotNull(_saved);
+        var food = Assert.Single(_saved);
+        Assert.Equal(61.46m, food.CaloriesPer100g);
+        Assert.Equal(3.21m, food.ProteinPer100g);
+        Assert.Equal(4.88m, food.CarbsPer100g);
+        Assert.Equal(3.34m, food.FatPer100g);
+        Assert.Equal(20.56m, food.PortionWeightGrams);
+    }
+
+    [Fact]
     public async Task SeedAsync_ClaveRepetidaEnElArchivo_SeDescartaLaSegunda()
     {
         var summary = await _service.SeedAsync(ToJson(ValidItem("AF-1"), ValidItem("AF-1"), ValidItem("AF-2")));

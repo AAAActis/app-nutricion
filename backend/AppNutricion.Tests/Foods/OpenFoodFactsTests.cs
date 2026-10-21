@@ -135,6 +135,47 @@ public class OpenFoodFactsTests
 
         Assert.Null(ex);
         Assert.Null(_saved);
+        Assert.Empty(_offLogger.Warnings); // un 404 es "no existe", no una falla de OFF
+    }
+
+    [Fact]
+    public async Task OpenFoodFactsCon5xxYCuerpoJsonValido_NoSeAceptaComoProducto()
+    {
+        Respond(HttpStatusCode.ServiceUnavailable, FullProduct);
+
+        Assert.Null(await _manager.GetByBarcodeAsync(Code, null));
+        Assert.Null(_saved);
+        Assert.Single(_offLogger.Warnings);
+    }
+
+    [Fact]
+    public async Task OpenFoodFactsCon200YJsonInvalido_NoEncontradoSinExcepcionYConWarning()
+    {
+        Respond(HttpStatusCode.OK, "{ esto no es json");
+
+        Food? result = null;
+        var ex = await Record.ExceptionAsync(async () => result = await _manager.GetByBarcodeAsync(Code, null));
+
+        Assert.Null(ex);
+        Assert.Null(result);
+        Assert.Single(_offLogger.Warnings);
+    }
+
+    [Fact]
+    public async Task MarcaYMacrosConDecimales_SeLimpianYRedondean()
+    {
+        Respond(HttpStatusCode.OK, """
+            {"product":{"product_name":"Yogur","brands":"  La Marca  , Otra","nutriments":{"energy-kcal_100g":61.456,"proteins_100g":3.214,"carbohydrates_100g":4.875,"fat_100g":3.335}}}
+            """);
+
+        var result = await _manager.GetByBarcodeAsync(Code, null);
+
+        Assert.NotNull(result);
+        Assert.Equal("La Marca", result.Brand);
+        Assert.Equal(61.46m, result.CaloriesPer100g);
+        Assert.Equal(3.21m, result.ProteinPer100g);
+        Assert.Equal(4.88m, result.CarbsPer100g);
+        Assert.Equal(3.34m, result.FatPer100g);
     }
 
     [Fact]
