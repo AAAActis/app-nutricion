@@ -50,6 +50,40 @@ public class FoodManagerTests
         _store.Verify(s => s.SearchByNameAsync("leche", null, expected), Times.Once);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("1234567")]
+    [InlineData("123456789012345")]
+    [InlineData("77912345a")]
+    [InlineData(" 77912345")]
+    [InlineData("٧٧٩١٢٣٤٥")]
+    public async Task GetByBarcodeAsync_CodigoInvalido_LanzaArgumentExceptionSinLlamarAlStore(string? code)
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _manager.GetByBarcodeAsync(code, null));
+        _store.Verify(s => s.GetByBarcodeAsync(It.IsAny<string>(), It.IsAny<int?>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("77912345")]
+    [InlineData("77912345678901")]
+    public async Task GetByBarcodeAsync_Encontrado_DevuelveElAlimento(string code)
+    {
+        var food = new Food { Name = "Leche" };
+        _store.Setup(s => s.GetByBarcodeAsync(code, 3)).ReturnsAsync(food);
+
+        Assert.Same(food, await _manager.GetByBarcodeAsync(code, 3));
+    }
+
+    [Fact]
+    public async Task GetByBarcodeAsync_NoEncontrado_DevuelveNull()
+    {
+        _store.Setup(s => s.GetByBarcodeAsync("7791234567890", null)).ReturnsAsync((Food?)null);
+
+        Assert.Null(await _manager.GetByBarcodeAsync("7791234567890", null));
+        _store.Verify(s => s.GetByBarcodeAsync("7791234567890", null), Times.Once);
+    }
+
     [Fact]
     public void ConvertToGrams_EnGramos_DevuelveLaCantidad()
     {

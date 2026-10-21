@@ -20,6 +20,8 @@ public class FoodManager(IFoodStore foodStore) : IFoodManager
 
     public Task<Food?> GetByIdAsync(int id, int? userId) => foodStore.GetByIdAsync(id, userId);
 
+    public Task<Food?> GetByBarcodeAsync(string? code, int? userId) => Task.FromResult<Food?>(null);
+
     public decimal ConvertToGrams(Food food, decimal quantity, bool isUnits)
     {
         if (!isUnits) return quantity;
