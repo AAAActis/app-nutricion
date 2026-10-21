@@ -1,0 +1,53 @@
+[
+  {
+    "name": "Manzana roja",
+    "source": "Argenfoods",
+    "externalId": "TEST-SEED-1",
+    "caloriesPer100g": 52,
+    "proteinPer100g": 0.3,
+    "carbsPer100g": 13.8,
+    "fatPer100g": 0.2,
+    "portionName": "unidad mediana",
+    "portionWeightGrams": 180
+  },
+  {
+    "name": "Pan francés",
+    "source": "Argenfoods",
+    "externalId": "TEST-SEED-2",
+    "caloriesPer100g": 270,
+    "proteinPer100g": 8.5,
+    "carbsPer100g": 55,
+    "fatPer100g": 1.5
+  },
+  {
+    "name": "Dulce de Leche Clásico",
+    "brand": "Marca de prueba",
+    "barcode": "0000000000017",
+    "source": "OpenFoodFacts",
+    "externalId": "0000000000017",
+    "caloriesPer100g": 315,
+    "proteinPer100g": 6.8,
+    "carbsPer100g": 55,
+    "fatPer100g": 7.5,
+    "portionName": "cucharada",
+    "portionWeightGrams": 20
+  },
+  {
+    "name": "Arroz blanco cocido",
+    "source": "Argenfoods",
+    "externalId": "TEST-SEED-4",
+    "caloriesPer100g": 130,
+    "proteinPer100g": 2.7,
+    "carbsPer100g": 28.2,
+    "fatPer100g": 0.3
+  },
+  {
+    "name": "Ítem inválido: macro negativo",
+    "source": "Argenfoods",
+    "externalId": "TEST-SEED-5",
+    "caloriesPer100g": 100,
+    "proteinPer100g": -1,
+    "carbsPer100g": 10,
+    "fatPer100g": 1
+  }
+]

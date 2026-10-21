@@ -1,7 +1,7 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-21 noche (Lauti, rama `feature/alimentos-busqueda`: L1 y L3 en revisión; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
+> Última actualización: 2026-10-21 noche (Lauti, rama `feature/alimentos-seed-off`: L2 y L7 en revisión; D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
 > Verificado por Santi en su máquina: el compose levanta y `app-nutricion-db` queda `healthy`. El estado de ramas y del `.gitignore` se confirma en el PR de `fix/gitignore-utf8`.
 
 ## Objetivo
@@ -47,13 +47,13 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 
 | # | Tarea | Responsable | Estado | Rama o PR | Depende de |
 |---|---|---|---|---|---|
-| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | En revisión | `feature/alimentos-busqueda` | S2 (tabla `Foods`) |
-| L2 | Carga del archivo `foods_seed`, idempotente (no duplica) | Lauti | Pendiente | — | S3, L1 |
-| L3 | Búsqueda por código de barras | Lauti | En revisión | `feature/alimentos-busqueda` | L1 |
+| L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | Hecha | PR #5 | S2 (tabla `Foods`) |
+| L2 | Carga del archivo `foods_seed`, idempotente (no duplica) | Lauti | En revisión | `feature/alimentos-seed-off` | S3, L1 |
+| L3 | Búsqueda por código de barras | Lauti | Hecha | PR #5 | L1 |
 | L4 | Comidas: alta, edición, baja y lista; macros guardados al momento, tipo de comida, zona horaria | Lauti | Pendiente | — | J2, S2, L1 |
 | L5 | Copiar comidas del día anterior, favoritos y recientes | Lauti | Pendiente | — | L4 |
 | L6 | Resumen diario vs. objetivos (con lo que falta) y resumen semanal con racha | Lauti | Pendiente | — | L4, J8 |
-| L7 | Respaldo con Open Food Facts (si no está en nuestra base, buscar en su API y guardar con su fuente) | Lauti | Pendiente | — | L1. Verificar antes API, límites y licencia |
+| L7 | Respaldo con Open Food Facts (si no está en nuestra base, buscar en su API y guardar con su fuente) | Lauti | En revisión | `feature/alimentos-seed-off` | L1. Verificar antes API, límites y licencia |
 | L8 | Alimentos personalizados por usuario, separados de los compartidos | Lauti | Pendiente | — | L1 |
 | L9 | Recetas: combinación de alimentos con macros totales y por porción | Lauti | Pendiente | — | L1 |
 | L10 | Exportar historial de comidas a CSV | Lauti | Pendiente | — | L4 |
@@ -102,6 +102,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | D15 | Secretos de la API en user-secrets (desarrollo) y variables de entorno (Docker). `appsettings.json` sin cadena de conexión ni claves | 2026-10-21 | Santi |
 | D16 | Contextos con datos de infraestructura personal van en `private/` (ignorada), no en el repo | 2026-10-21 | Santi |
 | D17 | Contraseña de Postgres rotada (la anterior quedó en el historial público) | 2026-10-21 | Santi |
+| D18 | Open Food Facts (L7). Producto por código: `GET https://world.openfoodfacts.org/api/v3/product/{code}.json` (v3 recomendada, v2 deprecada). Lectura sin auth, pero con User-Agent propio (`AppName/Version (contacto)`). Límites: 15 req/min por IP para producto y 10 para búsqueda (no usar para buscar mientras se tipea); si se pasa, responde 503. Licencia: base ODbL, contenidos DbCL, imágenes CC-BY-SA. **Se puede guardar y reusar** (incluso comercialmente) mencionando la licencia y atribuyendo a Open Food Facts con link a https://openfoodfacts.org o a la página del producto; lo derivado se comparte en las mismas condiciones. Datos sin garantía y no aptos para uso médico. Fuentes: https://openfoodfacts.github.io/openfoodfacts-server/api/ y https://world.openfoodfacts.org/terms-of-use | 2026-10-21 | Lauti |
 
 ## Pendientes de decisión
 
@@ -113,7 +114,6 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | Hora exacta de entrega del martes 27 | Docente | Plan del lunes |
 | Proveedor del LLM y quién consigue la clave (verificar cuota y precios vigentes) | Los 3 | S9 |
 | ¿ARGENFOODS tiene descarga (Excel/CSV) o se copia a mano? | Santi | S3, L2 |
-| API, límites y licencia de Open Food Facts | Lauti / Santi | L7, S3 |
 | ¿Habrá CI (GitHub Actions)? | Javi | Regla de "CI verde antes de mergear" |
 | Cómo se registra la autoría con el docente, ya que el grupo figura de 5 | Javi / docente | Entrega |
 
