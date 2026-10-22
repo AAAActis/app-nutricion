@@ -98,7 +98,7 @@ public class ExportarCsvTests
         { null, Hasta, "from" },
         { Desde, null, "to" },
         { Hasta, Desde, "to" },                              // from > to
-        { new(2025, 10, 20), new(2026, 10, 20), "to" },      // 367 días
+        { new(2025, 10, 19), new(2026, 10, 20), "to" },      // 367 días contando los dos extremos
     };
 
     [Theory]
@@ -115,7 +115,7 @@ public class ExportarCsvTests
     public async Task Rango_DeUnDiaYDe366Dias_Valido()
     {
         await _manager.ExportCsvAsync(UserId, Hasta, Hasta);
-        await _manager.ExportCsvAsync(UserId, new DateOnly(2025, 10, 21), Hasta);
+        await _manager.ExportCsvAsync(UserId, new DateOnly(2025, 10, 20), Hasta);   // 366 días contando los dos extremos
 
         _store.Verify(s => s.GetRangeAsync(UserId, It.IsAny<DateOnly>(), Hasta), Times.Exactly(2));
     }

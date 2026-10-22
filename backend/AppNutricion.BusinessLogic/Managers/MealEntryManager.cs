@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.DataAccess.Interfaces;
@@ -11,6 +13,7 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
 {
     private const decimal MaxGrams = 5000;
     private const int ItemNameMaxLength = 200;
+    private const int MaxExportDays = 366;
 
     public async Task<MealEntry?> CreateAsync(int userId, int foodId, decimal quantity, bool isUnits, MealType mealType, DateOnly date, int? recipeId)
     {
@@ -115,7 +118,30 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         return copies;
     }
 
-    public Task<string> ExportCsvAsync(int userId, DateOnly? from, DateOnly? to) => throw new NotImplementedException();
+    public async Task<string> ExportCsvAsync(int userId, DateOnly? from, DateOnly? to)
+    {
+        if (from is not { } start) throw new ArgumentException("Falta la fecha de inicio (from=YYYY-MM-DD).", nameof(from));
+        if (to is not { } end) throw new ArgumentException("Falta la fecha de fin (to=YYYY-MM-DD).", nameof(to));
+        if (end < start) throw new ArgumentException("La fecha de fin no puede ser anterior a la de inicio.", nameof(to));
+        if (end.DayNumber - start.DayNumber + 1 > MaxExportDays)
+            throw new ArgumentException($"El rango es de hasta {MaxExportDays} días.", nameof(to));
+
+        var csv = new StringBuilder("fecha,tipo,alimento,gramos,kcal,proteinas_g,carbohidratos_g,grasas_g\r\n");
+        foreach (var m in await store.GetRangeAsync(userId, start, end))
+        {
+            csv.Append(CultureInfo.InvariantCulture,
+                $"{m.Date:yyyy-MM-dd},{m.MealType},{CsvText(m.ItemName)},{m.QuantityGrams},{m.SavedCalories},{m.SavedProtein},{m.SavedCarbs},{m.SavedFat}\r\n");
+        }
+        return csv.ToString();
+    }
+
+    // Un texto que empieza como fórmula (= + - @ tab) se neutraliza con ' para que Excel no lo ejecute;
+    // después, escapado RFC 4180.
+    private static string CsvText(string text)
+    {
+        if (text.Length > 0 && "=+-@\t".Contains(text[0])) text = "'" + text;
+        return text.IndexOfAny([',', '"', '\r', '\n']) >= 0 ? $"\"{text.Replace("\"", "\"\"")}\"" : text;
+    }
 
     // Congela nombre, gramos y macros desde Foods (D6): después no se recalculan solos.
     private static void Freeze(MealEntry entry, Food food, decimal grams)

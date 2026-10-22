@@ -49,8 +49,12 @@ public class MealEntryStore(ApplicationDbContext context) : IMealEntryStore
             })
             .ToDictionaryAsync(x => x.Key, x => x.Totals);
 
-    public Task<List<MealEntry>> GetRangeAsync(int userId, DateOnly from, DateOnly to) =>
-        throw new NotImplementedException();
+    public async Task<List<MealEntry>> GetRangeAsync(int userId, DateOnly from, DateOnly to)
+    {
+        var entries = await OfUser(userId).Where(m => m.Date >= from && m.Date <= to).ToListAsync();
+        // Como GetByDateAsync: MealType es texto en la base, el orden del enum se aplica acá.
+        return entries.OrderBy(m => m.Date).ThenBy(m => m.MealType).ThenBy(m => m.CreatedAt).ThenBy(m => m.Id).ToList();
+    }
 
     public Task<Dictionary<DateOnly, MealTotals>> SumByDateAsync(int userId, DateOnly from, DateOnly to) =>
         OfUser(userId).Where(m => m.Date >= from && m.Date <= to).GroupBy(m => m.Date)
