@@ -15,7 +15,7 @@ public record NutritionInput(
     decimal WeeklyRateKg,          // el pedido; el aplicado puede ser menor (límites de seguridad)
     decimal? TargetWeightKg,
     DateOnly Today,
-    bool ApplyRateLimits = true);  // false: el ritmo ya es el aplicado (guardado en el Goal), no se vuelve a recortar
+    bool ApplyRateLimits = true);  // false: el ritmo ya es el aplicado (guardado en el Goal) y no se recorta de nuevo
 
 public record NutritionResult(
     int Calories,
@@ -92,7 +92,7 @@ public static class NutritionCalculator
 
         var maxRate = MaxWeeklyRateKg(input.GoalType, input.WeightKg);
         var requestedRate = input.GoalType == GoalType.Maintain ? 0m : input.WeeklyRateKg;
-        var appliedRate = Math.Min(requestedRate, maxRate);
+        var appliedRate = input.ApplyRateLimits ? Math.Min(requestedRate, maxRate) : requestedRate;
         var dailyAdjustment = appliedRate * NutritionDefaults.KcalPerKg / NutritionDefaults.DaysPerWeek;
         var rawCalories = input.GoalType == GoalType.LoseFat ? tdee - dailyAdjustment : tdee + dailyAdjustment;
 
@@ -122,6 +122,6 @@ public static class NutritionCalculator
 
         return new NutritionResult(
             calories, Round1(proteinG), Round1(carbsG), Round1(fatG), bmi, CategoryFor(bmi),
-            appliedRate, requestedRate > maxRate, floorApplied, weeks, projectedDate);
+            appliedRate, appliedRate < requestedRate, floorApplied, weeks, projectedDate);
     }
 }

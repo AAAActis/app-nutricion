@@ -26,13 +26,14 @@ public class GoalManager(IGoalStore goalStore, IProfileStore profileStore, IBody
         // Menores de 18 con LoseFat: el motor lanza ArgumentException("goalType").
         var result = NutritionCalculator.Calculate(InputFor(profile, weight, type, rate, targetWeightKg, today));
 
-        // Se congelan kcal y macros. WeeklyRateKg guarda el ritmo pedido; el aplicado sale del motor.
+        // Se congelan kcal y macros, y WeeklyRateKg guarda el ritmo aplicado (con el que salieron esas kcal).
+        // Si el pedido se recortó, el aviso sale solo en esta respuesta.
         var goal = new Goal
         {
             UserId = userId,
             GoalType = type,
             TargetWeightKg = targetWeightKg,
-            WeeklyRateKg = rate,
+            WeeklyRateKg = result.AppliedWeeklyRateKg,
             TargetCalories = result.Calories,
             TargetProteinG = result.ProteinG,
             TargetCarbsG = result.CarbsG,
@@ -51,10 +52,12 @@ public class GoalManager(IGoalStore goalStore, IProfileStore profileStore, IBody
         var goal = await goalStore.GetActiveAsync(userId);
         if (goal is null) return null;
 
-        // Kcal y macros vienen congelados en el Goal; IMC, proyección y avisos se recalculan con el último peso.
+        // Kcal y macros vienen congelados en el Goal; IMC, proyección y el aviso de piso se recalculan con el
+        // último peso. El ritmo guardado ya es el aplicado: no se vuelve a recortar.
         var (profile, today) = await ProfileGuard.RequireAsync(profileStore, userId, timeProvider);
         var weight = await LatestWeightAsync(userId) ?? throw new ConflictException(MissingWeightMessage);
-        var live = NutritionCalculator.Calculate(InputFor(profile, weight, goal.GoalType, goal.WeeklyRateKg, goal.TargetWeightKg, today));
+        var live = NutritionCalculator.Calculate(
+            InputFor(profile, weight, goal.GoalType, goal.WeeklyRateKg, goal.TargetWeightKg, today) with { ApplyRateLimits = false });
         return new GoalTargets(goal, live);
     }
 
