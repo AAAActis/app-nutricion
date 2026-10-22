@@ -130,11 +130,16 @@ public class WorkoutManagerTests
     }
 
     [Fact]
-    public async Task Create_NotasVaciasQuedanNull_YDeHasta500()
+    public async Task Create_NotasVaciasQuedanNull()
     {
         await _manager.CreateAsync(UserId, Valido() with { Notes = "  " });
-        Assert.Null(_agregado!.Notes);
 
+        Assert.Null(_agregado!.Notes);
+    }
+
+    [Fact]
+    public async Task Create_NotasDeHasta500()
+    {
         Assert.Equal("notes", (await Rechaza(Valido() with { Notes = new string('a', 501) })).ParamName);
     }
 
