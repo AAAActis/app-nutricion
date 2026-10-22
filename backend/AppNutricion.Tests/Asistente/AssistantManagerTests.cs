@@ -230,6 +230,35 @@ public sealed class AssistantManagerTests : IDisposable
         Assert.Empty(await Comidas());
     }
 
+    // La guarda va antes de MealEntryManager: una ya resuelta da "ya fue resuelta" aunque el alimento ya no esté
+    // o la fecha haya quedado fuera del diario, y no llega a buscar el alimento (no crea ni borra una comida).
+    [Fact]
+    public async Task AceptarUnaYaResuelta_ConflictYaResuelta_SinTocarElAlimento()
+    {
+        var manager = ConFake();
+        var sugerencia = Assert.Single((await manager.SendAsync(UserId, _conversacion, "comí 150 g de arroz"))!.Suggestions);
+        await manager.IgnoreSuggestionAsync(sugerencia.Id, UserId);
+        _foods.Invocations.Clear();
+        _foods.Setup(f => f.GetByIdAsync(_arroz.Id, UserId)).ReturnsAsync((Food?)null);
+
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => manager.AcceptSuggestionAsync(sugerencia.Id, UserId));
+
+        Assert.Equal("La sugerencia ya fue resuelta.", ex.Message);
+        _foods.Verify(f => f.GetByIdAsync(It.IsAny<int>(), It.IsAny<int?>()), Times.Never);
+        Assert.Empty(await Comidas());
+    }
+
+    [Fact]
+    public async Task AceptarUnaYaResuelta_ConLaFechaFueraDelDiario_SigueSiendoConflict()
+    {
+        var manager = ConFake();
+        var sugerencia = Assert.Single((await manager.SendAsync(UserId, _conversacion, "comí 150 g de arroz"))!.Suggestions);
+        await manager.IgnoreSuggestionAsync(sugerencia.Id, UserId);
+        _reloj.Advance(TimeSpan.FromDays(3 * 365));
+
+        await Assert.ThrowsAsync<ConflictException>(() => manager.AcceptSuggestionAsync(sugerencia.Id, UserId));
+    }
+
     [Fact]
     public async Task SugerenciaDeOtroUsuario_Null()
     {
