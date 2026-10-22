@@ -111,6 +111,19 @@ public class ResumenDiarioTests
         Assert.Equal(new MacroTotals(115, 100, 41.5m, 133.3m), resumen.ProgressPct);
     }
 
+    // El motor de Javi no genera targets en 0, pero un Goal así no puede tirar 500 por dividir por cero.
+    [Fact]
+    public async Task TargetEnCero_ProgresoEnCeroSinDividirPorCero()
+    {
+        ConComidas(new() { [MealType.Lunch] = new(500, 30, 60, 10, 2) });
+        ConObjetivo(2000, 120, 241, 0);
+
+        var resumen = await _manager.GetDailyAsync(UserId, DiaCordoba);
+
+        Assert.Equal(0, resumen.ProgressPct!.FatG);
+        Assert.Equal(new MacroLeft(-10, true), resumen.Remaining!.FatG);
+    }
+
     [Fact]
     public async Task SinObjetivo_TargetsRemainingYProgresoNull()
     {
