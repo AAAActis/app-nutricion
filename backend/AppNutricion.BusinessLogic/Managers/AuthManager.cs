@@ -61,6 +61,8 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
         return tokenService.CreateFor(user);
     }
 
+    public Task<User?> GetUserAsync(int userId) => userStore.GetByIdAsync(userId);
+
     // El índice único de Users.Email distingue mayúsculas: se guarda y se busca siempre así.
     private static string NormalizeEmail(string? email) => (email ?? "").Trim().ToLowerInvariant();
 

@@ -16,4 +16,7 @@ public interface IAuthManager
 
     // null = credenciales inválidas (mismo resultado si el email no existe o la contraseña no coincide).
     Task<LoginResult?> LoginAsync(string? email, string? password);
+
+    // El usuario del token (para /api/me). null si ya no existe.
+    Task<User?> GetUserAsync(int userId);
 }

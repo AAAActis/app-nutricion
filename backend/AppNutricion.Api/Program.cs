@@ -3,6 +3,8 @@ using AppNutricion.Api.OpenApi;
 using AppNutricion.BusinessLogic.Options;
 using AppNutricion.BusinessLogic.Registrations;
 using AppNutricion.DataAccess.Registrations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,21 @@ var jwtOptions = jwtSection.Get<JwtOptions>() ?? new JwtOptions();
 if (Encoding.UTF8.GetByteCount(jwtOptions.Key) < JwtOptions.MinKeyBytes)
     throw new InvalidOperationException($"Falta Jwt:Key en user-secrets o tiene menos de {JwtOptions.MinKeyBytes} bytes.");
 builder.Services.Configure<JwtOptions>(jwtSection);
+
+// Valida firma (con Jwt:Key), emisor, audiencia y vencimiento. MapInboundClaims = false deja
+// los claims con su nombre JWT: el userId se lee de "sub".
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+        };
+    });
+builder.Services.AddAuthorization();
 
 builder.Services.AddDataAccess(connectionString);
 builder.Services.AddBusinessLogic();
@@ -45,6 +62,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 
