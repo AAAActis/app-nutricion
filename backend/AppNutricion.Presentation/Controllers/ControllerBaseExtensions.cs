@@ -1,3 +1,5 @@
+using AppNutricion.BusinessLogic.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppNutricion.Presentation.Controllers;
@@ -11,4 +13,8 @@ public static class ControllerBaseExtensions
         controller.ModelState.AddModelError(ex.ParamName!, ex.Message.Replace($" (Parameter '{ex.ParamName}')", ""));
         return controller.ValidationProblem();
     }
+
+    // Falta un paso previo (perfil, peso) → 409 ProblemDetails con el mensaje del manager.
+    public static ActionResult ConflictProblemFor(this ControllerBase controller, ConflictException ex) =>
+        controller.Problem(statusCode: StatusCodes.Status409Conflict, title: ex.Message);
 }
