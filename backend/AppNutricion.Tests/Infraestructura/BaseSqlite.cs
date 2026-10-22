@@ -2,6 +2,7 @@ using AppNutricion.DataAccess.DataBaseContext;
 using AppNutricion.Entities.Entities;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace AppNutricion.Tests.Infraestructura;
 
@@ -25,8 +26,9 @@ public sealed class BaseSqlite : IDisposable
     }
 
     // Un contexto nuevo por operación, como en la API (scoped por request): nada queda en el ChangeTracker.
-    public ApplicationDbContext NuevoContexto() =>
-        new(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(_connection).Options);
+    // Con interceptores para meter algo entre el código del store y la base (por ejemplo, otro request simultáneo).
+    public ApplicationDbContext NuevoContexto(params IInterceptor[] interceptors) =>
+        new(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(_connection).AddInterceptors(interceptors).Options);
 
     public void Dispose() => _connection.Dispose();
 }

@@ -3,6 +3,7 @@ using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Enums;
 using AppNutricion.Tests.Infraestructura;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace AppNutricion.Tests.Foods;
 
@@ -66,6 +67,30 @@ public sealed class FavoritosYRecientesStoreTests : IDisposable
         var favorito = Assert.Single(await context.FavoriteFoods.ToListAsync());
         Assert.Equal((Yo, _pan), (favorito.UserId, favorito.FoodId));
         Assert.NotEqual(default, favorito.CreatedAt);
+    }
+
+    // Dos POST simultáneos: el otro request inserta la fila después del AnyAsync de este y antes de su insert.
+    // Choca en la PK y se trata como "ya existía".
+    [Fact]
+    public async Task AddFavorite_OtroRequestLoInsertaJustoAntes_NoFallaYQuedaUnaFila()
+    {
+        var store = new FoodStore(_db.NuevoContexto(new OtroRequestInserta(() => Favorito(Yo, _pan, 0))));
+
+        await store.AddFavoriteAsync(Yo, _pan);
+
+        await using var context = _db.NuevoContexto();
+        var favorito = Assert.Single(await context.FavoriteFoods.ToListAsync());
+        Assert.Equal((Yo, _pan), (favorito.UserId, favorito.FoodId));
+    }
+
+    private sealed class OtroRequestInserta(Func<Task> insertar) : SaveChangesInterceptor
+    {
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData,
+            InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            await insertar();
+            return result;
+        }
     }
 
     [Fact]
