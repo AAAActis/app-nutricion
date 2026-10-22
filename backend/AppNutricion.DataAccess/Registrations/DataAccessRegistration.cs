@@ -18,6 +18,7 @@ public static class DataAccessRegistration
         services.AddScoped<IBodyMetricStore, BodyMetricStore>();
         services.AddScoped<IGoalStore, GoalStore>();
         services.AddScoped<IExportStore, ExportStore>();
+        services.AddScoped<IAssistantStore, AssistantStore>();
         return services;
     }
 }

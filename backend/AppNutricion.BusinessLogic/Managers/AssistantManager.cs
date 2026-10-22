@@ -115,7 +115,12 @@ public class AssistantManager(
             UserId = userId, ChatMessageId = assistant.Id, FoodId = p.FoodId, QuantityGrams = p.QuantityGrams, MealType = p.MealType,
             Date = p.Date, Status = SuggestionStatus.Pending, CreatedAt = Now,
         }).ToList();
-        if (suggestions.Count > 0) await store.AddSuggestionsAsync(suggestions);
+        if (suggestions.Count > 0)
+        {
+            await store.AddSuggestionsAsync(suggestions);
+            // Se releen para devolverlas con su alimento.
+            suggestions = (await store.GetSuggestionsAsync(conversationId, userId)).Where(s => s.ChatMessageId == assistant.Id).ToList();
+        }
         await store.TouchConversationAsync(conversationId, userId, text.Length > TitleMaxLength ? text[..TitleMaxLength] : text, Now);
         return new AssistantReply(assistant, suggestions, degraded);
     }
