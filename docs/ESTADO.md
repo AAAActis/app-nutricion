@@ -73,9 +73,9 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | S6 | Seeds de demo: usuario de ejemplo con 2 semanas de peso, comidas y entrenamientos; 2 o 3 rutinas | Santi | Pendiente | — | S2 |
 | S7 | Rutinas y entrenamientos: endpoints, registro de lo realizado, tests | Santi | Pendiente | — | J2, S2 |
 | S8 | Progreso por ejercicio y comparación entrenamiento vs. ingesta (ajuste de calorías como estimación) | Santi | Pendiente | — | S7, L6 |
-| S9 | Asistente IA en C#: cliente del LLM detrás de interfaz, herramientas, contexto sin email ni nombre, guardrails, fallback | Santi | Pendiente | — | J8, L6 (mientras, datos simulados). Proveedor LLM pendiente |
-| S10 | Historial persistente de conversaciones y sugerencias aceptar/ignorar | Santi | Pendiente | — | S9 |
-| S11 | Tests del asistente con LLM falso y casos fijos | Santi | Pendiente | — | S9 |
+| S9 | Asistente IA en C#: cliente del LLM detrás de interfaz, herramientas, contexto sin email ni nombre, guardrails, fallback | Santi | En curso (rama `feature/asistente`) | — | J8, L6 (mientras, datos simulados). Proveedor LLM pendiente |
+| S10 | Historial persistente de conversaciones y sugerencias aceptar/ignorar | Santi | En curso (rama `feature/asistente`) | — | S9 |
+| S11 | Tests del asistente con LLM falso y casos fijos | Santi | En curso (rama `feature/asistente`) | — | S9 |
 | S12 | Pantallas: rutinas, progreso de entrenamiento y chat | Santi | Pendiente | — | J12, S7, S9 |
 | S13 | n8n (extra): workflow del asistente como alternativa y workflow de importación de Open Food Facts que genere el archivo. n8n nunca escribe en la base | Santi | Pendiente | — | S9. Solo si lo anterior está hecho |
 | S14 | Guion de la demo y video corto de respaldo | Santi | Pendiente | — | todo |
