@@ -286,7 +286,7 @@ public class ObjetivosEndpointsTests(ApiFactoryPerfil factory) : IClassFixture<A
     // Con otro objetivo activo (o con LoseFat y una fecha que sigue siendo de mayor), el cambio se acepta.
     [Theory]
     [InlineData("Maintain", null, "2008-10-23")]
-    [InlineData("LoseFat", 0.5, "2008-10-22")]   // cumple 18 hoy en Argentina
+    [InlineData("LoseFat", 0.5, "2008-10-21")]   // cumple 18 hoy en Argentina (21/10)
     public async Task PutProfile_CambioDeNacimientoSinConflicto_200(string goalType, double? ritmo, string birthDate)
     {
         var client = await UsuarioAsync();
