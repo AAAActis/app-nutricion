@@ -187,6 +187,26 @@ public class NutritionCalculatorCalculateTests
         Assert.Equal(0m, r.CarbsG);
     }
 
+    // Proteína con pesos altos (regla sin cambiar, a ratificar). Mujer de 75 años, 150 cm, 150 kg, sedentaria, LoseFat 1 kg:
+    // TMB = 1500 + 937,5 − 375 − 161 = 1901,5; gasto 2281,8; − 1100 = 1181,8 → piso 1200.
+    // Proteína 1,8 · 150 = 270 g (1080 kcal); grasa 300 kcal → 33,3 g; carbohidratos (1200 − 1080 − 300) / 4 < 0 → 0.
+    // Los macros suman 1080 + 299,7 = 1379,7 kcal: 180 más que el total.
+    [Fact]
+    public void Calculate_150KgLoseFatConPiso_LosMacrosSuperanLasKcal()
+    {
+        var input = new NutritionInput(BiologicalSex.Female, new DateOnly(1951, 10, 22), 150m, 150m,
+            ActivityLevel.Sedentary, GoalType.LoseFat, 1.0m, null, Hoy);
+
+        var r = NutritionCalculator.Calculate(input);
+
+        Assert.True(r.CalorieFloorApplied);
+        Assert.Equal(1200, r.Calories);
+        Assert.Equal(270.0m, r.ProteinG);
+        Assert.Equal(33.3m, r.FatG);
+        Assert.Equal(0m, r.CarbsG);
+        Assert.Equal(1379.7m, r.ProteinG * 4 + r.FatG * 9 + r.CarbsG * 4);
+    }
+
     // Mujer de 25 años, sedentaria, Maintain: 1614,3 → 1614.
     [Fact]
     public void Calculate_RedondeaLasKcalAEntero()
