@@ -145,7 +145,7 @@ Detalle en el `README.md`. Resumen:
 1. Docker + SDK de .NET 10 + `dotnet tool install --global dotnet-ef`.
 2. `git clone https://github.com/AAAActis/app-nutricion.git` y `git checkout develop`.
 3. Copiar `.env.example` como `.env` y completarlo. `docker compose up -d` → `docker compose ps` dice `healthy`.
-4. Cadena de conexión en user-secrets (comando en el README).
+4. Cadena de conexión en user-secrets (comando en el README). Desde J2, también la clave JWT (32 bytes o más; sin ella la API no arranca): `dotnet user-secrets set "Jwt:Key" "<clave>" --project backend/AppNutricion.Api`. En Docker: variable `Jwt__Key`.
 5. `dotnet ef database update --project backend/AppNutricion.DataAccess --startup-project backend/AppNutricion.Api` → crea las 19 tablas.
 6. `dotnet build backend/AppNutricion.slnx` y `dotnet run --project backend/AppNutricion.Api` (`http://localhost:5286`).
 7. Tests: `dotnet test backend/AppNutricion.slnx` (xUnit + Moq, en `backend/AppNutricion.Tests`, carpeta por módulo; no necesitan Postgres ni user-secrets). Swagger UI: `http://localhost:5286/swagger` (solo Development).
