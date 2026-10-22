@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using AppNutricion.BusinessLogic.Constants;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
@@ -12,7 +13,7 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
     private const int MinPasswordLength = 8;
     private const int MaxPasswordLength = 128;
 
-    public Task<RegisterResult> RegisterAsync(string? email, string? password, bool consentAccepted)
+    public async Task<RegisterResult> RegisterAsync(string? email, string? password, bool consentAccepted)
     {
         var normalizedEmail = NormalizeEmail(email);
         if (!IsValidEmail(normalizedEmail))
@@ -22,7 +23,18 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
         if (!consentAccepted)
             throw new ArgumentException("Hay que aceptar el consentimiento para registrarse.", nameof(consentAccepted));
 
-        return Task.FromResult(new RegisterResult(RegisterStatus.Registered, null));
+        var now = DateTime.UtcNow;   // Npgsql solo acepta DateTime UTC en timestamptz
+        var user = new User
+        {
+            Email = normalizedEmail,
+            ConsentAcceptedAt = now,
+            ConsentVersion = ConsentVersions.Current,
+            CreatedAt = now,
+        };
+        user.PasswordHash = passwordHasher.HashPassword(user, password);
+
+        await userStore.TryAddAsync(user);
+        return new RegisterResult(RegisterStatus.Registered, user);
     }
 
     public Task<LoginResult?> LoginAsync(string? email, string? password) =>
