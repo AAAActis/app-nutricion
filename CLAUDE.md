@@ -16,7 +16,7 @@ Leer antes de tocar código: `docs/ESTADO.md` (estado y quién hace qué) y `doc
 - La API es el único escritor de la base. n8n y el LLM nunca escriben en ella (D5).
 - Calorías y macros salen siempre de la tabla `Foods`, nunca del LLM. El `userId` sale del token JWT, nunca del cliente ni del LLM (D6).
 - Toda consulta de datos de usuario filtra por `UserId`. Un usuario jamás ve datos de otro.
-- `MealEntry` y `Goal` congelan sus valores al crearse: no se recalculan después.
+- `MealEntry` y `Goal` congelan sus valores al crearse y nunca se recalculan solos. Única excepción: editar la cantidad de un `MealEntry` re-congela los macros desde `Foods` si el alimento todavía existe; si no, se ajustan proporcionalmente (D19). Copiar a un día que ya tiene comidas de ese tipo → 409 (D20).
 - Al LLM no se le manda email ni nombre.
 - Fechas: `DateTime` siempre en UTC; los días del diario son `DateOnly` en la zona horaria del perfil.
 
