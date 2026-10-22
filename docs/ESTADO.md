@@ -1,7 +1,7 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-21 noche (Lauti, rama `feature/alimentos-seed-off`: L2 y L7 en revisión; D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
+> Última actualización: 2026-10-21 noche (Lauti, rama `feature/comidas`: L4 y L5 en revisión, **merge después de J2**. Antes, rama `feature/alimentos-seed-off`: L2 y L7 (PR #6); D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
 > Verificado por Santi en su máquina: el compose levanta y `app-nutricion-db` queda `healthy`. El estado de ramas y del `.gitignore` se confirma en el PR de `fix/gitignore-utf8`.
 
 ## Objetivo
@@ -50,8 +50,8 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | L1 | Módulo de alimentos: búsqueda por nombre sin tildes y con ranking, y porciones | Lauti | Hecha | PR #5 | S2 (tabla `Foods`) |
 | L2 | Carga del archivo `foods_seed`, idempotente (no duplica) | Lauti | Hecha | PR #6 | S3, L1 |
 | L3 | Búsqueda por código de barras | Lauti | Hecha | PR #5 | L1 |
-| L4 | Comidas: alta, edición, baja y lista; macros guardados al momento, tipo de comida, zona horaria | Lauti | En curso | `feature/comidas` | J2, S2, L1 |
-| L5 | Copiar comidas del día anterior, favoritos y recientes | Lauti | En curso | `feature/comidas` | L4 |
+| L4 | Comidas: alta, edición, baja y lista; macros guardados al momento, tipo de comida, zona horaria | Lauti | En revisión: `POST/PUT/DELETE/GET /api/meals` con `[Authorize]`, userId del claim `NameIdentifier`, macros congelados, edición proporcional, fecha entre hace 2 años y mañana (UTC), gramos 0 < g ≤ 5000. **Merge después de J2** | `feature/comidas` | J2, S2, L1 |
+| L5 | Copiar comidas del día anterior, favoritos y recientes | Lauti | En revisión: `POST /api/meals/copy`, `POST/DELETE /api/foods/{id}/favorite`, `GET /api/foods/favorites`, `GET /api/foods/recent`. **Merge después de J2** | `feature/comidas` | L4 |
 | L6 | Resumen diario vs. objetivos (con lo que falta) y resumen semanal con racha | Lauti | Pendiente | — | L4, J8 |
 | L7 | Respaldo con Open Food Facts (si no está en nuestra base, buscar en su API y guardar con su fuente) | Lauti | Hecha | PR #6 | L1. Verificar antes API, límites y licencia |
 | L8 | Alimentos personalizados por usuario, separados de los compartidos | Lauti | Pendiente | — | L1 |
@@ -119,6 +119,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 
 ## Bloqueos y riesgos
 
+- **`feature/comidas` (L4, L5) no se mergea hasta que J2 esté en `develop`:** sus controllers llevan `[Authorize]` y sin un esquema de autenticación configurado en `Program.cs` la API tira error en producción. Contrato acordado con Javi: userId en el claim `ClaimTypes.NameIdentifier` del JWT.
 - **Bloqueo hasta mergear `fix/gitignore-utf8`:** el `.gitignore` estaba en UTF-16 y no ignoraba nada; `bin/` y `obj/` quedaron commiteados. Nadie crea ramas hasta que esté mergeado en `develop`.
 - Riesgo: tres personas hacen el trabajo planeado para cinco, con un solo margen de integración (lunes 26).
 - Riesgo: lo que no esté mergeado el viernes 23 a las 22:00 no entra.
@@ -148,7 +149,7 @@ Detalle en el `README.md`. Resumen:
 4. Cadena de conexión en user-secrets (comando en el README).
 5. `dotnet ef database update --project backend/AppNutricion.DataAccess --startup-project backend/AppNutricion.Api` → crea las 19 tablas.
 6. `dotnet build backend/AppNutricion.slnx` y `dotnet run --project backend/AppNutricion.Api` (`http://localhost:5286`).
-7. Tests: `dotnet test backend/AppNutricion.slnx` (xUnit + Moq, en `backend/AppNutricion.Tests`, carpeta por módulo; no necesitan Postgres ni user-secrets). Swagger UI: `http://localhost:5286/swagger` (solo Development).
+7. Tests: `dotnet test backend/AppNutricion.slnx` (xUnit + Moq, en `backend/AppNutricion.Tests`, carpeta por módulo; no necesitan Postgres ni user-secrets). Los Stores se prueban con SQLite en memoria (`Infraestructura/BaseSqlite`); los controllers con `[Authorize]` con `ApiFactoryAutenticada` (header `X-Test-UserId` en vez de JWT). Swagger UI: `http://localhost:5286/swagger` (solo Development).
 
 ## PRÓXIMA SESIÓN · Santi
 
