@@ -1,3 +1,4 @@
+using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Auth;
 using AppNutricion.Presentation.Input;
@@ -31,6 +32,10 @@ public class ProfileController(IProfileManager profileManager, ICurrentUser curr
             var data = new ProfileData(input.BirthDate, input.BiologicalSex, input.HeightCm, input.ActivityLevel, input.TimeZoneId);
             var result = await profileManager.SaveAsync(currentUser.RequireUserId(), data);
             return ProfileOutput.From(result.Profile);
+        }
+        catch (ConflictException ex)
+        {
+            return this.ConflictProblemFor(ex);
         }
         catch (ArgumentException ex) when (ex.ParamName is not null)
         {

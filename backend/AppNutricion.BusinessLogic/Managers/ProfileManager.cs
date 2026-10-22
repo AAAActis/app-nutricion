@@ -1,5 +1,6 @@
 using AppNutricion.BusinessLogic.Calculators;
 using AppNutricion.BusinessLogic.Constants;
+using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Validators;
 using AppNutricion.DataAccess.Interfaces;
@@ -8,8 +9,10 @@ using AppNutricion.Entities.Enums;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class ProfileManager(IProfileStore profileStore, TimeProvider timeProvider) : IProfileManager
+public class ProfileManager(IProfileStore profileStore, IGoalStore goalStore, TimeProvider timeProvider) : IProfileManager
 {
+    public const string ChangeGoalFirstMessage = "Cambiá primero tu objetivo.";
+
     public Task<Profile?> GetAsync(int userId) => profileStore.GetByUserIdAsync(userId);
 
     public async Task<SaveProfileResult> SaveAsync(int userId, ProfileData data)
@@ -30,6 +33,11 @@ public class ProfileManager(IProfileStore profileStore, TimeProvider timeProvide
 
         if (!EnumInput.TryParse<ActivityLevel>(data.ActivityLevel, out var activity))
             throw new ArgumentException($"El nivel de actividad tiene que ser uno de: {string.Join(", ", Enum.GetNames<ActivityLevel>())}.", "activityLevel");
+
+        // Un menor no puede tener LoseFat: si la fecha nueva lo deja como menor con un LoseFat activo, primero
+        // tiene que cambiar el objetivo.
+        if (age < NutritionDefaults.MinAgeForLoseFat && (await goalStore.GetActiveAsync(userId))?.GoalType == GoalType.LoseFat)
+            throw new ConflictException(ChangeGoalFirstMessage);
 
         var profile = new Profile
         {

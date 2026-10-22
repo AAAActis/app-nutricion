@@ -20,10 +20,11 @@ public class GoalManager(IGoalStore goalStore, IProfileStore profileStore, IBody
 
         if (!EnumInput.TryParse<GoalType>(goalType, out var type))
             throw new ArgumentException($"El objetivo tiene que ser uno de: {string.Join(", ", Enum.GetNames<GoalType>())}.", "goalType");
+        if (type == GoalType.LoseFat && NutritionCalculator.AgeAt(profile.BirthDate, today) < NutritionDefaults.MinAgeForLoseFat)
+            throw new ArgumentException($"Menores de {NutritionDefaults.MinAgeForLoseFat} años no pueden elegir bajar de peso.", "goalType");
         var rate = ValidateRate(type, weeklyRateKg);
         ValidateTarget(type, targetWeightKg, weight);
 
-        // Menores de 18 con LoseFat: el motor lanza ArgumentException("goalType").
         var result = NutritionCalculator.Calculate(InputFor(profile, weight, type, rate, targetWeightKg, today));
 
         // Se congelan kcal y macros, y WeeklyRateKg guarda el ritmo aplicado (con el que salieron esas kcal).

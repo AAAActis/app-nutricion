@@ -84,10 +84,8 @@ public static class NutritionCalculator
 
     public static NutritionResult Calculate(NutritionInput input)
     {
+        // No rechaza a menores con LoseFat: lo controla GoalManager al crear, así el recálculo de GET /targets no lanza.
         var age = AgeAt(input.BirthDate, input.Today);
-        if (input.GoalType == GoalType.LoseFat && age < NutritionDefaults.MinAgeForLoseFat)
-            throw new ArgumentException($"Menores de {NutritionDefaults.MinAgeForLoseFat} años no pueden elegir bajar de peso.", "goalType");
-
         var tdee = Tdee(Bmr(input.Sex, input.WeightKg, input.HeightCm, age), input.ActivityLevel);
 
         var maxRate = MaxWeeklyRateKg(input.GoalType, input.WeightKg);
