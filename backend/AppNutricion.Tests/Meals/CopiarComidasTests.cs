@@ -21,7 +21,7 @@ public class CopiarComidasTests
     {
         _store.Setup(s => s.AddAsync(It.IsAny<IEnumerable<MealEntry>>()))
             .Callback((IEnumerable<MealEntry> e) => _agregadas.AddRange(e));
-        _manager = new MealEntryManager(_store.Object, Mock.Of<IFoodManager>());
+        _manager = new MealEntryManager(_store.Object, Mock.Of<IFoodManager>(), Mock.Of<IProfileStore>(), TimeProvider.System);
     }
 
     private static MealEntry Original(int id, MealType tipo, int? foodId) => new()
