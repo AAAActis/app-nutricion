@@ -28,6 +28,7 @@ public class MealEntryStore(ApplicationDbContext context) : IMealEntryStore
 
     public async Task<bool> UpdateAsync(MealEntry entry, int userId) =>
         await OfUser(userId).Where(m => m.Id == entry.Id).ExecuteUpdateAsync(s => s
+            .SetProperty(m => m.ItemName, entry.ItemName)
             .SetProperty(m => m.Date, entry.Date)
             .SetProperty(m => m.MealType, entry.MealType)
             .SetProperty(m => m.QuantityGrams, entry.QuantityGrams)

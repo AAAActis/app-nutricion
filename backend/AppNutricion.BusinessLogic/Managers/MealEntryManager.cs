@@ -20,21 +20,15 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
         if (food is null) return null;
         var grams = ValidGrams(foodManager.ConvertToGrams(food, quantity, isUnits));
 
-        var name = string.IsNullOrWhiteSpace(food.Brand) ? food.Name : $"{food.Name} ({food.Brand})";
         var entry = new MealEntry
         {
             UserId = userId,
             FoodId = food.Id,
-            ItemName = name.Length > ItemNameMaxLength ? name[..ItemNameMaxLength] : name,
             Date = date,
             MealType = mealType,
-            QuantityGrams = grams,
-            SavedCalories = Math.Round(grams * food.CaloriesPer100g / 100, 2),
-            SavedProtein = Math.Round(grams * food.ProteinPer100g / 100, 2),
-            SavedCarbs = Math.Round(grams * food.CarbsPer100g / 100, 2),
-            SavedFat = Math.Round(grams * food.FatPer100g / 100, 2),
             CreatedAt = DateTime.UtcNow,
         };
+        Freeze(entry, food, grams);
         await store.AddAsync([entry]);
         return entry;
     }
@@ -58,14 +52,25 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
             throw new ArgumentException("Para cambiar entre gramos y unidades hay que mandar la cantidad.", nameof(isUnits));
         if (quantity is { } amount)
         {
-            var grams = ValidGrams(isUnits == true ? await UnitsToGramsAsync(entry, amount, userId) : amount);
-            // Proporcional a lo guardado: los macros congelados nunca se vuelven a leer de Foods.
-            var oldGrams = entry.QuantityGrams;
-            entry.SavedCalories = Math.Round(entry.SavedCalories * grams / oldGrams, 2);
-            entry.SavedProtein = Math.Round(entry.SavedProtein * grams / oldGrams, 2);
-            entry.SavedCarbs = Math.Round(entry.SavedCarbs * grams / oldGrams, 2);
-            entry.SavedFat = Math.Round(entry.SavedFat * grams / oldGrams, 2);
-            entry.QuantityGrams = grams;
+            // Editar la cantidad es una acción nueva del usuario: "re-congela" los valores desde Foods (D19),
+            // así no se arrastra el redondeo de lo guardado (1 g → 5000 g). Sin el alimento, proporcional.
+            var food = entry.FoodId is { } foodId ? await foodManager.GetByIdAsync(foodId, userId) : null;
+            if (isUnits == true && food is null)
+                throw new ArgumentException("El alimento ya no existe: editá la cantidad en gramos.", nameof(quantity));
+            var grams = ValidGrams(isUnits == true ? foodManager.ConvertToGrams(food!, amount, true) : amount);
+            if (food is not null)
+            {
+                Freeze(entry, food, grams);
+            }
+            else
+            {
+                var oldGrams = entry.QuantityGrams;
+                entry.SavedCalories = Math.Round(entry.SavedCalories * grams / oldGrams, 2);
+                entry.SavedProtein = Math.Round(entry.SavedProtein * grams / oldGrams, 2);
+                entry.SavedCarbs = Math.Round(entry.SavedCarbs * grams / oldGrams, 2);
+                entry.SavedFat = Math.Round(entry.SavedFat * grams / oldGrams, 2);
+                entry.QuantityGrams = grams;
+            }
         }
 
         return await store.UpdateAsync(entry, userId) ? entry : null;
@@ -105,12 +110,16 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
         return copies;
     }
 
-    // Solo para pasar unidades a gramos: la porción sale del alimento, los macros no.
-    private async Task<decimal> UnitsToGramsAsync(MealEntry entry, decimal quantity, int userId)
+    // Congela nombre, gramos y macros desde Foods (D6): después no se recalculan solos.
+    private static void Freeze(MealEntry entry, Food food, decimal grams)
     {
-        var food = entry.FoodId is { } foodId ? await foodManager.GetByIdAsync(foodId, userId) : null;
-        if (food is null) throw new ArgumentException("El alimento ya no existe: editá la cantidad en gramos.", nameof(quantity));
-        return foodManager.ConvertToGrams(food, quantity, true);
+        var name = string.IsNullOrWhiteSpace(food.Brand) ? food.Name : $"{food.Name} ({food.Brand})";
+        entry.ItemName = name.Length > ItemNameMaxLength ? name[..ItemNameMaxLength] : name;
+        entry.QuantityGrams = grams;
+        entry.SavedCalories = Math.Round(grams * food.CaloriesPer100g / 100, 2);
+        entry.SavedProtein = Math.Round(grams * food.ProteinPer100g / 100, 2);
+        entry.SavedCarbs = Math.Round(grams * food.CarbsPer100g / 100, 2);
+        entry.SavedFat = Math.Round(grams * food.FatPer100g / 100, 2);
     }
 
     private static decimal ValidGrams(decimal grams)
