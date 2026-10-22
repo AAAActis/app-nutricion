@@ -123,6 +123,34 @@ public class AuthManagerRegisterTests
     }
 
     [Fact]
+    public async Task RegisterAsync_EmailYaRegistrado_DevuelveDuplicadoSinGuardar()
+    {
+        string? buscado = null;
+        _store.Setup(s => s.GetByEmailAsync(It.IsAny<string>()))
+            .Callback<string>(e => buscado = e)
+            .ReturnsAsync(new User { Id = 1, Email = "ana@mail.com" });
+
+        var resultado = await _manager.RegisterAsync(" ANA@Mail.com ", PasswordValida, true);
+
+        Assert.Equal("ana@mail.com", buscado);
+        Assert.Equal(RegisterStatus.EmailAlreadyRegistered, resultado.Status);
+        Assert.Null(resultado.User);
+        _store.Verify(s => s.TryAddAsync(It.IsAny<User>()), Times.Never);
+    }
+
+    // Dos registros simultáneos: los dos pasan el GetByEmail y el índice único de Postgres rechaza al segundo.
+    [Fact]
+    public async Task RegisterAsync_StoreRechazaPorIndiceUnico_DevuelveDuplicado()
+    {
+        _store.Setup(s => s.TryAddAsync(It.IsAny<User>())).ReturnsAsync(false);
+
+        var resultado = await _manager.RegisterAsync("ana@mail.com", PasswordValida, true);
+
+        Assert.Equal(RegisterStatus.EmailAlreadyRegistered, resultado.Status);
+        Assert.Null(resultado.User);
+    }
+
+    [Fact]
     public async Task RegisterAsync_SinConsentimiento_LanzaArgumentExceptionDeConsentAccepted()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() => _manager.RegisterAsync("ana@mail.com", PasswordValida, false));
