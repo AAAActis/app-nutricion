@@ -83,6 +83,19 @@ public class AuthManagerLoginTests
         _tokens.Verify(t => t.CreateFor(It.IsAny<User>()), Times.Never);
     }
 
+    // Más de 128 caracteres nunca puede ser una contraseña registrada: no se gasta un hash en ella
+    // (con contraseñas enormes el hasher sería un vector de DoS).
+    [Fact]
+    public async Task LoginAsync_PasswordDeMasDe128_DevuelveNullSinLlamarAlHasher()
+    {
+        HasherDevuelve(PasswordVerificationResult.Success);
+
+        var resultado = await _manager.LoginAsync("ana@mail.com", new string('x', 129));
+
+        Assert.Null(resultado);
+        Assert.Equal(0, _verificaciones);
+    }
+
     [Theory]
     [InlineData(null, Password)]
     [InlineData("ana@mail.com", null)]
