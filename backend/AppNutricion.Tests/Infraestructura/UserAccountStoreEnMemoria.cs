@@ -23,4 +23,15 @@ public sealed class UserAccountStoreEnMemoria : IUserAccountStore
         user.Id = Interlocked.Increment(ref _ultimoId);
         return Task.FromResult(true);
     }
+
+    public Task DeleteWithDataAsync(int userId)
+    {
+        foreach (var (email, _) in _porEmail.Where(p => p.Value.Id == userId).ToList())
+            _porEmail.TryRemove(email, out _);
+        return Task.CompletedTask;
+    }
+
+    // Para los tests que arman el token a mano (UsuarioDePrueba): el usuario del "sub" tiene que existir.
+    public void Agregar(int id) =>
+        _porEmail[$"u{id}@test"] = new User { Id = id, Email = $"u{id}@test", PasswordHash = "x", ConsentVersion = "1" };
 }

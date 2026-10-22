@@ -31,6 +31,9 @@ public static class BusinessLogicRegistration
         services.AddScoped<IBodyMetricManager, BodyMetricManager>();
         services.AddScoped<IGoalManager, GoalManager>();
 
+        // Cuenta: borrado y exportación (J5).
+        services.AddScoped<IAccountManager, AccountManager>();
+
         // Rutinas y entrenamientos (S7).
         services.AddScoped<IRoutineManager, RoutineManager>();
         services.AddScoped<IWorkoutManager, WorkoutManager>();
