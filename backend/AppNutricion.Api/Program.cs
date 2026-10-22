@@ -6,6 +6,7 @@ using AppNutricion.BusinessLogic.Options;
 using AppNutricion.BusinessLogic.Registrations;
 using AppNutricion.DataAccess.Registrations;
 using AppNutricion.Presentation.Auth;
+using AppNutricion.Presentation.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -60,6 +61,7 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+builder.Services.AddAppRateLimiting(builder.Configuration);
 
 // CORS: por defecto (lista vacía) solo mismo origen. Para habilitar otro frontend se agregan
 // sus orígenes en Cors:AllowedOrigins del appsettings del entorno o por variable de entorno.
@@ -85,6 +87,8 @@ app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+// Después de la autenticación: la política del chat parte por usuario ("sub").
+app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
 
