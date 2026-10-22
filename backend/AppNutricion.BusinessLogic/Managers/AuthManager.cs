@@ -30,7 +30,7 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
         if (await userStore.GetByEmailAsync(normalizedEmail) is not null)
             return new RegisterResult(RegisterStatus.EmailAlreadyRegistered, null);
 
-        var now = DateTime.UtcNow;   // Npgsql solo acepta DateTime UTC en timestamptz
+        var now = timeProvider.GetUtcNow().UtcDateTime;   // Npgsql solo acepta DateTime UTC en timestamptz
         var user = new User
         {
             Email = normalizedEmail,
