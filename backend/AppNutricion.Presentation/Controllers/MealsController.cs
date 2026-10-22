@@ -1,3 +1,4 @@
+using System.Text;
 using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Auth;
@@ -58,6 +59,22 @@ public class MealsController(IMealEntryManager mealManager, ICurrentUser current
         {
             var entries = await mealManager.ListAsync(userId, date);
             return entries.Select(MealEntryOutput.From).ToList();
+        }
+        catch (ArgumentException ex) when (ex.ParamName is not null)
+        {
+            return this.ValidationProblemFor(ex);
+        }
+    }
+
+    // Con BOM para que Excel lea bien las tildes.
+    [HttpGet("export")]
+    public async Task<IActionResult> Export([FromQuery] DateOnly? from, [FromQuery] DateOnly? to)
+    {
+        var userId = currentUser.RequireUserId();
+        try
+        {
+            var csv = await mealManager.ExportCsvAsync(userId, from, to);
+            return File(Encoding.UTF8.GetBytes("﻿" + csv), "text/csv; charset=utf-8", $"comidas_{from:yyyy-MM-dd}_{to:yyyy-MM-dd}.csv");
         }
         catch (ArgumentException ex) when (ex.ParamName is not null)
         {
