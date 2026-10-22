@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Enums;
 using AppNutricion.Tests.Infraestructura;
@@ -250,6 +251,20 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Empty((await response.Content.ReadFromJsonAsync<JsonElement>()).EnumerateArray());
         _factory.MealManager.Verify(m => m.CopyAsync(UserId, Dia.AddDays(-1), Dia, null), Times.Once);
+    }
+
+    [Fact]
+    public async Task Copy_DiaDestinoConComidas_Devuelve409ProblemDetailsConElMensaje()
+    {
+        _factory.MealManager.Setup(m => m.CopyAsync(UserId, Dia.AddDays(-1), Dia, null))
+            .ThrowsAsync(new ConflictException("El día destino ya tiene comidas cargadas"));
+
+        var response = await _factory.CrearCliente(UserId).PostAsJsonAsync("/api/meals/copy",
+            new { fromDate = "2026-10-19", toDate = "2026-10-20" });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("El día destino ya tiene comidas cargadas", (await UsuarioDePrueba.JsonAsync(response)).GetProperty("title").GetString());
     }
 
     [Fact]
