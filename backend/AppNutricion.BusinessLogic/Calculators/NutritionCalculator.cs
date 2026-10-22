@@ -1,3 +1,4 @@
+using AppNutricion.BusinessLogic.Constants;
 using AppNutricion.Entities.Enums;
 
 namespace AppNutricion.BusinessLogic.Calculators;
@@ -31,11 +32,29 @@ public record NutritionResult(
 // Motor de macros (J8): funciones puras, sin base ni HTTP. Constantes en NutritionDefaults.
 public static class NutritionCalculator
 {
-    public static int AgeAt(DateOnly birthDate, DateOnly on) => 0;
+    public static int AgeAt(DateOnly birthDate, DateOnly on)
+    {
+        var age = on.Year - birthDate.Year;
+        // Se compara mes y día: un nacido el 29/2 cumple el 1/3 en los años no bisiestos.
+        if ((on.Month, on.Day).CompareTo((birthDate.Month, birthDate.Day)) < 0) age--;
+        return age;
+    }
 
-    public static decimal Bmr(BiologicalSex sex, decimal weightKg, decimal heightCm, int age) => 0;
+    public static decimal Bmr(BiologicalSex sex, decimal weightKg, decimal heightCm, int age) =>
+        NutritionDefaults.BmrWeightFactor * weightKg
+        + NutritionDefaults.BmrHeightFactor * heightCm
+        - NutritionDefaults.BmrAgeFactor * age
+        + (sex == BiologicalSex.Male ? NutritionDefaults.BmrMaleConstant : NutritionDefaults.BmrFemaleConstant);
 
-    public static decimal Tdee(decimal bmr, ActivityLevel activityLevel) => 0;
+    public static decimal Tdee(decimal bmr, ActivityLevel activityLevel) => bmr * activityLevel switch
+    {
+        ActivityLevel.Sedentary => NutritionDefaults.ActivitySedentary,
+        ActivityLevel.Light => NutritionDefaults.ActivityLight,
+        ActivityLevel.Moderate => NutritionDefaults.ActivityModerate,
+        ActivityLevel.Active => NutritionDefaults.ActivityActive,
+        ActivityLevel.VeryActive => NutritionDefaults.ActivityVeryActive,
+        _ => throw new ArgumentOutOfRangeException(nameof(activityLevel)),
+    };
 
     public static decimal MaxWeeklyRateKg(GoalType goalType, decimal weightKg) => 0;
 
