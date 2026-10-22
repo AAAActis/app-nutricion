@@ -22,6 +22,11 @@ public static class BusinessLogicRegistration
         services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddSingleton<IAccessTokenService, JwtAccessTokenService>();
         services.AddScoped<IAuthManager, AuthManager>();
+
+        // Perfil, peso y objetivos (J7/J8).
+        services.AddScoped<IProfileManager, ProfileManager>();
+        services.AddScoped<IBodyMetricManager, BodyMetricManager>();
+        services.AddScoped<IGoalManager, GoalManager>();
         return services;
     }
 }
