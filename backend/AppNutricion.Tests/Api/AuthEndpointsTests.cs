@@ -207,6 +207,15 @@ public class AuthEndpointsTests(ApiFactoryAuth factory) : IClassFixture<ApiFacto
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
+    // Token bien firmado pero de un usuario que ya no existe (por ejemplo, cuenta borrada): no es una sesión válida.
+    [Fact]
+    public async Task Me_TokenDeUsuarioInexistente_401()
+    {
+        var response = await GetMeAsync(TokenPara(int.MaxValue));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     public static TheoryData<string, string, string> TokensInvalidos() => new()
     {
         { "otra-clave-de-al-menos-32-bytes-xxxxxx", "AppNutricion.Api", "AppNutricion.Clientes" },
