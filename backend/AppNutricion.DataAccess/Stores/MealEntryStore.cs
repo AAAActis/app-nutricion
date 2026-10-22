@@ -49,6 +49,12 @@ public class MealEntryStore(ApplicationDbContext context) : IMealEntryStore
             })
             .ToDictionaryAsync(x => x.Key, x => x.Totals);
 
+    public Task<Dictionary<DateOnly, MealTotals>> SumByDateAsync(int userId, DateOnly from, DateOnly to) =>
+        throw new NotImplementedException();
+
+    public Task<List<DateOnly>> GetLoggedDatesAsync(int userId, DateOnly upTo, int max) =>
+        throw new NotImplementedException();
+
     private IQueryable<MealEntry> OfUser(int userId) =>
         context.MealEntries.AsNoTracking().Where(m => m.UserId == userId);
 }

@@ -53,4 +53,38 @@ public sealed class ResumenStoreTests : IDisposable
 
         Assert.Empty(await NuevoStore().SumByMealTypeAsync(Yo, Dia));
     }
+
+    [Fact]
+    public async Task SumByDate_UnGrupoPorDiaConComidasDelRangoYSoloDelUsuario()
+    {
+        await Guardar(Yo, MealType.Lunch, 100, Dia.AddDays(-6));
+        await Guardar(Yo, MealType.Dinner, 50.5m, Dia.AddDays(-6), p: 1, c: 2, g: 3);
+        await Guardar(Yo, MealType.Lunch, 200, Dia);
+        await Guardar(Yo, MealType.Lunch, 999, Dia.AddDays(-7));   // fuera del rango
+        await Guardar(Yo, MealType.Lunch, 999, Dia.AddDays(1));
+        await Guardar(Otro, MealType.Lunch, 999, Dia.AddDays(-3));
+
+        var totales = await NuevoStore().SumByDateAsync(Yo, Dia.AddDays(-6), Dia);
+
+        Assert.Equal(2, totales.Count);
+        Assert.Equal(new MealTotals(150.5m, 11, 22, 8, 2), totales[Dia.AddDays(-6)]);
+        Assert.Equal(new MealTotals(200, 10, 20, 5, 1), totales[Dia]);
+    }
+
+    [Fact]
+    public async Task GetLoggedDates_DistintasDescendentesHastaUpToSoloDelUsuarioYConTope()
+    {
+        await Guardar(Yo, MealType.Lunch, 1, Dia.AddDays(-5));
+        await Guardar(Yo, MealType.Lunch, 1, Dia);
+        await Guardar(Yo, MealType.Dinner, 1, Dia);
+        await Guardar(Yo, MealType.Lunch, 1, Dia.AddDays(-1));
+        await Guardar(Yo, MealType.Lunch, 1, Dia.AddDays(-9));
+        await Guardar(Yo, MealType.Lunch, 1, Dia.AddDays(1));      // después de upTo
+        await Guardar(Otro, MealType.Lunch, 1, Dia.AddDays(-2));
+
+        var store = NuevoStore();
+
+        Assert.Equal([Dia, Dia.AddDays(-1), Dia.AddDays(-5), Dia.AddDays(-9)], await store.GetLoggedDatesAsync(Yo, Dia, 366));
+        Assert.Equal([Dia, Dia.AddDays(-1)], await NuevoStore().GetLoggedDatesAsync(Yo, Dia, 2));
+    }
 }

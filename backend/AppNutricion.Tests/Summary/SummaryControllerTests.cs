@@ -19,7 +19,7 @@ public class SummaryControllerTests : IClassFixture<ApiFactoryAutenticada>
         _factory.SummaryManager.Reset();
     }
 
-    public static TheoryData<string> Endpoints => new() { "/api/summary/daily" };
+    public static TheoryData<string> Endpoints => new() { "/api/summary/daily", "/api/summary/weekly" };
 
     [Theory]
     [MemberData(nameof(Endpoints))]
@@ -82,5 +82,39 @@ public class SummaryControllerTests : IClassFixture<ApiFactoryAutenticada>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal(["date"], await UsuarioDePrueba.CamposConErrorAsync(response));
+    }
+
+    [Fact]
+    public async Task Weekly_UserIdDelTokenYFormaDeLaRespuesta()
+    {
+        _factory.SummaryManager.Setup(m => m.GetWeeklyAsync(UserId, Dia)).ReturnsAsync(new WeeklySummary(
+            [new(Dia.AddDays(-1), new(0, 0, 0, 0), false), new(Dia, new(1800, 100, 200, 60), true)],
+            new(1800, 100, 200, 60), 1, 2000, 4));
+
+        var response = await _factory.CrearCliente(UserId).GetAsync("/api/summary/weekly?endDate=2026-10-20");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await UsuarioDePrueba.JsonAsync(response);
+        var dias = json.GetProperty("days").EnumerateArray().ToList();
+        Assert.Equal("2026-10-19", dias[0].GetProperty("date").GetString());
+        Assert.False(dias[0].GetProperty("logged").GetBoolean());
+        Assert.Equal(1800, dias[1].GetProperty("calories").GetDecimal());
+        Assert.Equal(60, dias[1].GetProperty("fatG").GetDecimal());
+        Assert.Equal(200, json.GetProperty("averages").GetProperty("carbsG").GetDecimal());
+        Assert.Equal(1, json.GetProperty("daysLogged").GetInt32());
+        Assert.Equal(2000, json.GetProperty("targetCalories").GetDecimal());
+        Assert.Equal(4, json.GetProperty("streak").GetInt32());
+    }
+
+    [Fact]
+    public async Task Weekly_EndDateFueraDeRango_Devuelve400ConElCampo()
+    {
+        _factory.SummaryManager.Setup(m => m.GetWeeklyAsync(UserId, It.IsAny<DateOnly?>()))
+            .ThrowsAsync(new ArgumentException("La fecha no puede ser futura ni de hace más de 2 años.", "endDate"));
+
+        var response = await _factory.CrearCliente(UserId).GetAsync("/api/summary/weekly?endDate=2030-01-01");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(["endDate"], await UsuarioDePrueba.CamposConErrorAsync(response));
     }
 }

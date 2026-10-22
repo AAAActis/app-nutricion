@@ -28,6 +28,8 @@ public class SummaryManager(IMealEntryStore store, IGoalManager goalManager, IUs
         return new DailySummary(day, Round(consumed), byMealType, Round(targets), remaining, progress);
     }
 
+    public Task<WeeklySummary> GetWeeklyAsync(int userId, DateOnly? endDate) => throw new NotImplementedException();
+
     private async Task<DateOnly> DayAsync(int userId, DateOnly? date, string paramName)
     {
         if (date is not { } day) return await userToday.GetAsync(userId);
