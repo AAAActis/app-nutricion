@@ -1,4 +1,7 @@
 using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using AppNutricion.Entities.Entities;
 using AppNutricion.Tests.Infraestructura;
 using Moq;
 
@@ -25,5 +28,112 @@ public class FoodsControllerTests : IClassFixture<ApiFactoryAutenticada>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         Assert.Contains("entre 8 y 14", await response.Content.ReadAsStringAsync());
+    }
+
+    private const int UserId = 7;
+
+    public static TheoryData<string, string> EndpointsConAuth => new()
+    {
+        { "POST", "/api/foods/3/favorite" },
+        { "DELETE", "/api/foods/3/favorite" },
+        { "GET", "/api/foods/favorites" },
+        { "GET", "/api/foods/recent" },
+    };
+
+    [Theory]
+    [MemberData(nameof(EndpointsConAuth))]
+    public async Task EndpointsNuevos_SinHeader_Devuelven401(string metodo, string ruta)
+    {
+        var response = await _factory.CrearCliente(null).SendAsync(new HttpRequestMessage(new HttpMethod(metodo), ruta));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Empty(_factory.FoodManager.Invocations);
+    }
+
+    [Theory]
+    [MemberData(nameof(EndpointsConAuth))]
+    public async Task EndpointsNuevos_UserIdQueNoEsEntero_Devuelven401(string metodo, string ruta)
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.Header, "abc");
+
+        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(metodo), ruta));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task BusquedaYDetalle_SiguenPublicos()
+    {
+        _factory.FoodManager.Setup(m => m.SearchAsync("pan", null, null)).ReturnsAsync([]);
+        var client = _factory.CrearCliente(null);
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/foods/search?q=pan")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/foods/3")).StatusCode);
+        _factory.FoodManager.Verify(m => m.GetByIdAsync(3, null), Times.Once);
+    }
+
+    [Fact]
+    public async Task PostFavorite_Visible_Devuelve204ConElUserIdDelClaim()
+    {
+        _factory.FoodManager.Setup(m => m.AddFavoriteAsync(3, UserId)).ReturnsAsync(true);
+
+        var response = await _factory.CrearCliente(UserId).PostAsync("/api/foods/3/favorite", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostFavorite_NoVisible_Devuelve404ProblemDetails()
+    {
+        var response = await _factory.CrearCliente(UserId).PostAsync("/api/foods/3/favorite", null);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        _factory.FoodManager.Verify(m => m.AddFavoriteAsync(3, UserId), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteFavorite_Visible_Devuelve204ConElUserIdDelClaim()
+    {
+        _factory.FoodManager.Setup(m => m.RemoveFavoriteAsync(3, UserId)).ReturnsAsync(true);
+
+        var response = await _factory.CrearCliente(UserId).DeleteAsync("/api/foods/3/favorite");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteFavorite_NoVisible_Devuelve404ProblemDetails()
+    {
+        var response = await _factory.CrearCliente(UserId).DeleteAsync("/api/foods/3/favorite");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        _factory.FoodManager.Verify(m => m.RemoveFavoriteAsync(3, UserId), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetFavorites_DevuelveLosDelUsuarioDelClaim()
+    {
+        _factory.FoodManager.Setup(m => m.GetFavoritesAsync(UserId)).ReturnsAsync([new Food { Id = 3, Name = "Pan" }]);
+
+        var response = await _factory.CrearCliente(UserId).GetAsync("/api/foods/favorites");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("Pan", Assert.Single(json.EnumerateArray()).GetProperty("name").GetString());
+    }
+
+    [Fact]
+    public async Task GetRecent_PasaElLimiteYElUserIdDelClaim()
+    {
+        _factory.FoodManager.Setup(m => m.GetRecentAsync(UserId, 5)).ReturnsAsync([new Food { Id = 3, Name = "Pan" }]);
+
+        var response = await _factory.CrearCliente(UserId).GetAsync("/api/foods/recent?limit=5");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(3, Assert.Single(json.EnumerateArray()).GetProperty("id").GetInt32());
     }
 }

@@ -38,11 +38,13 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
         { "PUT", "/api/meals/5" },
         { "DELETE", "/api/meals/5" },
         { "GET", "/api/meals?date=2026-10-20" },
+        { "POST", "/api/meals/copy" },
     };
 
     private static HttpRequestMessage Pedido(string metodo, string ruta) => new(new HttpMethod(metodo), ruta)
     {
-        Content = metodo is "POST" or "PUT" ? JsonContent.Create(Alta()) : null,
+        Content = ruta.EndsWith("/copy") ? JsonContent.Create(new { fromDate = "2026-10-19", toDate = "2026-10-20" })
+            : metodo is "POST" or "PUT" ? JsonContent.Create(Alta()) : null,
     };
 
     [Theory]
@@ -196,6 +198,44 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
         _factory.MealManager.Setup(m => m.ListAsync(UserId, null)).ThrowsAsync(new ArgumentException("Falta la fecha"));
 
         var response = await _factory.CrearCliente(UserId).GetAsync("/api/meals");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Copy_PasaFechasTipoYElUserIdDelClaim_Devuelve200ConLasCopias()
+    {
+        _factory.MealManager.Setup(m => m.CopyAsync(UserId, Dia.AddDays(-1), Dia, MealType.Lunch)).ReturnsAsync([_entrada]);
+
+        var response = await _factory.CrearCliente(UserId).PostAsJsonAsync("/api/meals/copy",
+            new { fromDate = "2026-10-19", toDate = "2026-10-20", mealType = "Lunch", userId = 99 });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(5, Assert.Single(json.EnumerateArray()).GetProperty("id").GetInt32());
+    }
+
+    [Fact]
+    public async Task Copy_SinMealType_PasaNull()
+    {
+        _factory.MealManager.Setup(m => m.CopyAsync(UserId, Dia.AddDays(-1), Dia, null)).ReturnsAsync([]);
+
+        var response = await _factory.CrearCliente(UserId).PostAsJsonAsync("/api/meals/copy",
+            new { fromDate = "2026-10-19", toDate = "2026-10-20" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty((await response.Content.ReadFromJsonAsync<JsonElement>()).EnumerateArray());
+        _factory.MealManager.Verify(m => m.CopyAsync(UserId, Dia.AddDays(-1), Dia, null), Times.Once);
+    }
+
+    [Fact]
+    public async Task Copy_ManagerLanzaArgumentException_Devuelve400ProblemDetails()
+    {
+        _factory.MealManager.Setup(m => m.CopyAsync(UserId, Dia, Dia, null)).ThrowsAsync(new ArgumentException("mismo día"));
+
+        var response = await _factory.CrearCliente(UserId).PostAsJsonAsync("/api/meals/copy",
+            new { fromDate = "2026-10-20", toDate = "2026-10-20" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
