@@ -24,6 +24,16 @@ public class MeController(IAuthManager authManager, IAccountManager accountManag
         return UserOutput.From(user);
     }
 
+    // Todos los datos del usuario (Ley 25.326, derecho de acceso). Sin hash ni refresh tokens.
+    [HttpGet("export")]
+    public async Task<ActionResult<ExportOutput>> Export()
+    {
+        var data = await accountManager.ExportAsync(currentUser.RequireUserId());
+        if (data is null)
+            return Problem(statusCode: StatusCodes.Status401Unauthorized, title: "La cuenta del token ya no existe.");
+        return ExportOutput.From(data);
+    }
+
     // Borra la cuenta con todos sus datos. Exige la contraseña actual.
     [HttpDelete]
     public async Task<IActionResult> Delete(DeleteAccountInput input)

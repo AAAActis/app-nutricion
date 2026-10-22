@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class AccountManager(IUserAccountStore userStore, IPasswordHasher<User> passwordHasher) : IAccountManager
+public class AccountManager(IUserAccountStore userStore, IExportStore exportStore, IPasswordHasher<User> passwordHasher) : IAccountManager
 {
     // Borrar la cuenta exige la contraseña actual: un token robado no alcanza.
     public async Task<bool> DeleteAsync(int userId, string? password)
@@ -21,5 +21,5 @@ public class AccountManager(IUserAccountStore userStore, IPasswordHasher<User> p
         return true;
     }
 
-    public Task<UserDataExport?> ExportAsync(int userId) => Task.FromResult<UserDataExport?>(null);
+    public Task<UserDataExport?> ExportAsync(int userId) => exportStore.GetAsync(userId);
 }
