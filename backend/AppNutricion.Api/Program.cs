@@ -1,10 +1,19 @@
+using System.Text;
 using AppNutricion.Api.OpenApi;
+using AppNutricion.BusinessLogic.Options;
 using AppNutricion.BusinessLogic.Registrations;
 using AppNutricion.DataAccess.Registrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Falta ConnectionStrings:DefaultConnection en user-secrets.");
+// Sin una clave de al menos 32 bytes no se arranca. El mensaje nunca incluye la clave.
+var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
+var jwtOptions = jwtSection.Get<JwtOptions>() ?? new JwtOptions();
+if (Encoding.UTF8.GetByteCount(jwtOptions.Key) < JwtOptions.MinKeyBytes)
+    throw new InvalidOperationException($"Falta Jwt:Key en user-secrets o tiene menos de {JwtOptions.MinKeyBytes} bytes.");
+builder.Services.Configure<JwtOptions>(jwtSection);
+
 builder.Services.AddDataAccess(connectionString);
 builder.Services.AddBusinessLogic();
 builder.Services.AddControllers();

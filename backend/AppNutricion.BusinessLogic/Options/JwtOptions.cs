@@ -4,6 +4,7 @@ namespace AppNutricion.BusinessLogic.Options;
 public class JwtOptions
 {
     public const string SectionName = "Jwt";
+    public const int MinKeyBytes = 32;   // HMAC-SHA256 pide una clave de al menos 256 bits
 
     public string Key { get; set; } = "";
     public string Issuer { get; set; } = "";
