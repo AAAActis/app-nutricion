@@ -138,6 +138,14 @@ public sealed class AssistantManagerTests : IDisposable
     }
 
     [Fact]
+    public async Task LasSugerenciasDeLaRespuesta_TraenElAlimento()
+    {
+        var reply = await ConFake().SendAsync(UserId, _conversacion, "comí 150 g de arroz");
+
+        Assert.Equal(_arroz.Name, Assert.Single(reply!.Suggestions).Food?.Name);
+    }
+
+    [Fact]
     public async Task ComiSinTilde_TambienPropone()
     {
         var reply = await ConFake().SendAsync(UserId, _conversacion, "comi 200g de arroz");
