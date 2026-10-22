@@ -12,6 +12,7 @@ public static class DataAccessRegistration
     {
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IFoodStore, FoodStore>();
+        services.AddScoped<IUserAccountStore, UserAccountStore>();
         return services;
     }
 }
