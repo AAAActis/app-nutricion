@@ -26,7 +26,7 @@ public class AuthManagerLoginTests
             .Callback<string>(e => _emailBuscado = e)
             .ReturnsAsync((string e) => e == Usuario.Email ? Usuario : null);
         _tokens.Setup(t => t.CreateFor(Usuario)).Returns(TokenEmitido);
-        _manager = new AuthManager(_store.Object, _hasher.Object, _tokens.Object);
+        _manager = new AuthManager(_store.Object, _hasher.Object, _tokens.Object, TimeProvider.System);
     }
 
     private void HasherDevuelve(PasswordVerificationResult resultado) =>

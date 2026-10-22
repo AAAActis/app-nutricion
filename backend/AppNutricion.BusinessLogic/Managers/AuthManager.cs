@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> passwordHasher, IAccessTokenService tokenService) : IAuthManager
+public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> passwordHasher, IAccessTokenService tokenService, TimeProvider timeProvider) : IAuthManager
 {
     private const int MaxEmailLength = 256;   // varchar(256) en Users.Email
     private const int MinPasswordLength = 8;

@@ -2,6 +2,7 @@ using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Managers;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
+using AppNutricion.Tests.Infraestructura;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 
@@ -10,6 +11,8 @@ namespace AppNutricion.Tests.Auth;
 public class AuthManagerRegisterTests
 {
     private const string PasswordValida = "una-clave-segura";
+    private static readonly DateTimeOffset Ahora = new(2026, 10, 21, 15, 30, 0, TimeSpan.Zero);
+    private static readonly RelojFijo Reloj = new(Ahora);
 
     private readonly Mock<IUserAccountStore> _store = new();
     private readonly AuthManager _manager;
@@ -17,7 +20,7 @@ public class AuthManagerRegisterTests
     public AuthManagerRegisterTests()
     {
         _store.Setup(s => s.TryAddAsync(It.IsAny<User>())).ReturnsAsync(true);
-        _manager = new AuthManager(_store.Object, new PasswordHasher<User>(), Mock.Of<IAccessTokenService>());
+        _manager = new AuthManager(_store.Object, new PasswordHasher<User>(), Mock.Of<IAccessTokenService>(), Reloj);
     }
 
     // local (64) + "@" + dominio: total exacto pedido.

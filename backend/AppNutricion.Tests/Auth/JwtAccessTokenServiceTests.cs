@@ -2,6 +2,7 @@ using System.Text;
 using AppNutricion.BusinessLogic.Options;
 using AppNutricion.BusinessLogic.Services;
 using AppNutricion.Entities.Entities;
+using AppNutricion.Tests.Infraestructura;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -19,11 +20,6 @@ public class JwtAccessTokenServiceTests
         Audience = "AppNutricion.Clientes",
         ExpirationMinutes = 60,
     };
-
-    private sealed class RelojFijo(DateTimeOffset ahora) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => ahora;
-    }
 
     private static JwtAccessTokenService Servicio() =>
         new(Microsoft.Extensions.Options.Options.Create(Opciones), new RelojFijo(Ahora));
