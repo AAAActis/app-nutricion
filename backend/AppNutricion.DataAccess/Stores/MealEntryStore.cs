@@ -41,7 +41,13 @@ public class MealEntryStore(ApplicationDbContext context) : IMealEntryStore
         await OfUser(userId).Where(m => m.Id == id).ExecuteDeleteAsync() > 0;
 
     public Task<Dictionary<MealType, MealTotals>> SumByMealTypeAsync(int userId, DateOnly date) =>
-        throw new NotImplementedException();
+        OfUser(userId).Where(m => m.Date == date).GroupBy(m => m.MealType)
+            .Select(g => new
+            {
+                g.Key,
+                Totals = new MealTotals(g.Sum(m => m.SavedCalories), g.Sum(m => m.SavedProtein), g.Sum(m => m.SavedCarbs), g.Sum(m => m.SavedFat), g.Count()),
+            })
+            .ToDictionaryAsync(x => x.Key, x => x.Totals);
 
     private IQueryable<MealEntry> OfUser(int userId) =>
         context.MealEntries.AsNoTracking().Where(m => m.UserId == userId);
