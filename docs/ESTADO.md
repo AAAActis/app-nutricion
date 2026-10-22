@@ -52,11 +52,11 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | L3 | Búsqueda por código de barras | Lauti | Hecha | PR #5 | L1 |
 | L4 | Comidas: alta, edición, baja y lista; macros guardados al momento, tipo de comida, zona horaria | Lauti | En revisión: `POST/PUT/DELETE/GET /api/meals` con `[Authorize]`, userId de `ICurrentUser.RequireUserId()` (claim `sub`), macros congelados; editar la cantidad re-congela desde `Foods` (D19). Fecha entre hoy − 2 años y hoy en la zona del perfil (sin perfil, hoy UTC + 1), con `TimeProvider`. Gramos 0 < g ≤ 5000. 400 como ValidationProblemDetails con el campo. Probado en vivo contra Postgres con token real | PR #8 | J2, S2, L1 |
 | L5 | Copiar comidas del día anterior, favoritos y recientes | Lauti | En revisión: `POST /api/meals/copy` (409 si el destino ya tiene comidas de ese tipo, D20), `POST/DELETE /api/foods/{id}/favorite` (idempotente aunque lleguen dos a la vez), `GET /api/foods/favorites`, `GET /api/foods/recent`. Búsqueda, detalle y código de barras siguen públicos y con token suman los alimentos propios | PR #8 | L4 |
-| L6 | Resumen diario vs. objetivos (con lo que falta) y resumen semanal con racha | Lauti | Pendiente | — | L4, J8 |
+| L6 | Resumen diario vs. objetivos (con lo que falta) y resumen semanal con racha | Lauti | En curso | `feature/resumen-csv` | L4, J8 |
 | L7 | Respaldo con Open Food Facts (si no está en nuestra base, buscar en su API y guardar con su fuente) | Lauti | Hecha | PR #6 | L1. Verificar antes API, límites y licencia |
 | L8 | Alimentos personalizados por usuario, separados de los compartidos | Lauti | Pendiente | — | L1 |
 | L9 | Recetas: combinación de alimentos con macros totales y por porción | Lauti | Pendiente | — | L1 |
-| L10 | Exportar historial de comidas a CSV | Lauti | Pendiente | — | L4 |
+| L10 | Exportar historial de comidas a CSV | Lauti | En curso | `feature/resumen-csv` | L4 |
 | L11 | Tests de comidas, resumen y aislamiento entre usuarios | Lauti | Pendiente | — | L4, L6 |
 | L12 | Pantallas: buscador, registrar comida, resumen del día, historial semanal con gráficos, favoritos y recetas | Lauti | Pendiente | — | J12 (layout), L1 a L9 |
 | L13 | Revisar PR de Santi y probar el recorrido completo | Lauti | Pendiente | — | S2 a S12 |
