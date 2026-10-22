@@ -56,11 +56,30 @@ public static class NutritionCalculator
         _ => throw new ArgumentOutOfRangeException(nameof(activityLevel)),
     };
 
-    public static decimal MaxWeeklyRateKg(GoalType goalType, decimal weightKg) => 0;
+    public static decimal MaxWeeklyRateKg(GoalType goalType, decimal weightKg) => goalType switch
+    {
+        GoalType.LoseFat => Math.Min(NutritionDefaults.MaxLossKgPerWeek, weightKg * NutritionDefaults.MaxLossFractionOfWeightPerWeek),
+        GoalType.GainMuscle => NutritionDefaults.MaxGainKgPerWeek,
+        _ => 0m,
+    };
 
-    public static decimal Bmi(decimal weightKg, decimal heightCm) => 0;
+    public static decimal Bmi(decimal weightKg, decimal heightCm)
+    {
+        var heightM = heightCm / 100m;
+        return Round1(weightKg / (heightM * heightM));
+    }
 
-    public static BmiCategory CategoryFor(decimal bmi) => default;
+    public static BmiCategory CategoryFor(decimal bmi) => bmi switch
+    {
+        < NutritionDefaults.BmiUnderweightBelow => BmiCategory.Underweight,
+        < NutritionDefaults.BmiOverweightFrom => BmiCategory.Normal,
+        < NutritionDefaults.BmiObesityIFrom => BmiCategory.Overweight,
+        < NutritionDefaults.BmiObesityIIFrom => BmiCategory.ObesityClassI,
+        < NutritionDefaults.BmiObesityIIIFrom => BmiCategory.ObesityClassII,
+        _ => BmiCategory.ObesityClassIII,
+    };
+
+    private static decimal Round1(decimal value) => Math.Round(value, 1, MidpointRounding.AwayFromZero);
 
     public static NutritionResult Calculate(NutritionInput input) =>
         new(0, 0, 0, 0, 0, default, 0, false, false, null, null);
