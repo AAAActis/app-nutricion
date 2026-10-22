@@ -92,3 +92,48 @@ GET {{AppNutricion.Api_HostAddress}}/api/meals/export?from=2026-10-21&to=2026-10
 Authorization: Bearer {{token}}
 
 ###
+
+# Asistente (S9/S10). Provider "Fake" por defecto: sin clave responde guionado. 20 mensajes por minuto por usuario.
+
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/assistant/conversations
+Authorization: Bearer {{token}}
+
+###
+
+# Con el Fake, "comí 150 g de arroz" deja una sugerencia Pending (no crea la comida).
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations/1/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "content": "comí 150 g de arroz" }
+
+###
+
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations/1/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "content": "cuánto me falta" }
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/assistant/conversations/1/messages
+Authorization: Bearer {{token}}
+
+###
+
+# Crea la comida con los macros de Foods. Ya resuelta → 409.
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/suggestions/1/accept
+Authorization: Bearer {{token}}
+
+###
+
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/suggestions/1/ignore
+Authorization: Bearer {{token}}
+
+###
