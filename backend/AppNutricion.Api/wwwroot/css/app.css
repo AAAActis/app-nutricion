@@ -1,0 +1,223 @@
+/* Estilos compartidos (J12). Mobile-first: lo base es para pantallas chicas; los @media suman espacio.
+   Colores como variables: el modo oscuro solo las redefine. Cada pantalla usa estas clases; si una
+   necesita algo propio, se agrega acá con un comentario de qué pantalla lo usa. */
+
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --text: #1d1d1f;
+  --muted: #5f6368;
+  --border: #d9d9d6;
+  --primary: #1f6f4a;
+  --primary-text: #ffffff;
+  --danger: #b3261e;
+  --warning-bg: #fff4d6;
+  --warning-text: #5c4300;
+  --ok-bg: #e3f4ea;
+  --ok-text: #1f4d33;
+  --focus: #2b6cb0;
+  --chart-line: #1f6f4a;
+  --chart-trend: #c26a00;
+  --radius: 10px;
+  --gap: 1rem;
+  font-size: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141517;
+    --surface: #1e1f22;
+    --text: #ececec;
+    --muted: #a8adb3;
+    --border: #3a3c40;
+    --primary: #5cc28f;
+    --primary-text: #0d1f15;
+    --danger: #f2867c;
+    --warning-bg: #3a3112;
+    --warning-text: #f6dc8a;
+    --ok-bg: #173325;
+    --ok-text: #b9e6cb;
+    --focus: #8ab4f8;
+    --chart-line: #5cc28f;
+    --chart-trend: #f0a54a;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  line-height: 1.5;
+  font-size: 1.0625rem;
+}
+
+a { color: var(--primary); }
+
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ---------- Estructura ---------- */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand { font-weight: 700; text-decoration: none; color: var(--text); }
+
+.nav { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+
+.nav a, .nav button {
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.nav a[aria-current="page"] { background: var(--primary); color: var(--primary-text); }
+
+.app { max-width: 46rem; margin: 0 auto; padding: 1rem; }
+
+.footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1.5rem 1rem; }
+
+h1 { font-size: 1.5rem; margin: 0.25rem 0 1rem; }
+h2 { font-size: 1.2rem; margin: 1.5rem 0 0.5rem; }
+h3 { font-size: 1.05rem; margin: 1rem 0 0.25rem; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: var(--gap);
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+
+/* ---------- Formularios ---------- */
+
+form { display: grid; gap: 0.75rem; }
+
+.field { display: grid; gap: 0.25rem; }
+.field label { font-weight: 600; }
+
+input, select, textarea, button {
+  font: inherit;
+  color: inherit;
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="number"],
+input[type="date"], input[type="search"], select {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--danger); }
+
+.checkbox { display: flex; gap: 0.5rem; align-items: flex-start; }
+.checkbox input { margin-top: 0.3rem; }
+
+.field-error, .form-error { color: var(--danger); font-size: 0.9rem; min-height: 0; }
+.form-error:empty, .field-error:empty { display: none; }
+
+.button {
+  display: inline-block;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button.secondary { background: transparent; color: var(--primary); }
+.button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.button.small { padding: 0.3rem 0.6rem; font-size: 0.9rem; font-weight: 500; }
+.button:disabled { opacity: 0.6; cursor: wait; }
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+/* ---------- Mensajes ---------- */
+
+.notice { padding: 0.75rem 1rem; border-radius: var(--radius); margin-bottom: var(--gap); }
+.notice.ok { background: var(--ok-bg); color: var(--ok-text); }
+.notice.warning { background: var(--warning-bg); color: var(--warning-text); }
+.notice.error { background: var(--warning-bg); color: var(--danger); }
+
+.disclaimer { font-weight: 600; }
+
+.consent {
+  max-height: 12rem;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  background: var(--bg);
+}
+
+/* ---------- Datos ---------- */
+
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+.stat { background: var(--bg); border-radius: var(--radius); padding: 0.5rem 0.75rem; }
+.stat .value { font-size: 1.35rem; font-weight: 700; display: block; }
+.stat .label { color: var(--muted); font-size: 0.85rem; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.list > li { padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+.list > li:last-child { border-bottom: none; }
+
+.item { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.75rem; align-items: center; }
+.item .name { font-weight: 600; }
+
+progress { width: 100%; height: 0.8rem; accent-color: var(--primary); }
+progress.over { accent-color: var(--danger); }
+
+.tabs { display: flex; gap: 0.25rem; margin-bottom: 0.5rem; }
+.tabs button[aria-selected="true"] { background: var(--primary); color: var(--primary-text); }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.35rem 0.25rem; border-bottom: 1px solid var(--border); }
+
+/* Pantalla Peso: gráfico SVG. */
+.chart { width: 100%; height: auto; display: block; }
+.chart .axis { stroke: var(--border); stroke-width: 1; }
+.chart .line { fill: none; stroke: var(--chart-line); stroke-width: 2.5; }
+.chart .trend { fill: none; stroke: var(--chart-trend); stroke-width: 2; stroke-dasharray: 6 4; }
+.chart .point { fill: var(--chart-line); }
+.chart text { fill: var(--muted); font-size: 12px; }
+.legend { display: flex; gap: 1rem; font-size: 0.85rem; color: var(--muted); }
+.legend .swatch-line { color: var(--chart-line); }
+.legend .swatch-trend { color: var(--chart-trend); }
+
+/* ---------- Pantallas más anchas ---------- */
+
+@media (min-width: 40rem) {
+  .app { padding: 1.5rem; }
+  .stats { grid-template-columns: repeat(4, 1fr); }
+  form.inline { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); align-items: end; }
+}
