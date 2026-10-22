@@ -77,3 +77,18 @@ GET {{AppNutricion.Api_HostAddress}}/api/foods/recent?limit=10
 Authorization: Bearer {{token}}
 
 ###
+
+GET {{AppNutricion.Api_HostAddress}}/api/summary/daily?date=2026-10-22
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/summary/weekly?endDate=2026-10-22
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/meals/export?from=2026-10-21&to=2026-10-22
+Authorization: Bearer {{token}}
+
+###
