@@ -40,6 +40,7 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
         { "DELETE", "/api/meals/5" },
         { "GET", "/api/meals?date=2026-10-20" },
         { "POST", "/api/meals/copy" },
+        { "GET", "/api/meals/export?from=2026-10-19&to=2026-10-20" },
     };
 
     private static HttpRequestMessage Pedido(string metodo, string ruta) => new(new HttpMethod(metodo), ruta)
@@ -289,5 +290,35 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         _factory.MealManager.Verify(m => m.ListAsync(userId, Dia), Times.Once);
+    }
+
+    [Fact]
+    public async Task Export_CsvConBomComoAdjuntoConElUserIdDelToken()
+    {
+        const string csv = "fecha,alimento\r\n2026-10-20,Ñoquis\r\n";
+        _factory.MealManager.Setup(m => m.ExportCsvAsync(UserId, new DateOnly(2026, 10, 19), Dia)).ReturnsAsync(csv);
+
+        var response = await _factory.CrearCliente(UserId).GetAsync("/api/meals/export?from=2026-10-19&to=2026-10-20");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/csv", response.Content.Headers.ContentType!.MediaType);
+        Assert.Equal("utf-8", response.Content.Headers.ContentType.CharSet);
+        Assert.Equal("attachment", response.Content.Headers.ContentDisposition!.DispositionType);
+        Assert.Equal("comidas_2026-10-19_2026-10-20.csv", response.Content.Headers.ContentDisposition.FileName!.Trim('"'));
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        Assert.Equal([0xEF, 0xBB, 0xBF], bytes[..3]);   // BOM: Excel lee bien las tildes
+        Assert.Equal(csv, System.Text.Encoding.UTF8.GetString(bytes[3..]));
+    }
+
+    [Fact]
+    public async Task Export_RangoInvalido_Devuelve400ConElCampo()
+    {
+        _factory.MealManager.Setup(m => m.ExportCsvAsync(UserId, It.IsAny<DateOnly?>(), It.IsAny<DateOnly?>()))
+            .ThrowsAsync(new ArgumentException("El rango es de hasta 366 días.", "to"));
+
+        var response = await _factory.CrearCliente(UserId).GetAsync("/api/meals/export?from=2020-01-01&to=2026-10-20");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(["to"], await UsuarioDePrueba.CamposConErrorAsync(response));
     }
 }
