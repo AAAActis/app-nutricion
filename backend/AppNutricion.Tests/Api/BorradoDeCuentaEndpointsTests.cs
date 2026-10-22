@@ -70,6 +70,22 @@ public class BorradoDeCuentaEndpointsTests(ApiFactoryAuth factory) : IClassFixtu
         Assert.Equal(HttpStatusCode.OK, (await LoginAsync(email)).StatusCode);
     }
 
+    // Borde punta a punta: 128 es el máximo del registro y se puede borrar con ella.
+    [Fact]
+    public async Task Delete_ContraseñaDe128Caracteres_204()
+    {
+        var email = $"u{Guid.NewGuid():N}@mail.com";
+        var larga = new string('k', 128);
+        Assert.Equal(HttpStatusCode.Created,
+            (await _client.PostAsJsonAsync("/api/auth/register", new { email, password = larga, consentAccepted = true })).StatusCode);
+        var login = await _client.PostAsJsonAsync("/api/auth/login", new { email, password = larga });
+        var token = (await JsonAsync(login)).GetProperty("accessToken").GetString()!;
+
+        var response = await BorrarAsync(token, new { password = larga });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
     [Fact]
     public async Task Delete_SinToken_401()
     {
