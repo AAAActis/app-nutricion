@@ -58,16 +58,32 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
         Assert.Empty(_factory.MealManager.Invocations);
     }
 
+    // Autenticado pero sin un "sub" entero: es un bug de configuración (500), no un 401.
     [Theory]
     [MemberData(nameof(EndpointsDeComidas))]
-    public async Task UserIdQueNoEsEntero_Devuelve401(string metodo, string ruta)
+    public async Task UserIdQueNoEsEntero_Devuelve500SinLlegarAlManager(string metodo, string ruta)
     {
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.Header, "abc");
 
         var response = await client.SendAsync(Pedido(metodo, ruta));
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Empty(_factory.MealManager.Invocations);
+    }
+
+    // El userId sale solo de "sub" (MapInboundClaims = false): si un controller volviera a leer NameIdentifier,
+    // este test llegaría al manager. Y si TestAuthHandler volviera a emitir NameIdentifier, fallaría todo lo demás.
+    [Theory]
+    [MemberData(nameof(EndpointsDeComidas))]
+    public async Task ConNameIdentifierYSinSub_NoLlegaAlManager(string metodo, string ruta)
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.HeaderNameIdentifier, UserId.ToString());
+
+        var response = await client.SendAsync(Pedido(metodo, ruta));
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
         Assert.Empty(_factory.MealManager.Invocations);
     }
 

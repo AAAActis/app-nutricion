@@ -51,16 +51,46 @@ public class FoodsControllerTests : IClassFixture<ApiFactoryAutenticada>
         Assert.Empty(_factory.FoodManager.Invocations);
     }
 
+    // Autenticado pero sin un "sub" entero: es un bug de configuración (500), no un 401.
     [Theory]
     [MemberData(nameof(EndpointsConAuth))]
-    public async Task EndpointsNuevos_UserIdQueNoEsEntero_Devuelven401(string metodo, string ruta)
+    public async Task EndpointsNuevos_UserIdQueNoEsEntero_Devuelven500SinLlegarAlManager(string metodo, string ruta)
     {
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.Header, "abc");
 
         var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(metodo), ruta));
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Empty(_factory.FoodManager.Invocations);
+    }
+
+    [Theory]
+    [MemberData(nameof(EndpointsConAuth))]
+    public async Task EndpointsNuevos_ConNameIdentifierYSinSub_NoLleganAlManager(string metodo, string ruta)
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.HeaderNameIdentifier, UserId.ToString());
+
+        var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(metodo), ruta));
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Empty(_factory.FoodManager.Invocations);
+    }
+
+    // Públicos: sin token el userId es null; con token, el del token (para incluir sus alimentos propios).
+    [Fact]
+    public async Task Publicos_ConToken_PasanElUserIdDelToken()
+    {
+        _factory.FoodManager.Setup(m => m.SearchAsync("pan", UserId, null)).ReturnsAsync([]);
+        var client = _factory.CrearCliente(UserId);
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/foods/search?q=pan")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/foods/3")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/foods/barcode/7790001000001")).StatusCode);
+        _factory.FoodManager.Verify(m => m.SearchAsync("pan", UserId, null), Times.Once);
+        _factory.FoodManager.Verify(m => m.GetByIdAsync(3, UserId), Times.Once);
+        _factory.FoodManager.Verify(m => m.GetByBarcodeAsync("7790001000001", UserId), Times.Once);
     }
 
     [Fact]
