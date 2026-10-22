@@ -3,6 +3,7 @@ using AppNutricion.Api.OpenApi;
 using AppNutricion.BusinessLogic.Options;
 using AppNutricion.BusinessLogic.Registrations;
 using AppNutricion.DataAccess.Registrations;
+using AppNutricion.Presentation.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -34,6 +35,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddDataAccess(connectionString);
 builder.Services.AddBusinessLogic();
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
