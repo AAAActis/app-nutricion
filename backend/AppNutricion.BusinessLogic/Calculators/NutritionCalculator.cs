@@ -14,7 +14,8 @@ public record NutritionInput(
     GoalType GoalType,
     decimal WeeklyRateKg,          // el pedido; el aplicado puede ser menor (límites de seguridad)
     decimal? TargetWeightKg,
-    DateOnly Today);
+    DateOnly Today,
+    bool ApplyRateLimits = true);  // false: el ritmo ya es el aplicado (guardado en el Goal), no se vuelve a recortar
 
 public record NutritionResult(
     int Calories,
