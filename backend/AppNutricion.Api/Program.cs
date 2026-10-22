@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Text;
 using AppNutricion.Api.OpenApi;
+using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Options;
 using AppNutricion.BusinessLogic.Registrations;
 using AppNutricion.DataAccess.Registrations;
@@ -29,6 +31,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtOptions.Issuer,
             ValidAudience = jwtOptions.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+        };
+        // Un token bien firmado de una cuenta borrada sigue vigente hasta que vence: si el usuario del "sub"
+        // ya no existe, la autenticación falla (401 en todos los endpoints). Cuesta una consulta por request.
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var sub = context.Principal?.FindFirst("sub")?.Value;
+                var authManager = context.HttpContext.RequestServices.GetRequiredService<IAuthManager>();
+                if (!int.TryParse(sub, CultureInfo.InvariantCulture, out var userId) || await authManager.GetUserAsync(userId) is null)
+                    context.Fail("La cuenta del token ya no existe.");
+            },
         };
     });
 builder.Services.AddAuthorization();
