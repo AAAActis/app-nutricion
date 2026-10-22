@@ -1,7 +1,7 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-22 (Javi, rama `feature/auth-registro-login`: J2 en revisión; J1 mergeado en `develop` con el PR #7). Anterior: 2026-10-21 noche (Lauti, rama `feature/alimentos-seed-off`: L2 y L7 en revisión; D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
+> Última actualización: 2026-10-22 (Javi, rama `feature/perfil-macros`: J7 y J8 en revisión, sale de `feature/auth-registro-login`). Antes: Javi, rama `feature/auth-registro-login`: J2 en revisión; J1 mergeado en `develop` con el PR #7. Anterior: 2026-10-21 noche (Lauti, rama `feature/alimentos-seed-off`: L2 y L7 en revisión; D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
 > Verificado por Santi en su máquina: el compose levanta y `app-nutricion-db` queda `healthy`. El estado de ramas y del `.gitignore` se confirma en el PR de `fix/gitignore-utf8`.
 
 ## Objetivo
@@ -33,8 +33,8 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | J4 | Cambio de contraseña y de email | Javi | Pendiente | — | J2 |
 | J5 | Borrado de cuenta (con todos sus datos) y exportación de datos del usuario | Javi | Pendiente. Ojo (de J2): el access token de una cuenta borrada sigue válido hasta 60 min; los endpoints con `RequireUserId()` darían 500 al escribir con ese `UserId` (FK). Resolverlo acá (revocar o comprobar que la cuenta exista) | — | J2, S2 |
 | J6 | Rate limiting, validación de entradas, logs estructurados | Javi | Pendiente | — | J1 |
-| J7 | Perfil, historial de peso con tendencia, objetivos con ritmo semanal | Javi | Pendiente | — | J2, S2 |
-| J8 | Motor de macros (Mifflin-St Jeor) con tests y límites de seguridad; IMC y proyección de meta | Javi | Pendiente | — | J7 |
+| J7 | Perfil, historial de peso con tendencia, objetivos con ritmo semanal | Javi | En revisión (PR cuando J2 esté en `develop`): `GET/PUT /api/me/profile` (edad 14 a 100, altura 100 a 250 cm, zona IANA), `POST/GET /api/me/metrics` (un peso por día local, 20 a 400 kg, hasta 2 años atrás; tendencia 7 contra 7), `POST/GET /api/me/goals` y `GET /api/me/targets` (targets congelados, un solo objetivo activo). Sin perfil → 409. Stores de EF sin test contra Postgres | `feature/perfil-macros` | J2, S2 |
+| J8 | Motor de macros (Mifflin-St Jeor) con tests y límites de seguridad; IMC y proyección de meta | Javi | En revisión: `NutritionCalculator` puro con tests de unidad (Mifflin-St Jeor, factores de actividad, ritmo máximo, piso 1500/1200, sin LoseFat a menores de 18, macros, IMC OMS, proyección). Valores por defecto en `NutritionDefaults`, a ratificar. Estimación, no consejo médico | `feature/perfil-macros` | J7 |
 | J9 | Paginación y filtros estándar para todas las listas | Javi | Pendiente | — | J1 |
 | J10 | Tests de integración de auth y aislamiento entre usuarios | Javi | Pendiente | — | J2 |
 | J11 | CI con GitHub Actions (compila y corre tests en cada PR) | Javi | Pendiente | — | J1 |
