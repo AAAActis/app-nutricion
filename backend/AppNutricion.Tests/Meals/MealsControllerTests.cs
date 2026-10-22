@@ -54,6 +54,7 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
         var response = await _factory.CrearCliente(null).SendAsync(Pedido(metodo, ruta));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(TestAuthHandler.Esquema, response.Headers.WwwAuthenticate.ToString());   // lo pidió [Authorize]
         Assert.Empty(_factory.MealManager.Invocations);
     }
 
@@ -239,5 +240,18 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Theory]
+    [InlineData(7)]
+    [InlineData(42)]
+    public async Task Get_ElUserIdQueLlegaAlManagerEsElDelClaim(int userId)
+    {
+        _factory.MealManager.Setup(m => m.ListAsync(userId, Dia)).ReturnsAsync([_entrada]);
+
+        var response = await _factory.CrearCliente(userId).GetAsync("/api/meals?date=2026-10-20");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        _factory.MealManager.Verify(m => m.ListAsync(userId, Dia), Times.Once);
     }
 }

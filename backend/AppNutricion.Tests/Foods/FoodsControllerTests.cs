@@ -47,6 +47,7 @@ public class FoodsControllerTests : IClassFixture<ApiFactoryAutenticada>
         var response = await _factory.CrearCliente(null).SendAsync(new HttpRequestMessage(new HttpMethod(metodo), ruta));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(TestAuthHandler.Esquema, response.Headers.WwwAuthenticate.ToString());   // lo pidió [Authorize]
         Assert.Empty(_factory.FoodManager.Invocations);
     }
 
@@ -135,5 +136,18 @@ public class FoodsControllerTests : IClassFixture<ApiFactoryAutenticada>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(3, Assert.Single(json.EnumerateArray()).GetProperty("id").GetInt32());
+    }
+
+    [Theory]
+    [InlineData(7)]
+    [InlineData(42)]
+    public async Task GetFavorites_ElUserIdQueLlegaAlManagerEsElDelClaim(int userId)
+    {
+        _factory.FoodManager.Setup(m => m.GetFavoritesAsync(userId)).ReturnsAsync([]);
+
+        var response = await _factory.CrearCliente(userId).GetAsync("/api/foods/favorites");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        _factory.FoodManager.Verify(m => m.GetFavoritesAsync(userId), Times.Once);
     }
 }

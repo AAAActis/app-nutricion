@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -20,5 +21,14 @@ public class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> option
 
         var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.ToString())], Esquema);
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Esquema)));
+    }
+
+    // Como JwtBearer: el challenge manda WWW-Authenticate. Así un test distingue el 401 de [Authorize]
+    // del Unauthorized() que devuelve el controller cuando el claim no es entero.
+    protected override Task HandleChallengeAsync(AuthenticationProperties properties)
+    {
+        Response.StatusCode = StatusCodes.Status401Unauthorized;
+        Response.Headers.WWWAuthenticate = Esquema;
+        return Task.CompletedTask;
     }
 }
