@@ -49,7 +49,8 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
     public async Task<LoginResult?> LoginAsync(string? email, string? password)
     {
         var normalizedEmail = NormalizeEmail(email);
-        if (normalizedEmail.Length == 0 || string.IsNullOrEmpty(password)) return null;
+        // Una contraseña de más de 128 no pudo registrarse: se descarta sin hashear (evita DoS con contraseñas enormes).
+        if (normalizedEmail.Length == 0 || string.IsNullOrEmpty(password) || password.Length > MaxPasswordLength) return null;
 
         var user = await userStore.GetByEmailAsync(normalizedEmail);
         // Si el email no existe se verifica igual contra un hash de relleno: así el tiempo de respuesta
