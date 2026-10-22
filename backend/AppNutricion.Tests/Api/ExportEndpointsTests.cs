@@ -44,7 +44,8 @@ public class ExportEndpointsTests : IClassFixture<ApiFactoryAuth>
             [new Recipe { UserId = userId, Name = "Mi receta", Servings = 2, CreatedAt = Base, Ingredients = [new RecipeIngredient { FoodId = torta.Id, Food = torta, QuantityGrams = 100 }] }],
             [new Routine { UserId = userId, Name = "Mi rutina", CreatedAt = Base, Days = [new RoutineDay { DayNumber = 1, Name = "Piernas", Exercises = [new RoutineExercise { ExerciseId = 7, Exercise = sentadilla, Order = 1, TargetSets = 3, TargetReps = 10 }] }] }],
             [new WorkoutLog { UserId = userId, Date = Dia, DurationMinutes = 45, CreatedAt = Base, Sets = [new WorkoutSet { ExerciseId = 7, Exercise = sentadilla, SetNumber = 1, Reps = 10, WeightKg = 40 }] }],
-            [new Conversation { UserId = userId, Title = "Charla", CreatedAt = Base, UpdatedAt = Base, Messages = [new ChatMessage { Role = ChatRole.User, Content = "hola", CreatedAt = Base }] }]);
+            [new Conversation { UserId = userId, Title = "Charla", CreatedAt = Base, UpdatedAt = Base, Messages = [new ChatMessage { Role = ChatRole.User, Content = "hola", CreatedAt = Base }] }],
+            []);
     }
 
     [Fact]
