@@ -81,6 +81,46 @@ public static class NutritionCalculator
 
     private static decimal Round1(decimal value) => Math.Round(value, 1, MidpointRounding.AwayFromZero);
 
-    public static NutritionResult Calculate(NutritionInput input) =>
-        new(0, 0, 0, 0, 0, default, 0, false, false, null, null);
+    public static NutritionResult Calculate(NutritionInput input)
+    {
+        var age = AgeAt(input.BirthDate, input.Today);
+        if (input.GoalType == GoalType.LoseFat && age < NutritionDefaults.MinAgeForLoseFat)
+            throw new ArgumentException($"Menores de {NutritionDefaults.MinAgeForLoseFat} años no pueden elegir bajar de peso.", "goalType");
+
+        var tdee = Tdee(Bmr(input.Sex, input.WeightKg, input.HeightCm, age), input.ActivityLevel);
+
+        var maxRate = MaxWeeklyRateKg(input.GoalType, input.WeightKg);
+        var requestedRate = input.GoalType == GoalType.Maintain ? 0m : input.WeeklyRateKg;
+        var appliedRate = Math.Min(requestedRate, maxRate);
+        var dailyAdjustment = appliedRate * NutritionDefaults.KcalPerKg / NutritionDefaults.DaysPerWeek;
+        var rawCalories = input.GoalType == GoalType.LoseFat ? tdee - dailyAdjustment : tdee + dailyAdjustment;
+
+        var floor = input.Sex == BiologicalSex.Male ? NutritionDefaults.CalorieFloorMale : NutritionDefaults.CalorieFloorFemale;
+        var floorApplied = rawCalories < floor;
+        var calories = (int)Math.Round(floorApplied ? floor : rawCalories, MidpointRounding.AwayFromZero);
+
+        // Macros sobre las kcal ya redondeadas: proteína por kg, grasa como % de las kcal, carbohidratos el resto.
+        var proteinPerKg = input.GoalType == GoalType.Maintain
+            ? NutritionDefaults.ProteinGPerKgMaintain
+            : NutritionDefaults.ProteinGPerKgLoseOrGain;
+        var proteinG = proteinPerKg * input.WeightKg;
+        var fatKcal = calories * NutritionDefaults.FatFractionOfCalories;
+        var fatG = fatKcal / NutritionDefaults.KcalPerGramFat;
+        var carbsG = Math.Max(0m, (calories - proteinG * NutritionDefaults.KcalPerGramProtein - fatKcal) / NutritionDefaults.KcalPerGramCarbs);
+
+        var bmi = Bmi(input.WeightKg, input.HeightCm);
+
+        decimal? weeks = null;
+        DateOnly? projectedDate = null;
+        if (input.TargetWeightKg is { } target && appliedRate > 0)
+        {
+            var exactWeeks = Math.Abs(input.WeightKg - target) / appliedRate;
+            weeks = Round1(exactWeeks);
+            projectedDate = input.Today.AddDays((int)Math.Ceiling(exactWeeks * NutritionDefaults.DaysPerWeek));
+        }
+
+        return new NutritionResult(
+            calories, Round1(proteinG), Round1(carbsG), Round1(fatG), bmi, CategoryFor(bmi),
+            appliedRate, requestedRate > maxRate, floorApplied, weeks, projectedDate);
+    }
 }
