@@ -20,9 +20,7 @@ public class AuthController(IAuthManager authManager) : ControllerBase
         }
         catch (ArgumentException ex) when (ex.ParamName is not null)
         {
-            // El mensaje de ArgumentException termina en " (Parameter 'x')": al cliente le llega solo el texto.
-            ModelState.AddModelError(ex.ParamName, ex.Message.Replace($" (Parameter '{ex.ParamName}')", ""));
-            return ValidationProblem();
+            return this.ValidationProblemFor(ex);
         }
 
         if (result.Status == RegisterStatus.EmailAlreadyRegistered)
