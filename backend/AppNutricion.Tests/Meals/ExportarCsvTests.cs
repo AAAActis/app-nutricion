@@ -72,6 +72,7 @@ public class ExportarCsvTests
     [InlineData("Pan, casero", "\"Pan, casero\"")]
     [InlineData("Pan \"Bimbo\"", "\"Pan \"\"Bimbo\"\"\"")]
     [InlineData("Pan\ncasero", "\"Pan\ncasero\"")]
+    [InlineData("Pan\rcasero", "\"Pan\rcasero\"")]
     public async Task Alimento_EscapadoRfc4180(string nombre, string esperado) =>
         Assert.StartsWith($"2026-10-20,Lunch,{esperado},", await FilaDe(nombre));
 
