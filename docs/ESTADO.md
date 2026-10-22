@@ -28,7 +28,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | # | Tarea | Responsable | Estado | Rama o PR | Depende de |
 |---|---|---|---|---|---|
 | J1 | Esqueleto en capas, Swagger, middleware de errores con formato único, health check, CORS, config por entorno | Javi | En revisión: proyecto `AppNutricion.Tests` (xUnit + `WebApplicationFactory`, sin Postgres). Sin `weatherforecast`. `GET /health` (solo vida del proceso, no chequea la base). Errores siempre como ProblemDetails (`application/problem+json`): 500 genérico sin mensaje ni stack trace, y 404/405 también. Swagger UI en `/swagger` con botón Authorize (Bearer JWT), **solo en Development**. CORS por `Cors:AllowedOrigins` (vacío = solo mismo origen). 12 tests; `ApiFactory` sin `FoodSeedHostedService` | `feature/api-esqueleto` | S1 |
-| J2 | Registro con consentimiento, login, JWT, hash de contraseñas | Javi | Pendiente | — | J1, S2 |
+| J2 | Registro con consentimiento, login, JWT, hash de contraseñas | Javi | En curso: lógica de registro y login en `AuthManager` (BusinessLogic) con tests de unidad; `PasswordHasher<User>`, `ConsentVersion` = `2026-10-21`, JWT con `sub` = userId. Faltan endpoints `/api/auth/register`, `/api/auth/login`, `/api/me`, `ICurrentUser` y `UserAccountStore` | `feature/auth-registro-login` (sale de `feature/api-esqueleto`; PR cuando J1 esté mergeado) | J1, S2 |
 | J3 | Refresh token y logout | Javi | Pendiente | — | J2 |
 | J4 | Cambio de contraseña y de email | Javi | Pendiente | — | J2 |
 | J5 | Borrado de cuenta (con todos sus datos) y exportación de datos del usuario | Javi | Pendiente | — | J2, S2 |
