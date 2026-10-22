@@ -23,6 +23,9 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
         if (!consentAccepted)
             throw new ArgumentException("Hay que aceptar el consentimiento para registrarse.", nameof(consentAccepted));
 
+        if (await userStore.GetByEmailAsync(normalizedEmail) is not null)
+            return new RegisterResult(RegisterStatus.EmailAlreadyRegistered, null);
+
         var now = DateTime.UtcNow;   // Npgsql solo acepta DateTime UTC en timestamptz
         var user = new User
         {
@@ -33,7 +36,9 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
         };
         user.PasswordHash = passwordHasher.HashPassword(user, password);
 
-        await userStore.TryAddAsync(user);
+        // false = otro registro con el mismo email ganó la carrera entre el GetByEmail y el insert.
+        if (!await userStore.TryAddAsync(user))
+            return new RegisterResult(RegisterStatus.EmailAlreadyRegistered, null);
         return new RegisterResult(RegisterStatus.Registered, user);
     }
 
