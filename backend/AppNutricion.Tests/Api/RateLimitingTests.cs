@@ -55,11 +55,22 @@ public class RateLimitingTests(ApiFactoryRateLimit factory) : IClassFixture<ApiF
         Assert.Equal(StatusCodes.Status401Unauthorized, otraIp.Response.StatusCode);
     }
 
+    // Usuario real (registro + login) desde una IP propia, que no gasta la ventana de auth de otro test.
+    // Un token armado a mano para un usuario inexistente no serviría cuando la API rechace los de cuentas borradas (J5).
+    private async Task<string> UsuarioConTokenAsync(string ip)
+    {
+        var json = $$"""{"email":"u{{Guid.NewGuid():N}}@mail.com","password":"una-clave-segura","consentAccepted":true}""";
+        Assert.Equal(StatusCodes.Status201Created, (await factory.EnviarAsync("POST", "/api/auth/register", ip, json)).Response.StatusCode);
+        var login = await factory.EnviarAsync("POST", "/api/auth/login", ip, json);
+        Assert.Equal(StatusCodes.Status200OK, login.Response.StatusCode);
+        return (await JsonAsync(login)).GetProperty("accessToken").GetString()!;
+    }
+
     // La política del chat existe y limita, aunque todavía no se aplica a ningún endpoint real.
     [Fact]
     public async Task Chat_Mensaje21DelMismoUsuario_429()
     {
-        var token = TokensDePrueba.Para(900_001);
+        var token = await UsuarioConTokenAsync("10.0.3.1");
         for (var i = 1; i <= 20; i++)
             Assert.Equal(StatusCodes.Status200OK, (await factory.EnviarAsync("POST", "/test/chat", "10.0.2.1", token: token)).Response.StatusCode);
 
@@ -72,10 +83,11 @@ public class RateLimitingTests(ApiFactoryRateLimit factory) : IClassFixture<ApiF
     [Fact]
     public async Task Chat_OtroUsuarioDesdeLaMismaIp_NoQuedaAfectado()
     {
-        var token = TokensDePrueba.Para(900_002);
+        var token = await UsuarioConTokenAsync("10.0.3.2");
+        var otroToken = await UsuarioConTokenAsync("10.0.3.3");
         for (var i = 1; i <= 21; i++) await factory.EnviarAsync("POST", "/test/chat", "10.0.2.2", token: token);
 
-        var otro = await factory.EnviarAsync("POST", "/test/chat", "10.0.2.2", token: TokensDePrueba.Para(900_003));
+        var otro = await factory.EnviarAsync("POST", "/test/chat", "10.0.2.2", token: otroToken);
 
         Assert.Equal(StatusCodes.Status200OK, otro.Response.StatusCode);
     }
