@@ -111,6 +111,42 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
             Assert.False(Regex.IsMatch(contenido, @"import\s[^;]*from\s+[""']https?:"), $"{ruta} importa un módulo externo");
     }
 
+    // Leyenda del art. 3 de la Resolución 14/2018 de la AAIP, copiada textual de
+    // https://www.argentina.gob.ar/normativa/nacional/resoluci%C3%B3n-14-2018-307621/texto (22/10/2026).
+    private const string LeyendaAaip =
+        "LA AGENCIA DE ACCESO A LA INFORMACIÓN PÚBLICA, en su carácter de Órgano de Control de la Ley N° 25.326, " +
+        "tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus " +
+        "derechos por incumplimiento de las normas vigentes en materia de protección de datos personales";
+
+    // Lo que tiene que decir el consentimiento (Ley 25.326, art. 6, y Res. AAIP 14/2018, art. 3).
+    [Theory]
+    [InlineData(LeyendaAaip)]
+    [InlineData("guardada como hash, que no se puede revertir")]
+    [InlineData("Responsable")]
+    [InlineData("Nutrición Inteligente")]
+    [InlineData("UNC")]
+    [InlineData("Finalidad")]
+    [InlineData("necesarios para usar el servicio")]
+    [InlineData("acceso")]
+    [InlineData("rectificación (desde Perfil)")]
+    [InlineData("supresión (desde Cuenta)")]
+    [InlineData("art. 6 de la Ley 25.326")]
+    public void Consentimiento_IncluyeLoQuePideLaLey(string texto)
+    {
+        var consent = Archivos(".js").SingleOrDefault(a => a.Ruta == "js/consent.js");
+
+        Assert.NotNull(consent.Contenido);
+        Assert.Contains(texto, consent.Contenido);
+    }
+
+    [Fact]
+    public void Consentimiento_NoDiceCifrada()
+    {
+        var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js");
+
+        Assert.DoesNotContain("cifrada", consent.Contenido);
+    }
+
     // El texto de consentimiento del registro es el de la versión que guarda la API.
     [Fact]
     public void Consentimiento_LaVersionDelFrontendEsLaDeLaApi()
