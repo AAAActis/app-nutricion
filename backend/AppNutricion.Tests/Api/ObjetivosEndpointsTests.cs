@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Tests.Infraestructura;
+using Microsoft.Extensions.DependencyInjection;
 using static AppNutricion.Tests.Infraestructura.UsuarioDePrueba;
 
 namespace AppNutricion.Tests.Api;
@@ -258,5 +260,63 @@ public class ObjetivosEndpointsTests(ApiFactoryPerfil factory) : IClassFixture<A
         Assert.Equal(HttpStatusCode.BadRequest, bajar.StatusCode);
         Assert.Equal(["goalType"], await CamposConErrorAsync(bajar));
         Assert.Equal(HttpStatusCode.Created, mantener.StatusCode);
+    }
+
+    private static Task<HttpResponseMessage> CambiarNacimientoAsync(HttpClient client, string birthDate) =>
+        client.PutAsJsonAsync("/api/me/profile", new
+        {
+            birthDate, biologicalSex = "Male", heightCm = 180m, activityLevel = "Moderate", timeZoneId = "America/Argentina/Buenos_Aires",
+        });
+
+    // Con un LoseFat activo, una fecha de nacimiento que lo deja como menor (17 años) → 409 y el perfil no cambia.
+    [Fact]
+    public async Task PutProfile_QuedaMenorConLoseFatActivo_409YNoCambia()
+    {
+        var client = await UsuarioAsync();
+        Assert.Equal(HttpStatusCode.Created, (await CrearAsync(client, "LoseFat", 0.5m)).StatusCode);
+
+        var response = await CambiarNacimientoAsync(client, "2008-10-23");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("Cambiá primero tu objetivo.", (await JsonAsync(response)).GetProperty("title").GetString());
+        var perfil = await JsonAsync(await client.GetAsync("/api/me/profile"));
+        Assert.Equal("1996-10-20", perfil.GetProperty("birthDate").GetString());
+    }
+
+    // Con otro objetivo activo (o con LoseFat y una fecha que sigue siendo de mayor), el cambio se acepta.
+    [Theory]
+    [InlineData("Maintain", null, "2008-10-23")]
+    [InlineData("LoseFat", 0.5, "2008-10-22")]   // cumple 18 hoy en Argentina
+    public async Task PutProfile_CambioDeNacimientoSinConflicto_200(string goalType, double? ritmo, string birthDate)
+    {
+        var client = await UsuarioAsync();
+        Assert.Equal(HttpStatusCode.Created, (await CrearAsync(client, goalType, (decimal?)ritmo)).StatusCode);
+
+        var response = await CambiarNacimientoAsync(client, birthDate);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    // Un LoseFat activo con un perfil de menor no se puede armar desde la API: se fuerza en el store.
+    // GET /targets igual responde (no da 500): kcal congeladas y el resto recalculado.
+    [Fact]
+    public async Task GetTargets_MenorConLoseFatActivo_200()
+    {
+        var (id, client) = Nuevo(factory);
+        var put = await CambiarNacimientoAsync(client, "1996-10-20");
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+        await client.PostAsJsonAsync("/api/me/metrics", new { weightKg = 80m, date = Hoy });
+        Assert.Equal(HttpStatusCode.Created, (await CrearAsync(client, "LoseFat", 0.5m, 75m)).StatusCode);
+        var perfiles = factory.Services.GetRequiredService<IProfileStore>();
+        var perfil = (await perfiles.GetByUserIdAsync(id))!;
+        perfil.BirthDate = new DateOnly(2008, 10, 23);
+        await perfiles.UpsertAsync(perfil);
+
+        var response = await client.GetAsync("/api/me/targets");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var t = await JsonAsync(response);
+        Assert.Equal(2209m, t.GetProperty("calories").GetDecimal());
+        Assert.Equal(10.0m, t.GetProperty("projection").GetProperty("weeks").GetDecimal());
     }
 }

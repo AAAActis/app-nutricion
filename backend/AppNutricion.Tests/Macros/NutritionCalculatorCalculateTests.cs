@@ -212,15 +212,16 @@ public class NutritionCalculatorCalculateTests
         Assert.Equal(5.0m, r.ProjectedWeeks);
     }
 
-    // Menores de 18: LoseFat no se permite.
+    // El motor no rechaza a menores con LoseFat: eso lo controla GoalManager.CreateAsync. Así el recálculo
+    // de GET /targets nunca lanza.
     [Fact]
-    public void Calculate_MenorDe18ConLoseFat_LanzaArgumentExceptionDeGoalType()
+    public void Calculate_MenorDe18ConLoseFat_NoLanza()
     {
         var input = Base(GoalType.LoseFat, 0.5m) with { BirthDate = new DateOnly(2008, 10, 23) };   // 17 años
 
-        var ex = Assert.Throws<ArgumentException>(() => NutritionCalculator.Calculate(input));
+        var ex = Record.Exception(() => NutritionCalculator.Calculate(input));
 
-        Assert.Equal("goalType", ex.ParamName);
+        Assert.Null(ex);
     }
 
     [Theory]
