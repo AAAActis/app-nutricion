@@ -65,6 +65,21 @@ public class MealsController(IMealEntryManager mealManager) : ControllerBase
         }
     }
 
+    [HttpPost("copy")]
+    public async Task<ActionResult<List<MealEntryOutput>>> Copy(CopyMealsInput input)
+    {
+        if (CurrentUserId() is not { } userId) return Unauthorized();
+        try
+        {
+            var copies = await mealManager.CopyAsync(userId, input.FromDate, input.ToDate, input.MealType);
+            return copies.Select(MealEntryOutput.From).ToList();
+        }
+        catch (ArgumentException ex)
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
+        }
+    }
+
     // El userId sale solo del token (D6): nunca del body ni de la query.
     private int? CurrentUserId() =>
         int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;

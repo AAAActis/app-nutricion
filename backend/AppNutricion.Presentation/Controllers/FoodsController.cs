@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Output;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,4 +41,42 @@ public class FoodsController(IFoodManager foodManager) : ControllerBase
             return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
         }
     }
+
+    [Authorize]
+    [HttpPost("{id:int}/favorite")]
+    public async Task<IActionResult> AddFavorite(int id)
+    {
+        if (CurrentUserId() is not { } userId) return Unauthorized();
+        return await foodManager.AddFavoriteAsync(id, userId) ? NoContent() : NotFound();
+    }
+
+    [Authorize]
+    [HttpDelete("{id:int}/favorite")]
+    public async Task<IActionResult> RemoveFavorite(int id)
+    {
+        if (CurrentUserId() is not { } userId) return Unauthorized();
+        return await foodManager.RemoveFavoriteAsync(id, userId) ? NoContent() : NotFound();
+    }
+
+    [Authorize]
+    [HttpGet("favorites")]
+    public async Task<ActionResult<List<FoodOutput>>> GetFavorites()
+    {
+        if (CurrentUserId() is not { } userId) return Unauthorized();
+        var foods = await foodManager.GetFavoritesAsync(userId);
+        return foods.Select(FoodOutput.From).ToList();
+    }
+
+    [Authorize]
+    [HttpGet("recent")]
+    public async Task<ActionResult<List<FoodOutput>>> GetRecent([FromQuery] int? limit)
+    {
+        if (CurrentUserId() is not { } userId) return Unauthorized();
+        var foods = await foodManager.GetRecentAsync(userId, limit);
+        return foods.Select(FoodOutput.From).ToList();
+    }
+
+    // El userId sale solo del token (D6): nunca del body ni de la query.
+    private int? CurrentUserId() =>
+        int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 }
