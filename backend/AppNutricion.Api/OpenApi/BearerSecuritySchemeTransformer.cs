@@ -1,11 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
 namespace AppNutricion.Api.OpenApi;
 
 // Declara el esquema "Bearer" (JWT) en el documento OpenAPI para que Swagger UI muestre
-// el botón "Authorize" y mande el header "Authorization: Bearer <token>" en cada request.
-public sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransformer
+// el botón "Authorize", y lo pide solo en las operaciones con [Authorize] (register y login no llevan candado).
+public sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransformer, IOpenApiOperationTransformer
 {
     public const string NombreEsquema = "Bearer";
 
@@ -20,13 +21,20 @@ public sealed class BearerSecuritySchemeTransformer : IOpenApiDocumentTransforme
             BearerFormat = "JWT",
             Description = "Pegá solo el token (sin la palabra Bearer)."
         };
+        return Task.CompletedTask;
+    }
 
-        document.Security ??= [];
-        document.Security.Add(new OpenApiSecurityRequirement
+    public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
+    {
+        var metadata = context.Description.ActionDescriptor.EndpointMetadata;
+        if (!metadata.OfType<IAuthorizeData>().Any())
+            return Task.CompletedTask;
+
+        operation.Security ??= [];
+        operation.Security.Add(new OpenApiSecurityRequirement
         {
-            [new OpenApiSecuritySchemeReference(NombreEsquema, document)] = []
+            [new OpenApiSecuritySchemeReference(NombreEsquema, context.Document)] = []
         });
-
         return Task.CompletedTask;
     }
 }
