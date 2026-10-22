@@ -27,6 +27,14 @@ public class FoodStore(ApplicationDbContext context) : IFoodStore
     public Task<Food?> GetByBarcodeAsync(string barcode, int? userId) =>
         Visible(userId).Where(f => f.Barcode == barcode).OrderBy(f => f.Id).FirstOrDefaultAsync();
 
+    public Task<List<Food>> GetFavoritesAsync(int userId) => Task.FromResult(new List<Food>());
+
+    public Task AddFavoriteAsync(int userId, int foodId) => Task.CompletedTask;
+
+    public Task RemoveFavoriteAsync(int userId, int foodId) => Task.CompletedTask;
+
+    public Task<List<Food>> GetRecentAsync(int userId, int limit) => Task.FromResult(new List<Food>());
+
     public async Task<(int Inserted, int Updated)> UpsertSeedAsync(IEnumerable<Food> foods)
     {
         var items = foods.Where(f => f.Source != FoodSource.Custom && f.ExternalId != null).ToList();

@@ -79,6 +79,9 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
         return store.GetByDateAsync(userId, day, null);
     }
 
+    public Task<List<MealEntry>> CopyAsync(int userId, DateOnly fromDate, DateOnly toDate, MealType? mealType) =>
+        Task.FromResult(new List<MealEntry>());
+
     // Solo para pasar unidades a gramos: la porción sale del alimento, los macros no.
     private async Task<decimal> UnitsToGramsAsync(MealEntry entry, decimal quantity, int userId)
     {

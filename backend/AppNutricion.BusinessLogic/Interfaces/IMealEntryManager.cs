@@ -10,4 +10,6 @@ public interface IMealEntryManager
     Task<MealEntry?> UpdateAsync(int id, int userId, decimal? quantity, bool? isUnits, MealType? mealType, DateOnly? date);
     Task<bool> DeleteAsync(int id, int userId);
     Task<List<MealEntry>> ListAsync(int userId, DateOnly? date);
+    // Copia las entradas de fromDate a toDate (todas o solo un tipo) con los mismos valores congelados.
+    Task<List<MealEntry>> CopyAsync(int userId, DateOnly fromDate, DateOnly toDate, MealType? mealType);
 }

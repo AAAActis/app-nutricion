@@ -49,6 +49,14 @@ public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFact
         return external;
     }
 
+    public Task<bool> AddFavoriteAsync(int foodId, int userId) => Task.FromResult(false);
+
+    public Task<bool> RemoveFavoriteAsync(int foodId, int userId) => Task.FromResult(false);
+
+    public Task<List<Food>> GetFavoritesAsync(int userId) => Task.FromResult(new List<Food>());
+
+    public Task<List<Food>> GetRecentAsync(int userId, int? limit) => Task.FromResult(new List<Food>());
+
     public decimal ConvertToGrams(Food food, decimal quantity, bool isUnits)
     {
         if (!isUnits) return quantity;
