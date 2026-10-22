@@ -1,5 +1,6 @@
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Managers;
+using AppNutricion.BusinessLogic.Services;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Enums;
@@ -22,7 +23,7 @@ public class CopiarComidasTests
         _store.Setup(s => s.AddAsync(It.IsAny<IEnumerable<MealEntry>>()))
             .Callback((IEnumerable<MealEntry> e) => _agregadas.AddRange(e));
         _store.Setup(s => s.GetByDateAsync(UserId, Hoy, It.IsAny<MealType?>())).ReturnsAsync([]);   // destino vacío (D20)
-        _manager = new MealEntryManager(_store.Object, Mock.Of<IFoodManager>(), Mock.Of<IProfileStore>(), TimeProvider.System);
+        _manager = new MealEntryManager(_store.Object, Mock.Of<IFoodManager>(), new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
     }
 
     private static MealEntry Original(int id, MealType tipo, int? foodId) => new()

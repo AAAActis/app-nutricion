@@ -1,5 +1,6 @@
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Managers;
+using AppNutricion.BusinessLogic.Services;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Enums;
@@ -30,7 +31,7 @@ public class MealEntryManagerTests
         _store.Setup(s => s.AddAsync(It.IsAny<IEnumerable<MealEntry>>()))
             .Callback((IEnumerable<MealEntry> e) => _agregadas.AddRange(e));
         _store.Setup(s => s.UpdateAsync(It.IsAny<MealEntry>(), UserId)).ReturnsAsync(true);
-        _manager = new MealEntryManager(_store.Object, _foods.Object, Mock.Of<IProfileStore>(), TimeProvider.System);
+        _manager = new MealEntryManager(_store.Object, _foods.Object, new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
     }
 
     private Task<MealEntry?> Crear(decimal quantity, bool isUnits = false, DateOnly? date = null, int foodId = 3, int? recipeId = null) =>

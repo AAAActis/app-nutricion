@@ -1,13 +1,12 @@
 using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
-using AppNutricion.BusinessLogic.Validators;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Enums;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, IProfileStore profileStore, TimeProvider timeProvider)
+public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, IUserToday userToday, TimeProvider timeProvider)
     : IMealEntryManager
 {
     private const decimal MaxGrams = 5000;
@@ -17,7 +16,7 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
     {
         if (recipeId is not null) throw new ArgumentException("Las recetas llegan en L9: por ahora solo se cargan alimentos.", nameof(recipeId));
         ValidateMealType(mealType);
-        await ValidateDateAsync(userId, date, nameof(date));
+        await userToday.ValidateDiaryDateAsync(userId, date, nameof(date));
 
         var food = await foodManager.GetByIdAsync(foodId, userId);
         if (food is null) return null;
@@ -48,7 +47,7 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         }
         if (date is { } day)
         {
-            await ValidateDateAsync(userId, day, nameof(date));
+            await userToday.ValidateDiaryDateAsync(userId, day, nameof(date));
             entry.Date = day;
         }
         if (isUnits is not null && quantity is null)
@@ -90,7 +89,7 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
     public async Task<List<MealEntry>> CopyAsync(int userId, DateOnly fromDate, DateOnly toDate, MealType? mealType)
     {
         if (fromDate == toDate) throw new ArgumentException("El día de origen y el de destino son el mismo.", nameof(toDate));
-        await ValidateDateAsync(userId, toDate, nameof(toDate));
+        await userToday.ValidateDiaryDateAsync(userId, toDate, nameof(toDate));
         if (mealType is { } type) ValidateMealType(type);
         // Copiar dos veces duplicaría todo (D20): el destino no puede tener comidas del tipo pedido (o de ninguno, sin tipo).
         if ((await store.GetByDateAsync(userId, toDate, mealType)).Count > 0)
@@ -134,18 +133,6 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         if (grams <= 0 || grams > MaxGrams)
             throw new ArgumentException($"La cantidad tiene que ser mayor a 0 y de hasta {MaxGrams} g.", "quantity");
         return grams;
-    }
-
-    // "Hoy" es el día local del perfil (como el peso). Sin perfil no se sabe la zona: hoy UTC + 1 de tolerancia
-    // por las zonas adelantadas.
-    private async Task ValidateDateAsync(int userId, DateOnly date, string paramName)
-    {
-        var profile = await profileStore.GetByUserIdAsync(userId);
-        var timeZone = TimeZoneInfo.Utc;
-        var hasZone = profile is not null && TimeZones.TryFindIana(profile.TimeZoneId, out timeZone);
-        var today = TimeZones.Today(timeProvider, timeZone);
-        if (date > (hasZone ? today : today.AddDays(1)) || date < today.AddYears(-2))
-            throw new ArgumentException("La fecha no puede ser futura ni de hace más de 2 años.", paramName);
     }
 
     private static void ValidateMealType(MealType mealType)

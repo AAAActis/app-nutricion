@@ -1,5 +1,6 @@
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Managers;
+using AppNutricion.BusinessLogic.Services;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Enums;
@@ -32,7 +33,7 @@ public class FechasDeComidasTests
         });
         _store.Setup(s => s.UpdateAsync(It.IsAny<MealEntry>(), UserId)).ReturnsAsync(true);
         _store.Setup(s => s.GetByDateAsync(UserId, It.IsAny<DateOnly>(), It.IsAny<MealType?>())).ReturnsAsync([]);
-        _manager = new MealEntryManager(_store.Object, foods.Object, _perfiles.Object, _reloj);
+        _manager = new MealEntryManager(_store.Object, foods.Object, new UserToday(_perfiles.Object, _reloj), _reloj);
     }
 
     private void ConPerfilEnCordoba() =>
