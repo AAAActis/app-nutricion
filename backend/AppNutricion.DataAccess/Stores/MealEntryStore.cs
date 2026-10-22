@@ -40,6 +40,35 @@ public class MealEntryStore(ApplicationDbContext context) : IMealEntryStore
     public async Task<bool> DeleteAsync(int id, int userId) =>
         await OfUser(userId).Where(m => m.Id == id).ExecuteDeleteAsync() > 0;
 
+    public Task<Dictionary<MealType, MealTotals>> SumByMealTypeAsync(int userId, DateOnly date) =>
+        OfUser(userId).Where(m => m.Date == date).GroupBy(m => m.MealType)
+            .Select(g => new
+            {
+                g.Key,
+                Totals = new MealTotals(g.Sum(m => m.SavedCalories), g.Sum(m => m.SavedProtein), g.Sum(m => m.SavedCarbs), g.Sum(m => m.SavedFat), g.Count()),
+            })
+            .ToDictionaryAsync(x => x.Key, x => x.Totals);
+
+    public async Task<List<MealEntry>> GetRangeAsync(int userId, DateOnly from, DateOnly to)
+    {
+        var entries = await OfUser(userId).Where(m => m.Date >= from && m.Date <= to).ToListAsync();
+        // Como GetByDateAsync: MealType es texto en la base, el orden del enum se aplica acá.
+        return entries.OrderBy(m => m.Date).ThenBy(m => m.MealType).ThenBy(m => m.CreatedAt).ThenBy(m => m.Id).ToList();
+    }
+
+    public Task<Dictionary<DateOnly, MealTotals>> SumByDateAsync(int userId, DateOnly from, DateOnly to) =>
+        OfUser(userId).Where(m => m.Date >= from && m.Date <= to).GroupBy(m => m.Date)
+            .Select(g => new
+            {
+                g.Key,
+                Totals = new MealTotals(g.Sum(m => m.SavedCalories), g.Sum(m => m.SavedProtein), g.Sum(m => m.SavedCarbs), g.Sum(m => m.SavedFat), g.Count()),
+            })
+            .ToDictionaryAsync(x => x.Key, x => x.Totals);
+
+    public Task<List<DateOnly>> GetLoggedDatesAsync(int userId, DateOnly upTo, int max) =>
+        OfUser(userId).Where(m => m.Date <= upTo).Select(m => m.Date).Distinct()
+            .OrderByDescending(d => d).Take(max).ToListAsync();
+
     private IQueryable<MealEntry> OfUser(int userId) =>
         context.MealEntries.AsNoTracking().Where(m => m.UserId == userId);
 }
