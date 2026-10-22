@@ -37,6 +37,7 @@ public static class NutritionDefaults
     // Macros.
     public const decimal ProteinGPerKgLoseOrGain = 1.8m;
     public const decimal ProteinGPerKgMaintain = 1.6m;
+    public const decimal ProteinMaxFractionOfCalories = 0.30m;   // tope: con pesos altos, g/kg superaba las kcal
     public const decimal FatFractionOfCalories = 0.25m;
     public const decimal KcalPerGramProtein = 4m;
     public const decimal KcalPerGramCarbs = 4m;

@@ -98,14 +98,16 @@ public static class NutritionCalculator
         var floorApplied = rawCalories < floor;
         var calories = (int)Math.Round(floorApplied ? floor : rawCalories, MidpointRounding.AwayFromZero);
 
-        // Macros sobre las kcal ya redondeadas: proteína por kg, grasa como % de las kcal, carbohidratos el resto.
+        // Macros sobre las kcal ya redondeadas: proteína por kg con tope en un % de las kcal, grasa como % de las kcal,
+        // carbohidratos el resto. Con el tope (30 %) y la grasa (25 %), los carbohidratos son al menos el 45 %: nunca negativos.
         var proteinPerKg = input.GoalType == GoalType.Maintain
             ? NutritionDefaults.ProteinGPerKgMaintain
             : NutritionDefaults.ProteinGPerKgLoseOrGain;
-        var proteinG = proteinPerKg * input.WeightKg;
+        var proteinG = Math.Min(proteinPerKg * input.WeightKg,
+            calories * NutritionDefaults.ProteinMaxFractionOfCalories / NutritionDefaults.KcalPerGramProtein);
         var fatKcal = calories * NutritionDefaults.FatFractionOfCalories;
         var fatG = fatKcal / NutritionDefaults.KcalPerGramFat;
-        var carbsG = Math.Max(0m, (calories - proteinG * NutritionDefaults.KcalPerGramProtein - fatKcal) / NutritionDefaults.KcalPerGramCarbs);
+        var carbsG = (calories - proteinG * NutritionDefaults.KcalPerGramProtein - fatKcal) / NutritionDefaults.KcalPerGramCarbs;
 
         var bmi = Bmi(input.WeightKg, input.HeightCm);
 
