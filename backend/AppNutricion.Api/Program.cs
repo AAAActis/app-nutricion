@@ -73,6 +73,8 @@ app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+// Después de la autenticación: la política del chat parte por usuario ("sub").
+app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
 

@@ -1,13 +1,17 @@
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Input;
 using AppNutricion.Presentation.Output;
+using AppNutricion.Presentation.RateLimiting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AppNutricion.Presentation.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+// Login y registro: 5 intentos por minuto y por IP (compartidos entre los dos) → 429 con Retry-After.
+[EnableRateLimiting(RateLimitPolicies.Auth)]
 public class AuthController(IAuthManager authManager) : ControllerBase
 {
     [HttpPost("register")]
