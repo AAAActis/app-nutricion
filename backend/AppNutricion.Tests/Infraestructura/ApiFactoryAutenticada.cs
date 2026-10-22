@@ -13,6 +13,7 @@ public class ApiFactoryAutenticada : ApiFactory
 {
     public Mock<IFoodManager> FoodManager { get; } = new();
     public Mock<IMealEntryManager> MealManager { get; } = new();
+    public Mock<ISummaryManager> SummaryManager { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -23,6 +24,7 @@ public class ApiFactoryAutenticada : ApiFactory
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.Esquema, _ => { });
             services.AddSingleton(FoodManager.Object);
             services.AddSingleton(MealManager.Object);
+            services.AddSingleton(SummaryManager.Object);
         });
     }
 

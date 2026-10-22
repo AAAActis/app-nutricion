@@ -1,6 +1,7 @@
 using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Managers;
+using AppNutricion.BusinessLogic.Services;
 using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.DataAccess.Stores;
 using AppNutricion.Entities.Entities;
@@ -23,7 +24,7 @@ public sealed class CopiarComidasConflictoTests : IDisposable
     public void Dispose() => _db.Dispose();
 
     private MealEntryManager NuevoManager() =>
-        new(new MealEntryStore(_db.NuevoContexto()), Mock.Of<IFoodManager>(), Mock.Of<IProfileStore>(), TimeProvider.System);
+        new(new MealEntryStore(_db.NuevoContexto()), Mock.Of<IFoodManager>(), new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
 
     private async Task Guardar(DateOnly dia, MealType tipo)
     {
