@@ -71,7 +71,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | S4 | Dockerfile de la API y compose completo | Santi | Pendiente | — | S1, J1 |
 | S5 | Scripts de respaldo y restauración de la base | Santi | Pendiente | — | S1 |
 | S6 | Seeds de demo: usuario de ejemplo con 2 semanas de peso, comidas y entrenamientos; 2 o 3 rutinas | Santi | Pendiente | — | S2 |
-| S7 | Rutinas y entrenamientos: endpoints, registro de lo realizado, tests | Santi | Pendiente | — | J2, S2 |
+| S7 | Rutinas y entrenamientos: endpoints, registro de lo realizado, tests | Santi | En curso (rama `feature/rutinas`) | — | J2, S2 |
 | S8 | Progreso por ejercicio y comparación entrenamiento vs. ingesta (ajuste de calorías como estimación) | Santi | Pendiente | — | S7, L6 |
 | S9 | Asistente IA en C#: cliente del LLM detrás de interfaz, herramientas, contexto sin email ni nombre, guardrails, fallback | Santi | Pendiente | — | J8, L6 (mientras, datos simulados). Proveedor LLM pendiente |
 | S10 | Historial persistente de conversaciones y sugerencias aceptar/ignorar | Santi | Pendiente | — | S9 |
