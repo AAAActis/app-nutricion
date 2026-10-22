@@ -262,6 +262,17 @@ public class ObjetivosEndpointsTests(ApiFactoryPerfil factory) : IClassFixture<A
         Assert.Equal(HttpStatusCode.Created, mantener.StatusCode);
     }
 
+    // Borde: cumple 18 hoy en Argentina (21/10) → ya puede elegir bajar de peso.
+    [Fact]
+    public async Task Post_Cumple18Hoy_LoseFat201()
+    {
+        var client = await UsuarioAsync(birthDate: "2008-10-21");
+
+        var response = await CrearAsync(client, "LoseFat", 0.25m);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
     private static Task<HttpResponseMessage> CambiarNacimientoAsync(HttpClient client, string birthDate) =>
         client.PutAsJsonAsync("/api/me/profile", new
         {
