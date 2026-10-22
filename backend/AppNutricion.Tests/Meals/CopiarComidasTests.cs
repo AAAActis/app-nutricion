@@ -21,6 +21,7 @@ public class CopiarComidasTests
     {
         _store.Setup(s => s.AddAsync(It.IsAny<IEnumerable<MealEntry>>()))
             .Callback((IEnumerable<MealEntry> e) => _agregadas.AddRange(e));
+        _store.Setup(s => s.GetByDateAsync(UserId, Hoy, It.IsAny<MealType?>())).ReturnsAsync([]);   // destino vacío (D20)
         _manager = new MealEntryManager(_store.Object, Mock.Of<IFoodManager>(), Mock.Of<IProfileStore>(), TimeProvider.System);
     }
 

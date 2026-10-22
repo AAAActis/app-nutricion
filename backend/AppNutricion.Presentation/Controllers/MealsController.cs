@@ -1,3 +1,4 @@
+using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Auth;
 using AppNutricion.Presentation.Input;
@@ -72,6 +73,10 @@ public class MealsController(IMealEntryManager mealManager, ICurrentUser current
         {
             var copies = await mealManager.CopyAsync(userId, input.FromDate, input.ToDate, input.MealType);
             return copies.Select(MealEntryOutput.From).ToList();
+        }
+        catch (ConflictException ex)
+        {
+            return this.ConflictProblemFor(ex);
         }
         catch (ArgumentException ex) when (ex.ParamName is not null)
         {

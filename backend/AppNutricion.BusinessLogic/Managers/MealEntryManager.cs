@@ -1,3 +1,4 @@
+using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Validators;
 using AppNutricion.DataAccess.Interfaces;
@@ -91,6 +92,9 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         if (fromDate == toDate) throw new ArgumentException("El día de origen y el de destino son el mismo.", nameof(toDate));
         await ValidateDateAsync(userId, toDate, nameof(toDate));
         if (mealType is { } type) ValidateMealType(type);
+        // Copiar dos veces duplicaría todo (D20): el destino no puede tener comidas del tipo pedido (o de ninguno, sin tipo).
+        if ((await store.GetByDateAsync(userId, toDate, mealType)).Count > 0)
+            throw new ConflictException("El día destino ya tiene comidas cargadas; borralas o copiá un tipo de comida que no tenga");
 
         var now = timeProvider.GetUtcNow().UtcDateTime;
         var copies = (await store.GetByDateAsync(userId, fromDate, mealType)).Select(m => new MealEntry
