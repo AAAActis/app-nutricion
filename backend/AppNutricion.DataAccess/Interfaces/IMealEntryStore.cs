@@ -3,6 +3,9 @@ using AppNutricion.Entities.Enums;
 
 namespace AppNutricion.DataAccess.Interfaces;
 
+// Sumas de los valores congelados (Saved*) y cantidad de entradas.
+public record MealTotals(decimal Calories, decimal Protein, decimal Carbs, decimal Fat, int Entries);
+
 // Todo filtra por userId: una entrada de otro usuario no existe (null/false).
 public interface IMealEntryStore
 {
@@ -12,4 +15,7 @@ public interface IMealEntryStore
     Task AddAsync(IEnumerable<MealEntry> entries);
     Task<bool> UpdateAsync(MealEntry entry, int userId);
     Task<bool> DeleteAsync(int id, int userId);
+
+    // Sumado en la base, un grupo por tipo de comida con entradas ese día.
+    Task<Dictionary<MealType, MealTotals>> SumByMealTypeAsync(int userId, DateOnly date);
 }

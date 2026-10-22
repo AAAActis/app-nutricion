@@ -40,6 +40,9 @@ public class MealEntryStore(ApplicationDbContext context) : IMealEntryStore
     public async Task<bool> DeleteAsync(int id, int userId) =>
         await OfUser(userId).Where(m => m.Id == id).ExecuteDeleteAsync() > 0;
 
+    public Task<Dictionary<MealType, MealTotals>> SumByMealTypeAsync(int userId, DateOnly date) =>
+        throw new NotImplementedException();
+
     private IQueryable<MealEntry> OfUser(int userId) =>
         context.MealEntries.AsNoTracking().Where(m => m.UserId == userId);
 }
