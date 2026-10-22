@@ -18,16 +18,19 @@ public class FoodsControllerTests : IClassFixture<ApiFactoryAutenticada>
     }
 
     [Fact]
-    public async Task GetByBarcode_CodigoInvalido_Devuelve400ComoProblemDetails()
+    public async Task GetByBarcode_CodigoInvalido_Devuelve400ValidationProblemConElCampo()
     {
         _factory.FoodManager.Setup(m => m.GetByBarcodeAsync("abc", null))
-            .ThrowsAsync(new ArgumentException("El código de barras debe tener entre 8 y 14 dígitos."));
+            .ThrowsAsync(new ArgumentException("El código de barras debe tener entre 8 y 14 dígitos.", "code"));
 
         var response = await _factory.CrearCliente(null).GetAsync("/api/foods/barcode/abc");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        Assert.Contains("entre 8 y 14", await response.Content.ReadAsStringAsync());
+        Assert.Equal(["code"], await UsuarioDePrueba.CamposConErrorAsync(response));
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("entre 8 y 14", body);
+        Assert.DoesNotContain("(Parameter", body);
     }
 
     private const int UserId = 7;

@@ -110,7 +110,7 @@ public class MealEntryManagerTests
     [InlineData(5000.01)]
     public async Task Create_GramosFueraDeRango_LanzaArgumentException(decimal quantity)
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => Crear(quantity));
+        Assert.Equal("quantity", (await Assert.ThrowsAsync<ArgumentException>(() => Crear(quantity))).ParamName);
         Assert.Empty(_agregadas);
     }
 
@@ -123,7 +123,7 @@ public class MealEntryManagerTests
     [Fact]
     public async Task Create_FechaMasDeUnDiaEnElFuturo_LanzaArgumentException()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => Crear(100, date: Hoy.AddDays(2)));
+        Assert.Equal("date", (await Assert.ThrowsAsync<ArgumentException>(() => Crear(100, date: Hoy.AddDays(2)))).ParamName);
         Assert.Empty(_agregadas);
     }
 
@@ -137,7 +137,7 @@ public class MealEntryManagerTests
     [Fact]
     public async Task Create_FechaDeHaceMasDeDosAnios_LanzaArgumentException()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => Crear(100, date: Hoy.AddYears(-2).AddDays(-1)));
+        Assert.Equal("date", (await Assert.ThrowsAsync<ArgumentException>(() => Crear(100, date: Hoy.AddYears(-2).AddDays(-1)))).ParamName);
     }
 
     [Fact]
@@ -155,13 +155,15 @@ public class MealEntryManagerTests
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() => Crear(100, recipeId: 1));
         Assert.Contains("L9", ex.Message);
+        Assert.Equal("recipeId", ex.ParamName);
     }
 
     [Fact]
     public async Task Create_MealTypeInexistente_LanzaArgumentException()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
             _manager.CreateAsync(UserId, _pan.Id, 100, false, (MealType)99, Hoy, null));
+        Assert.Equal("mealType", ex.ParamName);
     }
 
     private MealEntry Guardada(int? foodId = 3) => new()
@@ -229,7 +231,7 @@ public class MealEntryManagerTests
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada(foodId: null));
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, 2, true, null, null));
+        Assert.Equal("quantity", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, 2, true, null, null))).ParamName);
         _store.Verify(s => s.UpdateAsync(It.IsAny<MealEntry>(), It.IsAny<int>()), Times.Never);
     }
 
@@ -238,7 +240,7 @@ public class MealEntryManagerTests
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada(foodId: 99));
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, 2, true, null, null));
+        Assert.Equal("quantity", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, 2, true, null, null))).ParamName);
     }
 
     [Fact]
@@ -246,7 +248,7 @@ public class MealEntryManagerTests
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada());
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, null, true, null, null));
+        Assert.Equal("isUnits", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, null, true, null, null))).ParamName);
     }
 
     [Theory]
@@ -256,7 +258,7 @@ public class MealEntryManagerTests
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada());
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, quantity, false, null, null));
+        Assert.Equal("quantity", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, quantity, false, null, null))).ParamName);
     }
 
     [Fact]
@@ -264,7 +266,7 @@ public class MealEntryManagerTests
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada());
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, null, null, null, Hoy.AddDays(2)));
+        Assert.Equal("date", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, null, null, null, Hoy.AddDays(2)))).ParamName);
     }
 
     [Fact]
@@ -272,7 +274,7 @@ public class MealEntryManagerTests
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada());
 
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, null, null, (MealType)99, null));
+        Assert.Equal("mealType", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.UpdateAsync(5, UserId, null, null, (MealType)99, null))).ParamName);
     }
 
     [Fact]
@@ -320,7 +322,7 @@ public class MealEntryManagerTests
     [Fact]
     public async Task List_SinFecha_LanzaArgumentException()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.ListAsync(UserId, null));
+        Assert.Equal("date", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.ListAsync(UserId, null))).ParamName);
     }
 
     [Fact]

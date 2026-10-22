@@ -80,7 +80,7 @@ public class FoodManagerTests
     [InlineData("٧٧٩١٢٣٤٥")]
     public async Task GetByBarcodeAsync_CodigoInvalido_LanzaArgumentExceptionSinLlamarAlStore(string? code)
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.GetByBarcodeAsync(code, null));
+        Assert.Equal("code", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.GetByBarcodeAsync(code, null))).ParamName);
         _store.Verify(s => s.GetByBarcodeAsync(It.IsAny<string>(), It.IsAny<int?>()), Times.Never);
     }
 
@@ -127,5 +127,6 @@ public class FoodManagerTests
 
         var ex = Assert.Throws<ArgumentException>(() => _manager.ConvertToGrams(food, 2m, isUnits: true));
         Assert.Contains("Harina", ex.Message);
+        Assert.Equal("isUnits", ex.ParamName);
     }
 }

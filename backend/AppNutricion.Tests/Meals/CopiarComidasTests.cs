@@ -79,7 +79,7 @@ public class CopiarComidasTests
     [Fact]
     public async Task Copy_MismoDia_LanzaArgumentException()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.CopyAsync(UserId, Hoy, Hoy, null));
+        Assert.Equal("toDate", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.CopyAsync(UserId, Hoy, Hoy, null))).ParamName);
     }
 
     [Fact]
@@ -99,12 +99,12 @@ public class CopiarComidasTests
     [InlineData(-800)]
     public async Task Copy_DestinoFueraDeRango_LanzaArgumentException(int diasDesdeHoy)
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.CopyAsync(UserId, Ayer, Hoy.AddDays(diasDesdeHoy), null));
+        Assert.Equal("toDate", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.CopyAsync(UserId, Ayer, Hoy.AddDays(diasDesdeHoy), null))).ParamName);
     }
 
     [Fact]
     public async Task Copy_MealTypeInexistente_LanzaArgumentException()
     {
-        await Assert.ThrowsAsync<ArgumentException>(() => _manager.CopyAsync(UserId, Ayer, Hoy, (MealType)99));
+        Assert.Equal("mealType", (await Assert.ThrowsAsync<ArgumentException>(() => _manager.CopyAsync(UserId, Ayer, Hoy, (MealType)99))).ParamName);
     }
 }

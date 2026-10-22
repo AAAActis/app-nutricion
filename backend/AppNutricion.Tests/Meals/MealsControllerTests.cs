@@ -117,19 +117,27 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
     }
 
     [Fact]
-    public async Task Post_ManagerLanzaArgumentException_Devuelve400ProblemDetailsConElMensaje()
+    public async Task Post_ManagerLanzaArgumentException_Devuelve400ValidationProblemConElCampo()
     {
         _factory.MealManager
             .Setup(m => m.CreateAsync(UserId, It.IsAny<int>(), It.IsAny<decimal>(), It.IsAny<bool>(),
                 It.IsAny<MealType>(), It.IsAny<DateOnly>(), It.IsAny<int?>()))
-            .ThrowsAsync(new ArgumentException("cantidad fuera de rango"));
+            .ThrowsAsync(new ArgumentException("cantidad fuera de rango", "quantity"));
 
         var response = await _factory.CrearCliente(UserId).PostAsJsonAsync("/api/meals", Alta());
 
+        await AssertValidacionAsync(response, "quantity", "cantidad fuera de rango");
+    }
+
+    // 400 en el formato de J2: ValidationProblemDetails con el campo y el mensaje sin " (Parameter 'x')".
+    private static async Task AssertValidacionAsync(HttpResponseMessage response, string campo, string mensaje)
+    {
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Equal("cantidad fuera de rango", json.RootElement.GetProperty("detail").GetString());
+        Assert.Equal([campo], await UsuarioDePrueba.CamposConErrorAsync(response));
+        var errores = (await UsuarioDePrueba.JsonAsync(response)).GetProperty("errors").GetProperty(campo);
+        Assert.Equal(mensaje, Assert.Single(errores.EnumerateArray()).GetString());
+        Assert.DoesNotContain("(Parameter", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -165,16 +173,15 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
     }
 
     [Fact]
-    public async Task Put_ManagerLanzaArgumentException_Devuelve400ProblemDetails()
+    public async Task Put_ManagerLanzaArgumentException_Devuelve400ValidationProblemConElCampo()
     {
         _factory.MealManager.Setup(m => m.UpdateAsync(5, UserId, It.IsAny<decimal?>(), It.IsAny<bool?>(),
                 It.IsAny<MealType?>(), It.IsAny<DateOnly?>()))
-            .ThrowsAsync(new ArgumentException("sin porción"));
+            .ThrowsAsync(new ArgumentException("sin porción", "isUnits"));
 
         var response = await _factory.CrearCliente(UserId).PutAsJsonAsync("/api/meals/5", new { quantity = 2, isUnits = true });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        await AssertValidacionAsync(response, "isUnits", "sin porción");
     }
 
     [Fact]
@@ -210,14 +217,13 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
     }
 
     [Fact]
-    public async Task Get_SinFecha_Devuelve400ProblemDetails()
+    public async Task Get_SinFecha_Devuelve400ValidationProblemConElCampo()
     {
-        _factory.MealManager.Setup(m => m.ListAsync(UserId, null)).ThrowsAsync(new ArgumentException("Falta la fecha"));
+        _factory.MealManager.Setup(m => m.ListAsync(UserId, null)).ThrowsAsync(new ArgumentException("Falta la fecha", "date"));
 
         var response = await _factory.CrearCliente(UserId).GetAsync("/api/meals");
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        await AssertValidacionAsync(response, "date", "Falta la fecha");
     }
 
     [Fact]
@@ -247,15 +253,14 @@ public class MealsControllerTests : IClassFixture<ApiFactoryAutenticada>
     }
 
     [Fact]
-    public async Task Copy_ManagerLanzaArgumentException_Devuelve400ProblemDetails()
+    public async Task Copy_ManagerLanzaArgumentException_Devuelve400ValidationProblemConElCampo()
     {
-        _factory.MealManager.Setup(m => m.CopyAsync(UserId, Dia, Dia, null)).ThrowsAsync(new ArgumentException("mismo día"));
+        _factory.MealManager.Setup(m => m.CopyAsync(UserId, Dia, Dia, null)).ThrowsAsync(new ArgumentException("mismo día", "toDate"));
 
         var response = await _factory.CrearCliente(UserId).PostAsJsonAsync("/api/meals/copy",
             new { fromDate = "2026-10-20", toDate = "2026-10-20" });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        await AssertValidacionAsync(response, "toDate", "mismo día");
     }
 
     [Theory]
