@@ -14,7 +14,7 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
     {
         if (recipeId is not null) throw new ArgumentException("Las recetas llegan en L9: por ahora solo se cargan alimentos.", nameof(recipeId));
         ValidateMealType(mealType);
-        ValidateDate(date);
+        ValidateDate(date, nameof(date));
 
         var food = await foodManager.GetByIdAsync(foodId, userId);
         if (food is null) return null;
@@ -51,7 +51,7 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
         }
         if (date is { } day)
         {
-            ValidateDate(day);
+            ValidateDate(day, nameof(date));
             entry.Date = day;
         }
         if (isUnits is not null && quantity is null)
@@ -82,7 +82,7 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
     public async Task<List<MealEntry>> CopyAsync(int userId, DateOnly fromDate, DateOnly toDate, MealType? mealType)
     {
         if (fromDate == toDate) throw new ArgumentException("El día de origen y el de destino son el mismo.", nameof(toDate));
-        ValidateDate(toDate);
+        ValidateDate(toDate, nameof(toDate));
         if (mealType is { } type) ValidateMealType(type);
 
         var now = DateTime.UtcNow;
@@ -122,11 +122,11 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
     }
 
     // El cliente manda su día local: se acepta hasta mañana (UTC) por las zonas horarias adelantadas.
-    private static void ValidateDate(DateOnly date)
+    private static void ValidateDate(DateOnly date, string paramName)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         if (date > today.AddDays(1) || date < today.AddYears(-2))
-            throw new ArgumentException("La fecha tiene que estar entre hace 2 años y mañana.", nameof(date));
+            throw new ArgumentException("La fecha tiene que estar entre hace 2 años y mañana.", paramName);
     }
 
     private static void ValidateMealType(MealType mealType)

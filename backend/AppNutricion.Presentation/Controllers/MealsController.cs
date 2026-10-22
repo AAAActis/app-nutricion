@@ -3,7 +3,6 @@ using AppNutricion.Presentation.Auth;
 using AppNutricion.Presentation.Input;
 using AppNutricion.Presentation.Output;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppNutricion.Presentation.Controllers;
@@ -22,9 +21,9 @@ public class MealsController(IMealEntryManager mealManager, ICurrentUser current
             var entry = await mealManager.CreateAsync(userId, input.FoodId, input.Quantity, input.IsUnits, input.MealType, input.Date, input.RecipeId);
             return entry is null ? NotFound() : Created((string?)null, MealEntryOutput.From(entry));
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException ex) when (ex.ParamName is not null)
         {
-            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
+            return this.ValidationProblemFor(ex);
         }
     }
 
@@ -37,9 +36,9 @@ public class MealsController(IMealEntryManager mealManager, ICurrentUser current
             var entry = await mealManager.UpdateAsync(id, userId, input.Quantity, input.IsUnits, input.MealType, input.Date);
             return entry is null ? NotFound() : MealEntryOutput.From(entry);
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException ex) when (ex.ParamName is not null)
         {
-            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
+            return this.ValidationProblemFor(ex);
         }
     }
 
@@ -59,9 +58,9 @@ public class MealsController(IMealEntryManager mealManager, ICurrentUser current
             var entries = await mealManager.ListAsync(userId, date);
             return entries.Select(MealEntryOutput.From).ToList();
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException ex) when (ex.ParamName is not null)
         {
-            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
+            return this.ValidationProblemFor(ex);
         }
     }
 
@@ -74,9 +73,9 @@ public class MealsController(IMealEntryManager mealManager, ICurrentUser current
             var copies = await mealManager.CopyAsync(userId, input.FromDate, input.ToDate, input.MealType);
             return copies.Select(MealEntryOutput.From).ToList();
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException ex) when (ex.ParamName is not null)
         {
-            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
+            return this.ValidationProblemFor(ex);
         }
     }
 }

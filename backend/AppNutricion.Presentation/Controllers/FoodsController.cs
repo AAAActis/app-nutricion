@@ -2,7 +2,6 @@ using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Auth;
 using AppNutricion.Presentation.Output;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppNutricion.Presentation.Controllers;
@@ -34,9 +33,9 @@ public class FoodsController(IFoodManager foodManager, ICurrentUser currentUser)
             var food = await foodManager.GetByBarcodeAsync(code, currentUser.UserId);
             return food is null ? NotFound() : FoodOutput.From(food);
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException ex) when (ex.ParamName is not null)
         {
-            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
+            return this.ValidationProblemFor(ex);
         }
     }
 
