@@ -1,6 +1,6 @@
-// Mi día (pantalla de Lauti; base en J12). No hay endpoint de resumen diario en develop (L6 pendiente): se suman
-// en la página las comidas de GET /api/meals?date=YYYY-MM-DD contra GET /api/me/targets.
-// Carga: POST /api/meals { foodId, quantity, isUnits, mealType, date, recipeId }. Edición: PUT /api/meals/{id}
+// Mi día (pantalla de Lauti; base en J12). Resumen: GET /api/summary/daily?date=YYYY-MM-DD (L6) → { consumed,
+// targets | null, remaining { calories: { value, exceeded }, … } | null, progressPct | null, disclaimer }.
+// Comidas: GET /api/meals?date=YYYY-MM-DD. Carga: POST /api/meals { foodId, quantity, isUnits, mealType, date, recipeId }. Edición: PUT /api/meals/{id}
 // { quantity, isUnits, mealType, date }. Borrado: DELETE /api/meals/{id}.
 // Alimentos: GET /api/foods/search?q&limit, GET /api/foods/favorites, GET /api/foods/recent,
 // POST y DELETE /api/foods/{id}/favorite. Los de Open Food Facts traen attribution (ODbL).
@@ -20,7 +20,7 @@ const SEARCH_LIMIT = 20;
 const SEARCH_DELAY_MS = 300;
 
 export async function render(container) {
-  const state = { date: today(await profileTimeZone()), meals: [], targets: null, favorites: new Set() };
+  const state = { date: today(await profileTimeZone()), meals: [], summary: null, favorites: new Set() };
 
   const status = el("div");
   const summary = el("section", { class: "card" });
@@ -28,10 +28,11 @@ export async function render(container) {
   const dateInput = el("input", { type: "date", name: "date", value: state.date });
 
   const reload = async () => {
-    const [meals, targets] = await Promise.all([api(`/api/meals?date=${encodeURIComponent(state.date)}`), loadTargets()]);
+    const date = encodeURIComponent(state.date);
+    const [meals, daily] = await Promise.all([api(`/api/meals?date=${date}`), api(`/api/summary/daily?date=${date}`)]);
     state.meals = meals;
-    state.targets = targets;
-    renderSummary(summary, state);
+    state.summary = daily;
+    renderSummary(summary, daily);
     renderMeals(mealsCard, state, reload, status);
   };
 
@@ -62,40 +63,39 @@ async function profileTimeZone() {
   }
 }
 
-async function loadTargets() {
-  try {
-    return await api("/api/me/targets");
-  } catch (error) {
-    if (error.status === 404) return null;
-    throw error;
-  }
-}
+// ---------- Resumen del día contra el objetivo (lo calcula la API) ----------
 
-// ---------- Resumen del día contra los targets ----------
+const MACROS = [
+  ["calories", "Calorías", "kcal", 0],
+  ["proteinG", "Proteína", "g", 1],
+  ["carbsG", "Carbohidratos", "g", 1],
+  ["fatG", "Grasa", "g", 1],
+];
 
-function renderSummary(card, { meals, targets }) {
-  const total = (key) => meals.reduce((sum, m) => sum + Number(m[key]), 0);
-  const rows = [
-    ["Calorías", total("savedCalories"), targets?.calories, "kcal", 0],
-    ["Proteína", total("savedProtein"), targets?.proteinG, "g", 1],
-    ["Carbohidratos", total("savedCarbs"), targets?.carbsG, "g", 1],
-    ["Grasa", total("savedFat"), targets?.fatG, "g", 1],
-  ];
+function renderSummary(card, daily) {
+  const { consumed, targets, remaining } = daily;
   setChildren(card,
     el("h2", {}, "Resumen"),
     targets ? null : notice("warning", "Sin objetivo activo: solo se ven los totales. ", el("a", { href: "#/objetivo" }, "Crear objetivo")),
-    rows.map(([label, value, target, unit, decimals]) => el("div", { class: "field" },
-      el("div", { class: "item" },
-        el("span", { class: "name" }, label),
-        el("span", {}, target
-          ? `${num(value, decimals)} de ${num(target, decimals)} ${unit} · ${restText(value, target, unit, decimals)}`
-          : `${num(value, decimals)} ${unit}`)),
-      target ? el("progress", { max: target, value: Math.min(value, target), class: value > target ? "over" : false }) : null)));
+    MACROS.map(([key, label, unit, decimals]) => {
+      const value = Number(consumed[key]);
+      const target = targets ? Number(targets[key]) : null;
+      const left = remaining?.[key];
+      return el("div", { class: "field" },
+        el("div", { class: "item" },
+          el("span", { class: "name" }, label),
+          el("span", {}, target === null
+            ? `${num(value, decimals)} ${unit}`
+            : `${num(value, decimals)} de ${num(target, decimals)} ${unit} · ${leftText(left, unit, decimals)}`)),
+        target ? el("progress", { max: target, value: Math.min(value, target), class: left?.exceeded ? "over" : false }) : null);
+    }),
+    el("p", { class: "muted small" }, daily.disclaimer));
 }
 
-function restText(value, target, unit, decimals) {
-  const rest = Number(target) - value;
-  return rest >= 0 ? `faltan ${num(rest, decimals)} ${unit}` : `pasado por ${num(-rest, decimals)} ${unit}`;
+function leftText(left, unit, decimals) {
+  if (!left) return "";
+  const amount = num(Math.abs(Number(left.value)), decimals);
+  return left.exceeded ? `pasado por ${amount} ${unit}` : `faltan ${amount} ${unit}`;
 }
 
 // ---------- Comidas del día ----------
