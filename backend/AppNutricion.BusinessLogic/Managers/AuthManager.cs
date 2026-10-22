@@ -13,6 +13,10 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
     private const int MinPasswordLength = 8;
     private const int MaxPasswordLength = 128;
 
+    // Hash (PasswordHasher v3) de una contraseña aleatoria que no se guardó en ningún lado.
+    private const string DummyPasswordHash = "AQAAAAIAAYagAAAAEANfj9Z9jxn2mvOhLY9GFsV3FkQ8hn2lKOpEAhWCIwpqEqXl0M+JoUOvEpQ5o6LAbg==";
+    private static readonly User DummyUser = new();
+
     public async Task<RegisterResult> RegisterAsync(string? email, string? password, bool consentAccepted)
     {
         var normalizedEmail = NormalizeEmail(email);
@@ -42,8 +46,19 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
         return new RegisterResult(RegisterStatus.Registered, user);
     }
 
-    public Task<LoginResult?> LoginAsync(string? email, string? password) =>
-        Task.FromResult<LoginResult?>(null);
+    public async Task<LoginResult?> LoginAsync(string? email, string? password)
+    {
+        var normalizedEmail = NormalizeEmail(email);
+        if (normalizedEmail.Length == 0 || string.IsNullOrEmpty(password)) return null;
+
+        var user = await userStore.GetByEmailAsync(normalizedEmail);
+        // Si el email no existe se verifica igual contra un hash de relleno: así el tiempo de respuesta
+        // no revela qué emails están registrados.
+        var verification = passwordHasher.VerifyHashedPassword(user ?? DummyUser, user?.PasswordHash ?? DummyPasswordHash, password);
+        if (user is null || verification == PasswordVerificationResult.Failed) return null;
+
+        return tokenService.CreateFor(user);
+    }
 
     // El índice único de Users.Email distingue mayúsculas: se guarda y se busca siempre así.
     private static string NormalizeEmail(string? email) => (email ?? "").Trim().ToLowerInvariant();
