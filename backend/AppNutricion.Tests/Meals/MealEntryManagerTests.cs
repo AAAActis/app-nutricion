@@ -166,14 +166,15 @@ public class MealEntryManagerTests
         Assert.Equal("mealType", ex.ParamName);
     }
 
+    // Los valores guardados no coinciden con el pan actual (250/10/30/5 por 100 g): así se ve de dónde sale cada número.
     private MealEntry Guardada(int? foodId = 3) => new()
     {
-        Id = 5, UserId = UserId, FoodId = foodId, ItemName = "Pan (Bimbo)", Date = Hoy, MealType = MealType.Lunch,
+        Id = 5, UserId = UserId, FoodId = foodId, ItemName = "Pan viejo", Date = Hoy, MealType = MealType.Lunch,
         QuantityGrams = 150, SavedCalories = 300, SavedProtein = 20, SavedCarbs = 45.55m, SavedFat = 7,
     };
 
     [Fact]
-    public async Task Update_CambiaLaCantidad_RecalculaProporcionalALoGuardado()
+    public async Task Update_CambiaLaCantidadConElAlimentoVisible_RecongelaDesdeFoodsYActualizaElNombre()
     {
         var guardada = Guardada();
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(guardada);
@@ -182,18 +183,56 @@ public class MealEntryManagerTests
 
         Assert.NotNull(entry);
         Assert.Equal(300m, entry.QuantityGrams);
-        Assert.Equal(600m, entry.SavedCalories);
-        Assert.Equal(40m, entry.SavedProtein);
-        Assert.Equal(91.1m, entry.SavedCarbs);
-        Assert.Equal(14m, entry.SavedFat);
-        _foods.Verify(f => f.GetByIdAsync(It.IsAny<int>(), It.IsAny<int?>()), Times.Never);
+        Assert.Equal(750m, entry.SavedCalories);
+        Assert.Equal(30m, entry.SavedProtein);
+        Assert.Equal(90m, entry.SavedCarbs);
+        Assert.Equal(15m, entry.SavedFat);
+        Assert.Equal("Pan (Bimbo)", entry.ItemName);
+        _foods.Verify(f => f.GetByIdAsync(_pan.Id, UserId), Times.Once);
         _store.Verify(s => s.UpdateAsync(guardada, UserId), Times.Once);
     }
 
+    // Con 1 g guardado los macros redondeados pierden casi todo: escalarlos ×5000 da otro número.
     [Fact]
-    public async Task Update_RedondeaLosMacrosProporcionales()
+    public async Task Update_De1A5000GramosConElAlimentoVisible_DaElValorExacto()
     {
+        var yerba = new Food { Id = 8, Name = "Yerba", CaloriesPer100g = 0.3m, ProteinPer100g = 1.234m, CarbsPer100g = 0.4m, FatPer100g = 0.111m };
+        _foods.Setup(f => f.GetByIdAsync(8, UserId)).ReturnsAsync(yerba);
+        _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(new MealEntry
+        {
+            Id = 5, UserId = UserId, FoodId = 8, ItemName = "Yerba", Date = Hoy, MealType = MealType.Breakfast,
+            QuantityGrams = 1, SavedCalories = 0, SavedProtein = 0.01m, SavedCarbs = 0, SavedFat = 0,
+        });
+
+        var entry = await _manager.UpdateAsync(5, UserId, 5000, false, null, null);
+
+        Assert.Equal(5000m, entry?.QuantityGrams);
+        Assert.Equal(15m, entry?.SavedCalories);
+        Assert.Equal(61.7m, entry?.SavedProtein);
+        Assert.Equal(20m, entry?.SavedCarbs);
+        Assert.Equal(5.55m, entry?.SavedFat);
+    }
+
+    [Fact]
+    public async Task Update_ConElAlimentoVisible_RedondeaA2Decimales()
+    {
+        _foods.Setup(f => f.GetByIdAsync(_pan.Id, UserId))
+            .ReturnsAsync(new Food { Id = 3, Name = "Pan", CaloriesPer100g = 251.111m, ProteinPer100g = 9.999m, CarbsPer100g = 33.333m, FatPer100g = 4.444m });
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada());
+
+        var entry = await _manager.UpdateAsync(5, UserId, 33, false, null, null);
+
+        Assert.Equal(82.87m, entry?.SavedCalories);   // 33 × 251.111 / 100 = 82.866…
+        Assert.Equal(3.30m, entry?.SavedProtein);     // 3.29967
+        Assert.Equal(11m, entry?.SavedCarbs);         // 10.99989
+        Assert.Equal(1.47m, entry?.SavedFat);         // 1.46652
+        Assert.Equal("Pan", entry?.ItemName);
+    }
+
+    [Fact]
+    public async Task Update_AlimentoBorrado_RedondeaLosMacrosProporcionales()
+    {
+        _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada(foodId: null));
 
         var entry = await _manager.UpdateAsync(5, UserId, 100, false, null, null);
 
@@ -201,10 +240,11 @@ public class MealEntryManagerTests
         Assert.Equal(13.33m, entry?.SavedProtein);   // 20 × 100 / 150 = 13.333…
         Assert.Equal(30.37m, entry?.SavedCarbs);     // 45.55 × 100 / 150 = 30.3666…
         Assert.Equal(4.67m, entry?.SavedFat);        // 7 × 100 / 150 = 4.666…
+        Assert.Equal("Pan viejo", entry?.ItemName);
     }
 
     [Fact]
-    public async Task Update_EnUnidades_ConvierteConElAlimentoYRecalculaProporcional()
+    public async Task Update_EnUnidades_ConvierteConElAlimentoYRecongelaDesdeFoods()
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada());
         _foods.Setup(f => f.ConvertToGrams(_pan, 2, true)).Returns(75);
@@ -212,11 +252,11 @@ public class MealEntryManagerTests
         var entry = await _manager.UpdateAsync(5, UserId, 2, true, null, null);
 
         Assert.Equal(75m, entry?.QuantityGrams);
-        Assert.Equal(150m, entry?.SavedCalories);
+        Assert.Equal(187.5m, entry?.SavedCalories);
     }
 
     [Fact]
-    public async Task Update_AlimentoBorradoYCantidadEnGramos_Funciona()
+    public async Task Update_AlimentoBorradoYCantidadEnGramos_Proporcional()
     {
         _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada(foodId: null));
 
@@ -224,6 +264,19 @@ public class MealEntryManagerTests
 
         Assert.Equal(75m, entry?.QuantityGrams);
         Assert.Equal(150m, entry?.SavedCalories);
+        Assert.Equal(10m, entry?.SavedProtein);
+    }
+
+    [Fact]
+    public async Task Update_AlimentoYaNoVisibleYCantidadEnGramos_Proporcional()
+    {
+        _store.Setup(s => s.GetByIdAsync(5, UserId)).ReturnsAsync(Guardada(foodId: 99));
+
+        var entry = await _manager.UpdateAsync(5, UserId, 75, false, null, null);
+
+        Assert.Equal(150m, entry?.SavedCalories);
+        Assert.Equal("Pan viejo", entry?.ItemName);
+        _foods.Verify(f => f.GetByIdAsync(99, UserId), Times.Once);
     }
 
     [Fact]
@@ -290,6 +343,9 @@ public class MealEntryManagerTests
         Assert.Equal(MealType.Dinner, entry.MealType);
         Assert.Equal(150m, entry.QuantityGrams);
         Assert.Equal(300m, entry.SavedCalories);
+        Assert.Equal(20m, entry.SavedProtein);
+        Assert.Equal("Pan viejo", entry.ItemName);
+        _foods.Verify(f => f.GetByIdAsync(It.IsAny<int>(), It.IsAny<int?>()), Times.Never);
     }
 
     [Fact]

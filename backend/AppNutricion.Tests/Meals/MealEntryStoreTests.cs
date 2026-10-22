@@ -85,7 +85,7 @@ public sealed class MealEntryStoreTests : IDisposable
     public async Task Update_Propia_GuardaLosCambios()
     {
         var id = await Guardar(Entrada(Yo, MealType.Lunch, 0));
-        var entry = Entrada(Yo, MealType.Dinner, 0);
+        var entry = Entrada(Yo, MealType.Dinner, 0, nombre: "nombre nuevo");
         entry.Id = id;
         entry.QuantityGrams = 200;
         entry.SavedCalories = 200;
@@ -97,6 +97,7 @@ public sealed class MealEntryStoreTests : IDisposable
         Assert.Equal(200m, guardada.QuantityGrams);
         Assert.Equal(200m, guardada.SavedCalories);
         Assert.Equal(MealType.Dinner, guardada.MealType);
+        Assert.Equal("nombre nuevo", guardada.ItemName);
     }
 
     [Fact]
