@@ -1,5 +1,6 @@
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Output;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppNutricion.Presentation.Controllers;
@@ -35,7 +36,7 @@ public class FoodsController(IFoodManager foodManager) : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: ex.Message);
         }
     }
 }
