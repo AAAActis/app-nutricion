@@ -31,4 +31,6 @@ public class UserAccountStore(ApplicationDbContext context) : IUserAccountStore
             return false;
         }
     }
+
+    public Task DeleteWithDataAsync(int userId) => Task.CompletedTask;
 }

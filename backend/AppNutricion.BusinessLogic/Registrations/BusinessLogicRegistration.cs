@@ -28,6 +28,9 @@ public static class BusinessLogicRegistration
         services.AddScoped<IProfileManager, ProfileManager>();
         services.AddScoped<IBodyMetricManager, BodyMetricManager>();
         services.AddScoped<IGoalManager, GoalManager>();
+
+        // Cuenta: borrado y exportación (J5).
+        services.AddScoped<IAccountManager, AccountManager>();
         return services;
     }
 }
