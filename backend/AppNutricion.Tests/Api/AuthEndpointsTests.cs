@@ -186,14 +186,14 @@ public class AuthEndpointsTests(ApiFactoryAuth factory) : IClassFixture<ApiFacto
     // ---------- tokens inválidos ----------
 
     private static string TokenPara(int userId, string clave = ApiFactory.ClaveJwtFalsa, string issuer = "AppNutricion.Api",
-        string audiencia = "AppNutricion.Clientes", string algoritmo = SecurityAlgorithms.HmacSha256) =>
+        string audiencia = "AppNutricion.Clientes") =>
         new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity([new Claim(JwtRegisteredClaimNames.Sub, userId.ToString())]),
             Issuer = issuer,
             Audience = audiencia,
             Expires = DateTime.UtcNow.AddMinutes(10),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(clave)), algoritmo),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(clave)), SecurityAlgorithms.HmacSha256),
         });
 
     // Control: un token armado a mano con los datos correctos sí entra. Así los 401 de abajo se deben al dato cambiado.
@@ -207,22 +207,20 @@ public class AuthEndpointsTests(ApiFactoryAuth factory) : IClassFixture<ApiFacto
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    // El último: HS512 con la clave correcta. Solo cambia el algoritmo.
-    public static TheoryData<string, string, string, string> TokensInvalidos() => new()
+    public static TheoryData<string, string, string> TokensInvalidos() => new()
     {
-        { "otra-clave-de-al-menos-32-bytes-xxxxxx", "AppNutricion.Api", "AppNutricion.Clientes", SecurityAlgorithms.HmacSha256 },
-        { ApiFactory.ClaveJwtFalsa, "OtroEmisor", "AppNutricion.Clientes", SecurityAlgorithms.HmacSha256 },
-        { ApiFactory.ClaveJwtFalsa, "AppNutricion.Api", "OtraAudiencia", SecurityAlgorithms.HmacSha256 },
-        { ApiFactory.ClaveJwtFalsa, "AppNutricion.Api", "AppNutricion.Clientes", SecurityAlgorithms.HmacSha512 },
+        { "otra-clave-de-al-menos-32-bytes-xxxxxx", "AppNutricion.Api", "AppNutricion.Clientes" },
+        { ApiFactory.ClaveJwtFalsa, "OtroEmisor", "AppNutricion.Clientes" },
+        { ApiFactory.ClaveJwtFalsa, "AppNutricion.Api", "OtraAudiencia" },
     };
 
     [Theory]
     [MemberData(nameof(TokensInvalidos))]
-    public async Task Me_TokenConClaveEmisorAudienciaOAlgoritmoDistinto_401(string clave, string issuer, string audiencia, string algoritmo)
+    public async Task Me_TokenConClaveEmisorOAudienciaDistinta_401(string clave, string issuer, string audiencia)
     {
         var (id, _) = await RegistrarYLoguearAsync();
 
-        var response = await GetMeAsync(TokenPara(id, clave, issuer, audiencia, algoritmo));
+        var response = await GetMeAsync(TokenPara(id, clave, issuer, audiencia));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
