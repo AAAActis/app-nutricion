@@ -130,7 +130,8 @@ public class NutritionCalculatorCalculateTests
     }
 
     // Mujer de 25 años, 165 cm, 60 kg, sedentaria: TMB 1345,25 · 1,2 = 1614,3. − 550 = 1064,3 < 1200 → piso.
-    // Proteína 1,8 · 60 = 108 g (432 kcal). Grasa 300 kcal → 33,3 g. Carbohidratos (1200 − 432 − 300) / 4 = 117 g.
+    // Proteína 1,8 · 60 = 108 g (432 kcal) supera el tope del 30 % (360 kcal) → 90 g. Grasa 300 kcal → 33,3 g.
+    // Carbohidratos (1200 − 360 − 300) / 4 = 135 g.
     [Fact]
     public void Calculate_MujerPorDebajoDe1200_UsaElPisoYAvisa()
     {
@@ -141,9 +142,9 @@ public class NutritionCalculatorCalculateTests
 
         Assert.Equal(1200, r.Calories);
         Assert.True(r.CalorieFloorApplied);
-        Assert.Equal(108.0m, r.ProteinG);
+        Assert.Equal(90.0m, r.ProteinG);
         Assert.Equal(33.3m, r.FatG);
-        Assert.Equal(117.0m, r.CarbsG);
+        Assert.Equal(135.0m, r.CarbsG);
     }
 
     // Hombre de 30 años, 160 cm, 60 kg, sedentario: TMB 1455 · 1,2 = 1746. Ritmo 0,6 (máximo) → − 660 = 1086 < 1500.
@@ -172,10 +173,10 @@ public class NutritionCalculatorCalculateTests
         Assert.False(r.CalorieFloorApplied);
     }
 
-    // Mujer de 100 años, 100 cm, 130 kg: piso 1200. Proteína 1,8 · 130 = 234 g (936 kcal) + grasa 300 kcal > 1200.
-    // Los carbohidratos darían −9 g: nunca negativos.
+    // Mujer de 100 años, 100 cm, 130 kg: piso 1200. Proteína 1,8 · 130 = 234 g (936 kcal) superaría las kcal con la
+    // grasa; el tope del 30 % la deja en 360 kcal → 90 g. Carbohidratos (1200 − 360 − 300) / 4 = 135 g.
     [Fact]
-    public void Calculate_ProteinaYGrasaSuperanLasKcal_CarbohidratosEnCero()
+    public void Calculate_ProteinaPorKgSuperaElTope_SeUsaEl30PorCientoDeLasKcal()
     {
         var input = new NutritionInput(BiologicalSex.Female, new DateOnly(1926, 10, 22), 100m, 130m,
             ActivityLevel.Sedentary, GoalType.LoseFat, 1.0m, null, Hoy);
@@ -183,16 +184,16 @@ public class NutritionCalculatorCalculateTests
         var r = NutritionCalculator.Calculate(input);
 
         Assert.Equal(1200, r.Calories);
-        Assert.Equal(234.0m, r.ProteinG);
-        Assert.Equal(0m, r.CarbsG);
+        Assert.Equal(90.0m, r.ProteinG);
+        Assert.Equal(135.0m, r.CarbsG);
     }
 
-    // Proteína con pesos altos (regla sin cambiar, a ratificar). Mujer de 75 años, 150 cm, 150 kg, sedentaria, LoseFat 1 kg:
+    // Proteína con pesos altos. Mujer de 75 años, 150 cm, 150 kg, sedentaria, LoseFat 1 kg:
     // TMB = 1500 + 937,5 − 375 − 161 = 1901,5; gasto 2281,8; − 1100 = 1181,8 → piso 1200.
-    // Proteína 1,8 · 150 = 270 g (1080 kcal); grasa 300 kcal → 33,3 g; carbohidratos (1200 − 1080 − 300) / 4 < 0 → 0.
-    // Los macros suman 1080 + 299,7 = 1379,7 kcal: 180 más que el total.
+    // Proteína 1,8 · 150 = 270 g (1080 kcal) → tope 30 % = 360 kcal = 90 g. Grasa 300 kcal → 33,3 g.
+    // Carbohidratos (1200 − 360 − 300) / 4 = 135 g. Suman 360 + 299,7 + 540 = 1199,7 kcal.
     [Fact]
-    public void Calculate_150KgLoseFatConPiso_LosMacrosSuperanLasKcal()
+    public void Calculate_150KgLoseFatConPiso_LosMacrosSumanLasKcal()
     {
         var input = new NutritionInput(BiologicalSex.Female, new DateOnly(1951, 10, 22), 150m, 150m,
             ActivityLevel.Sedentary, GoalType.LoseFat, 1.0m, null, Hoy);
@@ -201,10 +202,50 @@ public class NutritionCalculatorCalculateTests
 
         Assert.True(r.CalorieFloorApplied);
         Assert.Equal(1200, r.Calories);
-        Assert.Equal(270.0m, r.ProteinG);
+        Assert.Equal(90.0m, r.ProteinG);
         Assert.Equal(33.3m, r.FatG);
-        Assert.Equal(0m, r.CarbsG);
-        Assert.Equal(1379.7m, r.ProteinG * 4 + r.FatG * 9 + r.CarbsG * 4);
+        Assert.Equal(135.0m, r.CarbsG);
+        Assert.Equal(1199.7m, r.ProteinG * 4 + r.FatG * 9 + r.CarbsG * 4);
+    }
+
+    // El tope no toca el caso base: hombre de 80 kg, LoseFat 0,5 → 2209 kcal. Tope = 30 % de 2209 / 4 = 165,7 g;
+    // la proteína por kg (144 g) queda debajo y no cambia.
+    [Fact]
+    public void Calculate_80Kg2209Kcal_ElTopeNoCambiaLaProteina()
+    {
+        var r = NutritionCalculator.Calculate(Base(GoalType.LoseFat, 0.5m));
+
+        Assert.Equal(2209, r.Calories);
+        Assert.Equal(144.0m, r.ProteinG);
+        Assert.Equal(61.4m, r.FatG);
+        Assert.Equal(270.2m, r.CarbsG);
+    }
+
+    // Para cualquier perfil, los macros suman las kcal (±1 % por el redondeo a 1 decimal) y ninguno es negativo.
+    [Theory]
+    [InlineData(BiologicalSex.Female, "1951-10-22", 150, 150, ActivityLevel.Sedentary, GoalType.LoseFat, 1.0)]
+    [InlineData(BiologicalSex.Female, "1926-10-22", 100, 130, ActivityLevel.Sedentary, GoalType.LoseFat, 1.0)]
+    [InlineData(BiologicalSex.Female, "1946-03-03", 150, 180, ActivityLevel.Sedentary, GoalType.LoseFat, 1.0)]
+    [InlineData(BiologicalSex.Female, "2001-10-22", 165, 60, ActivityLevel.Sedentary, GoalType.LoseFat, 0.5)]
+    [InlineData(BiologicalSex.Female, "2012-01-15", 155, 45, ActivityLevel.Light, GoalType.GainMuscle, 0.25)]
+    [InlineData(BiologicalSex.Female, "1965-10-22", 156, 49.1, ActivityLevel.Sedentary, GoalType.Maintain, 0)]
+    [InlineData(BiologicalSex.Male, "1996-10-22", 180, 80, ActivityLevel.Moderate, GoalType.LoseFat, 0.5)]
+    [InlineData(BiologicalSex.Male, "1996-10-22", 160, 60, ActivityLevel.Sedentary, GoalType.LoseFat, 0.6)]
+    [InlineData(BiologicalSex.Male, "1980-01-01", 190, 200, ActivityLevel.VeryActive, GoalType.LoseFat, 1.0)]
+    [InlineData(BiologicalSex.Male, "1960-05-05", 170, 250, ActivityLevel.Sedentary, GoalType.LoseFat, 1.0)]
+    [InlineData(BiologicalSex.Male, "2000-06-30", 175, 70, ActivityLevel.Active, GoalType.Maintain, 0)]
+    [InlineData(BiologicalSex.Male, "1990-02-28", 185, 95, ActivityLevel.Moderate, GoalType.GainMuscle, 0.5)]
+    public void Calculate_CualquierPerfil_LosMacrosSumanLasKcalYNingunoEsNegativo(
+        BiologicalSex sexo, string nacimiento, double altura, double peso, ActivityLevel actividad, GoalType objetivo, double ritmo)
+    {
+        var input = new NutritionInput(sexo, DateOnly.Parse(nacimiento), (decimal)altura, (decimal)peso,
+            actividad, objetivo, (decimal)ritmo, null, Hoy);
+
+        var r = NutritionCalculator.Calculate(input);
+
+        var kcalDeMacros = r.ProteinG * 4 + r.FatG * 9 + r.CarbsG * 4;
+        Assert.InRange(kcalDeMacros, r.Calories * 0.99m, r.Calories * 1.01m);
+        Assert.True(r.ProteinG >= 0 && r.FatG >= 0 && r.CarbsG >= 0, $"Macro negativo: {r.ProteinG} / {r.FatG} / {r.CarbsG}");
     }
 
     // Mujer de 25 años, sedentaria, Maintain: 1614,3 → 1614.
