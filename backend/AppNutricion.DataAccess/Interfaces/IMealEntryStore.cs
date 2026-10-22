@@ -19,6 +19,9 @@ public interface IMealEntryStore
     // Sumado en la base, un grupo por tipo de comida con entradas ese día.
     Task<Dictionary<MealType, MealTotals>> SumByMealTypeAsync(int userId, DateOnly date);
 
+    // Entre from y to (incluidos), ordenadas por fecha, tipo (orden del enum) y CreatedAt.
+    Task<List<MealEntry>> GetRangeAsync(int userId, DateOnly from, DateOnly to);
+
     // Sumado en la base, un grupo por día con entradas entre from y to (incluidos).
     Task<Dictionary<DateOnly, MealTotals>> SumByDateAsync(int userId, DateOnly from, DateOnly to);
 

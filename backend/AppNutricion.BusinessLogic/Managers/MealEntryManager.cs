@@ -115,6 +115,8 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         return copies;
     }
 
+    public Task<string> ExportCsvAsync(int userId, DateOnly? from, DateOnly? to) => throw new NotImplementedException();
+
     // Congela nombre, gramos y macros desde Foods (D6): después no se recalculan solos.
     private static void Freeze(MealEntry entry, Food food, decimal grams)
     {

@@ -49,6 +49,9 @@ public class MealEntryStore(ApplicationDbContext context) : IMealEntryStore
             })
             .ToDictionaryAsync(x => x.Key, x => x.Totals);
 
+    public Task<List<MealEntry>> GetRangeAsync(int userId, DateOnly from, DateOnly to) =>
+        throw new NotImplementedException();
+
     public Task<Dictionary<DateOnly, MealTotals>> SumByDateAsync(int userId, DateOnly from, DateOnly to) =>
         OfUser(userId).Where(m => m.Date >= from && m.Date <= to).GroupBy(m => m.Date)
             .Select(g => new
