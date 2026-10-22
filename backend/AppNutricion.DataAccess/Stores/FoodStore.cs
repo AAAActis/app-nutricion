@@ -37,9 +37,18 @@ public class FoodStore(ApplicationDbContext context) : IFoodStore
     public async Task AddFavoriteAsync(int userId, int foodId)
     {
         if (await context.FavoriteFoods.AnyAsync(f => f.UserId == userId && f.FoodId == foodId)) return;
-        context.FavoriteFoods.Add(new FavoriteFood { UserId = userId, FoodId = foodId, CreatedAt = DateTime.UtcNow });
-        // shortcut: dos POST simultáneos del mismo favorito chocan en la PK (500); agregar reintento si pasa.
-        await context.SaveChangesAsync();
+        var favorite = context.FavoriteFoods.Add(new FavoriteFood { UserId = userId, FoodId = foodId, CreatedAt = DateTime.UtcNow });
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Dos POST simultáneos: el otro lo agregó entre el AnyAsync y el insert y este choca en la PK
+            // (23505 en Postgres, constraint en SQLite). Si la fila ya está, "ya existía"; si no (FK u otro), es error.
+            favorite.State = EntityState.Detached;
+            if (!await context.FavoriteFoods.AnyAsync(f => f.UserId == userId && f.FoodId == foodId)) throw;
+        }
     }
 
     public Task RemoveFavoriteAsync(int userId, int foodId) =>
