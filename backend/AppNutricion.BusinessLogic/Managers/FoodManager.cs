@@ -12,6 +12,8 @@ public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFact
     private const int MinTermLength = 2;
     private const int DefaultLimit = 20;
     private const int MaxLimit = 50;
+    private const int DefaultRecentLimit = 10;
+    private const int MaxRecentLimit = 30;
 
     public async Task<List<Food>> SearchAsync(string? term, int? userId, int? limit)
     {
@@ -49,13 +51,24 @@ public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFact
         return external;
     }
 
-    public Task<bool> AddFavoriteAsync(int foodId, int userId) => Task.FromResult(false);
+    public async Task<bool> AddFavoriteAsync(int foodId, int userId)
+    {
+        if (await foodStore.GetByIdAsync(foodId, userId) is null) return false;
+        await foodStore.AddFavoriteAsync(userId, foodId);
+        return true;
+    }
 
-    public Task<bool> RemoveFavoriteAsync(int foodId, int userId) => Task.FromResult(false);
+    public async Task<bool> RemoveFavoriteAsync(int foodId, int userId)
+    {
+        if (await foodStore.GetByIdAsync(foodId, userId) is null) return false;
+        await foodStore.RemoveFavoriteAsync(userId, foodId);
+        return true;
+    }
 
-    public Task<List<Food>> GetFavoritesAsync(int userId) => Task.FromResult(new List<Food>());
+    public Task<List<Food>> GetFavoritesAsync(int userId) => foodStore.GetFavoritesAsync(userId);
 
-    public Task<List<Food>> GetRecentAsync(int userId, int? limit) => Task.FromResult(new List<Food>());
+    public Task<List<Food>> GetRecentAsync(int userId, int? limit) =>
+        foodStore.GetRecentAsync(userId, Math.Clamp(limit ?? DefaultRecentLimit, 1, MaxRecentLimit));
 
     public decimal ConvertToGrams(Food food, decimal quantity, bool isUnits)
     {

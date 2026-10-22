@@ -27,13 +27,34 @@ public class FoodStore(ApplicationDbContext context) : IFoodStore
     public Task<Food?> GetByBarcodeAsync(string barcode, int? userId) =>
         Visible(userId).Where(f => f.Barcode == barcode).OrderBy(f => f.Id).FirstOrDefaultAsync();
 
-    public Task<List<Food>> GetFavoritesAsync(int userId) => Task.FromResult(new List<Food>());
+    public Task<List<Food>> GetFavoritesAsync(int userId) =>
+        context.FavoriteFoods.Where(f => f.UserId == userId)
+            .Join(Visible(userId), fav => fav.FoodId, food => food.Id, (fav, food) => new { fav.CreatedAt, Food = food })
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => x.Food)
+            .ToListAsync();
 
-    public Task AddFavoriteAsync(int userId, int foodId) => Task.CompletedTask;
+    public async Task AddFavoriteAsync(int userId, int foodId)
+    {
+        if (await context.FavoriteFoods.AnyAsync(f => f.UserId == userId && f.FoodId == foodId)) return;
+        context.FavoriteFoods.Add(new FavoriteFood { UserId = userId, FoodId = foodId, CreatedAt = DateTime.UtcNow });
+        // shortcut: dos POST simultáneos del mismo favorito chocan en la PK (500); agregar reintento si pasa.
+        await context.SaveChangesAsync();
+    }
 
-    public Task RemoveFavoriteAsync(int userId, int foodId) => Task.CompletedTask;
+    public Task RemoveFavoriteAsync(int userId, int foodId) =>
+        context.FavoriteFoods.Where(f => f.UserId == userId && f.FoodId == foodId).ExecuteDeleteAsync();
 
-    public Task<List<Food>> GetRecentAsync(int userId, int limit) => Task.FromResult(new List<Food>());
+    public Task<List<Food>> GetRecentAsync(int userId, int limit) =>
+        context.MealEntries.Where(m => m.UserId == userId && m.FoodId != null)
+            .GroupBy(m => m.FoodId!.Value)
+            .Select(g => new { FoodId = g.Key, LastUsed = g.Max(m => m.CreatedAt) })
+            .Join(Visible(userId), r => r.FoodId, food => food.Id, (r, food) => new { r.LastUsed, Food = food })
+            .OrderByDescending(x => x.LastUsed)
+            .ThenBy(x => x.Food.Id)
+            .Take(limit)
+            .Select(x => x.Food)
+            .ToListAsync();
 
     public async Task<(int Inserted, int Updated)> UpsertSeedAsync(IEnumerable<Food> foods)
     {

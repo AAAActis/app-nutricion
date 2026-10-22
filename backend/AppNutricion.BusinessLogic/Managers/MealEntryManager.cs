@@ -79,8 +79,31 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager) :
         return store.GetByDateAsync(userId, day, null);
     }
 
-    public Task<List<MealEntry>> CopyAsync(int userId, DateOnly fromDate, DateOnly toDate, MealType? mealType) =>
-        Task.FromResult(new List<MealEntry>());
+    public async Task<List<MealEntry>> CopyAsync(int userId, DateOnly fromDate, DateOnly toDate, MealType? mealType)
+    {
+        if (fromDate == toDate) throw new ArgumentException("El día de origen y el de destino son el mismo.", nameof(toDate));
+        ValidateDate(toDate);
+        if (mealType is { } type) ValidateMealType(type);
+
+        var now = DateTime.UtcNow;
+        var copies = (await store.GetByDateAsync(userId, fromDate, mealType)).Select(m => new MealEntry
+        {
+            UserId = userId,
+            FoodId = m.FoodId,
+            RecipeId = m.RecipeId,
+            ItemName = m.ItemName,
+            Date = toDate,
+            MealType = m.MealType,
+            QuantityGrams = m.QuantityGrams,
+            SavedCalories = m.SavedCalories,
+            SavedProtein = m.SavedProtein,
+            SavedCarbs = m.SavedCarbs,
+            SavedFat = m.SavedFat,
+            CreatedAt = now,
+        }).ToList();
+        if (copies.Count > 0) await store.AddAsync(copies);
+        return copies;
+    }
 
     // Solo para pasar unidades a gramos: la porción sale del alimento, los macros no.
     private async Task<decimal> UnitsToGramsAsync(MealEntry entry, decimal quantity, int userId)
