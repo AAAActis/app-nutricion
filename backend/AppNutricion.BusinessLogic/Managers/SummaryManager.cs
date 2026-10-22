@@ -7,6 +7,8 @@ namespace AppNutricion.BusinessLogic.Managers;
 
 public class SummaryManager(IMealEntryStore store, IGoalManager goalManager, IUserToday userToday) : ISummaryManager
 {
+    private const int MaxStreakDays = 366;
+
     public async Task<DailySummary> GetDailyAsync(int userId, DateOnly? date)
     {
         var day = await DayAsync(userId, date, nameof(date));
@@ -28,7 +30,37 @@ public class SummaryManager(IMealEntryStore store, IGoalManager goalManager, IUs
         return new DailySummary(day, Round(consumed), byMealType, Round(targets), remaining, progress);
     }
 
-    public Task<WeeklySummary> GetWeeklyAsync(int userId, DateOnly? endDate) => throw new NotImplementedException();
+    public async Task<WeeklySummary> GetWeeklyAsync(int userId, DateOnly? endDate)
+    {
+        var end = await DayAsync(userId, endDate, nameof(endDate));
+        var start = end.AddDays(-6);
+        var sums = await store.SumByDateAsync(userId, start, end);
+        var days = Enumerable.Range(0, 7).Select(i => start.AddDays(i)).Select(d => sums.TryGetValue(d, out var t)
+            ? new DayTotals(d, Round(ToMacros(t)), true)
+            : new DayTotals(d, new MacroTotals(0, 0, 0, 0), false)).ToList();
+
+        var logged = sums.Values.Select(ToMacros).ToList();
+        var averages = logged.Count == 0 ? null : Round(new MacroTotals(
+            logged.Average(m => m.Calories), logged.Average(m => m.ProteinG), logged.Average(m => m.CarbsG), logged.Average(m => m.FatG)));
+        var goal = await ActiveGoalAsync(userId);
+        return new WeeklySummary(days, averages, logged.Count, goal is null ? null : Math.Round(goal.TargetCalories), await StreakAsync(userId));
+    }
+
+    // Días seguidos con comidas hasta hoy del usuario. Si hoy todavía no tiene, cuenta desde ayer:
+    // la racha no se corta en medio del día.
+    private async Task<int> StreakAsync(int userId)
+    {
+        var today = await userToday.GetAsync(userId);
+        var dates = await store.GetLoggedDatesAsync(userId, today, MaxStreakDays);
+        var start = dates.FirstOrDefault() == today ? today : today.AddDays(-1);
+        var streak = 0;
+        foreach (var date in dates)
+        {
+            if (date != start.AddDays(-streak)) break;
+            streak++;
+        }
+        return streak;
+    }
 
     private async Task<DateOnly> DayAsync(int userId, DateOnly? date, string paramName)
     {
