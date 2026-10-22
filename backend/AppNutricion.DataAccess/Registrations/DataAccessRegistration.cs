@@ -17,6 +17,9 @@ public static class DataAccessRegistration
         services.AddScoped<IProfileStore, ProfileStore>();
         services.AddScoped<IBodyMetricStore, BodyMetricStore>();
         services.AddScoped<IGoalStore, GoalStore>();
+        services.AddScoped<IExerciseStore, ExerciseStore>();
+        services.AddScoped<IRoutineStore, RoutineStore>();
+        services.AddScoped<IWorkoutStore, WorkoutStore>();
         return services;
     }
 }

@@ -30,6 +30,12 @@ public static class BusinessLogicRegistration
         services.AddScoped<IProfileManager, ProfileManager>();
         services.AddScoped<IBodyMetricManager, BodyMetricManager>();
         services.AddScoped<IGoalManager, GoalManager>();
+
+        // Rutinas y entrenamientos (S7).
+        services.AddScoped<IRoutineManager, RoutineManager>();
+        services.AddScoped<IWorkoutManager, WorkoutManager>();
+        services.AddScoped<ITrainingSeedService, TrainingSeedService>();
+        services.AddHostedService<TrainingSeedHostedService>();
         return services;
     }
 }
