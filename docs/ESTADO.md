@@ -1,7 +1,7 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-21 noche (Lauti, rama `feature/alimentos-seed-off`: L2 y L7 en revisión; D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
+> Última actualización: 2026-10-22 (Javi, rama `feature/auth-registro-login`: J2 en revisión; J1 mergeado en `develop` con el PR #7). Anterior: 2026-10-21 noche (Lauti, rama `feature/alimentos-seed-off`: L2 y L7 en revisión; D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
 > Verificado por Santi en su máquina: el compose levanta y `app-nutricion-db` queda `healthy`. El estado de ramas y del `.gitignore` se confirma en el PR de `fix/gitignore-utf8`.
 
 ## Objetivo
@@ -27,8 +27,8 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 
 | # | Tarea | Responsable | Estado | Rama o PR | Depende de |
 |---|---|---|---|---|---|
-| J1 | Esqueleto en capas, Swagger, middleware de errores con formato único, health check, CORS, config por entorno | Javi | En revisión: proyecto `AppNutricion.Tests` (xUnit + `WebApplicationFactory`, sin Postgres). Sin `weatherforecast`. `GET /health` (solo vida del proceso, no chequea la base). Errores siempre como ProblemDetails (`application/problem+json`): 500 genérico sin mensaje ni stack trace, y 404/405 también. Swagger UI en `/swagger` con botón Authorize (Bearer JWT), **solo en Development**. CORS por `Cors:AllowedOrigins` (vacío = solo mismo origen). 12 tests; `ApiFactory` sin `FoodSeedHostedService` | `feature/api-esqueleto` | S1 |
-| J2 | Registro con consentimiento, login, JWT, hash de contraseñas | Javi | En curso: lógica de registro y login en `AuthManager` (BusinessLogic) con tests de unidad; `PasswordHasher<User>`, `ConsentVersion` = `2026-10-21`, JWT con `sub` = userId. Faltan endpoints `/api/auth/register`, `/api/auth/login`, `/api/me`, `ICurrentUser` y `UserAccountStore` | `feature/auth-registro-login` (sale de `feature/api-esqueleto`; PR cuando J1 esté mergeado) | J1, S2 |
+| J1 | Esqueleto en capas, Swagger, middleware de errores con formato único, health check, CORS, config por entorno | Javi | Hecho (PR #7, revisó Lauti): proyecto `AppNutricion.Tests` (xUnit + `WebApplicationFactory`, sin Postgres). Sin `weatherforecast`. `GET /health` (solo vida del proceso, no chequea la base). Errores siempre como ProblemDetails (`application/problem+json`): 500 genérico sin mensaje ni stack trace, y 404/405 también. Swagger UI en `/swagger` con botón Authorize (Bearer JWT), **solo en Development**. CORS por `Cors:AllowedOrigins` (vacío = solo mismo origen). 12 tests; `ApiFactory` sin `FoodSeedHostedService` | `feature/api-esqueleto` | S1 |
+| J2 | Registro con consentimiento, login, JWT, hash de contraseñas | Javi | En revisión: `POST /api/auth/register` (201 `{id, email}`, 409 si el email existe, 400 con el campo que falla), `POST /api/auth/login` (200 `{accessToken, expiresAt}`, 401 igual para email inexistente o contraseña incorrecta), `GET /api/me` con `[Authorize]`. `PasswordHasher<User>`, email normalizado a minúsculas, `ConsentVersion` = `2026-10-21`. JWT HS256 de 60 min con `sub` = userId; la API no arranca si `Jwt:Key` (user-secrets) tiene menos de 32 bytes. `ICurrentUser` en Presentation para leer el userId del token. Bearer en Swagger solo en endpoints con `[Authorize]`. `UserAccountStore` sin test contra Postgres (pasos manuales en el PR). Pendiente para J4: regrabar el hash cuando el hasher pide rehash | `feature/auth-registro-login` | J1, S2 |
 | J3 | Refresh token y logout | Javi | Pendiente | — | J2 |
 | J4 | Cambio de contraseña y de email | Javi | Pendiente | — | J2 |
 | J5 | Borrado de cuenta (con todos sus datos) y exportación de datos del usuario | Javi | Pendiente | — | J2, S2 |
@@ -166,8 +166,8 @@ Detalle en el `README.md`. Resumen:
 
 ## PRÓXIMA SESIÓN · Javi
 
-1. Revisar `Users`, `RefreshTokens`, `Profiles`, `BodyMetrics`, `Goals` en `docs/MODELO-DATOS.md`.
-2. Seguir J1 sobre `develop`: el registro del `DbContext` ya está en `Program.cs`; respetarlo al reemplazar la plantilla.
-3. J2 a J8 con esas tablas. Para Mifflin-St Jeor: peso = último `BodyMetric`, edad desde `BirthDate`.
+1. Atender el review del PR de J2. Probar a mano contra Postgres (compose) el registro duplicado con mayúsculas distintas → 409.
+2. J3 (refresh token y logout) sobre `RefreshTokens`, sumando `refreshToken` a la respuesta de login.
+3. J4 a J8. Para Mifflin-St Jeor: peso = último `BodyMetric`, edad desde `BirthDate`. En J4, `UpdatePasswordHashAsync` para el rehash.
 
 **Frenar y preguntar si:** el modelo no está ratificado y hay que tocar una tabla de otro, aparece una clave que se iba a subir, n8n tendría que escribir en la base, o hay que elegir proveedor del LLM. No inventar carpetas ni archivos: revisarlos primero en el repo.
