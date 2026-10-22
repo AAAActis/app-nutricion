@@ -12,6 +12,7 @@ namespace AppNutricion.Tests.Infraestructura;
 public class ApiFactoryAutenticada : ApiFactory
 {
     public Mock<IFoodManager> FoodManager { get; } = new();
+    public Mock<IMealEntryManager> MealManager { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -21,6 +22,7 @@ public class ApiFactoryAutenticada : ApiFactory
             services.AddAuthentication(TestAuthHandler.Esquema)
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.Esquema, _ => { });
             services.AddSingleton(FoodManager.Object);
+            services.AddSingleton(MealManager.Object);
         });
     }
 
