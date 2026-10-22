@@ -18,3 +18,62 @@ GET {{AppNutricion.Api_HostAddress}}/api/foods/barcode/7790001234567
 Accept: application/json
 
 ###
+
+# ---- Comidas, favoritos y recientes (L4, L5) ----
+# Requieren token: se prueban en vivo cuando J2 (login + JWT) esté en develop.
+# Pegar el token del login en @token. Sin token → 401.
+@token = <pegar-token-de-J2>
+
+POST {{AppNutricion.Api_HostAddress}}/api/meals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "foodId": 1, "quantity": 150, "isUnits": false, "mealType": "Lunch", "date": "2026-10-21" }
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/meals?date=2026-10-21
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{AppNutricion.Api_HostAddress}}/api/meals/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "quantity": 300, "mealType": "Dinner" }
+
+###
+
+DELETE {{AppNutricion.Api_HostAddress}}/api/meals/1
+Authorization: Bearer {{token}}
+
+###
+
+POST {{AppNutricion.Api_HostAddress}}/api/meals/copy
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fromDate": "2026-10-20", "toDate": "2026-10-21", "mealType": "Breakfast" }
+
+###
+
+POST {{AppNutricion.Api_HostAddress}}/api/foods/1/favorite
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{AppNutricion.Api_HostAddress}}/api/foods/1/favorite
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/foods/favorites
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/foods/recent?limit=10
+Authorization: Bearer {{token}}
+
+###
