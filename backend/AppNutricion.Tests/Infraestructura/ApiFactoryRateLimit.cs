@@ -39,6 +39,12 @@ public class ApiFactoryRateLimit : ApiFactoryAuth
         });
 }
 
+// Igual, pero en Development: toma el límite de appsettings.Development.json.
+public class ApiFactoryRateLimitDesarrollo : ApiFactoryRateLimit
+{
+    protected override string Entorno => "Development";
+}
+
 [ApiController]
 [Route("test/chat")]
 public class ChatDePruebaController : ControllerBase
