@@ -11,11 +11,9 @@ public class RateLimitingTests(ApiFactoryRateLimit factory) : IClassFixture<ApiF
     private const string LoginJson = """{"email":"nadie@mail.com","password":"una-clave-cualquiera"}""";
     private const string RegistroInvalidoJson = """{"email":"no-es-email","password":"x","consentAccepted":false}""";
 
-    private static async Task<JsonElement> JsonAsync(HttpContext context)
-    {
-        context.Response.Body.Position = 0;
-        return (await JsonDocument.ParseAsync(context.Response.Body)).RootElement;
-    }
+    // El cuerpo de la respuesta de TestServer se lee desde el principio y no se puede rebobinar.
+    private static async Task<JsonElement> JsonAsync(HttpContext context) =>
+        (await JsonDocument.ParseAsync(context.Response.Body)).RootElement;
 
     [Theory]
     [InlineData("/api/auth/login", LoginJson, "10.0.1.1")]
