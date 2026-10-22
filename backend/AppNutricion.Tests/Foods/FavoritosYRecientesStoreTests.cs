@@ -83,6 +83,13 @@ public sealed class FavoritosYRecientesStoreTests : IDisposable
         Assert.Equal((Yo, _pan), (favorito.UserId, favorito.FoodId));
     }
 
+    // Solo se traga el choque de PK: un alimento que no existe (FK) sigue siendo error.
+    [Fact]
+    public async Task AddFavorite_AlimentoInexistente_SigueFallando()
+    {
+        await Assert.ThrowsAsync<DbUpdateException>(() => NuevoStore().AddFavoriteAsync(Yo, 9999));
+    }
+
     private sealed class OtroRequestInserta(Func<Task> insertar) : SaveChangesInterceptor
     {
         public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData,
