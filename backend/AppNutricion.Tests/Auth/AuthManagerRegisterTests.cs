@@ -61,6 +61,67 @@ public class AuthManagerRegisterTests
         _store.Verify(s => s.TryAddAsync(It.IsAny<User>()), Times.Never);
     }
 
+    private async Task<(RegisterResult Resultado, User? Guardado)> RegistrarAsync(string email, string password)
+    {
+        User? guardado = null;
+        _store.Setup(s => s.TryAddAsync(It.IsAny<User>())).Callback<User>(u => guardado = u).ReturnsAsync(true);
+        var resultado = await _manager.RegisterAsync(email, password, true);
+        return (resultado, guardado);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_DatosValidos_GuardaEmailNormalizadoYDevuelveElUsuario()
+    {
+        var (resultado, guardado) = await RegistrarAsync("  Ana.Perez@Mail.COM ", PasswordValida);
+
+        Assert.NotNull(guardado);
+        Assert.Equal("ana.perez@mail.com", guardado.Email);
+        Assert.Equal(RegisterStatus.Registered, resultado.Status);
+        Assert.Same(guardado, resultado.User);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_GuardaHashVerificableQueEntraEnLaColumna()
+    {
+        var (_, guardado) = await RegistrarAsync("ana@mail.com", PasswordValida);
+
+        Assert.NotNull(guardado);
+        Assert.NotEqual(PasswordValida, guardado.PasswordHash);
+        Assert.InRange(guardado.PasswordHash.Length, 1, 100);   // varchar(100) en Users.PasswordHash
+        var verificacion = new PasswordHasher<User>().VerifyHashedPassword(guardado, guardado.PasswordHash, PasswordValida);
+        Assert.Equal(PasswordVerificationResult.Success, verificacion);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_GuardaConsentimientoVersionadoYFechasEnUtc()
+    {
+        var antes = DateTime.UtcNow;
+        var (_, guardado) = await RegistrarAsync("ana@mail.com", PasswordValida);
+        var despues = DateTime.UtcNow;
+
+        Assert.NotNull(guardado);
+        Assert.Equal("2026-10-21", guardado.ConsentVersion);
+        Assert.Equal(DateTimeKind.Utc, guardado.CreatedAt.Kind);
+        Assert.Equal(DateTimeKind.Utc, guardado.ConsentAcceptedAt.Kind);
+        Assert.InRange(guardado.CreatedAt, antes, despues);
+        Assert.InRange(guardado.ConsentAcceptedAt, antes, despues);
+    }
+
+    // Bordes aceptados: password de 8 y de 128 caracteres, email de 256.
+    [Theory]
+    [InlineData(200, 8)]
+    [InlineData(256, 128)]
+    public async Task RegisterAsync_EnLosBordesAceptados_Registra(int largoEmail, int largoPassword)
+    {
+        var email = EmailDeLargo(largoEmail);
+        Assert.Equal(largoEmail, email.Length);
+
+        var (resultado, guardado) = await RegistrarAsync(email, new string('x', largoPassword));
+
+        Assert.NotNull(guardado);
+        Assert.Equal(RegisterStatus.Registered, resultado.Status);
+    }
+
     [Fact]
     public async Task RegisterAsync_SinConsentimiento_LanzaArgumentExceptionDeConsentAccepted()
     {
