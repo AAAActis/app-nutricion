@@ -11,4 +11,8 @@ public interface IUserAccountStore
 
     // false si el email ya existe (violación del índice único IX_Users_Email).
     Task<bool> TryAddAsync(User user);
+
+    // Borra el usuario con todos sus datos en una transacción: primero sus Recipes (sus ingredientes pueden
+    // apuntar a Foods propios, FK NoAction) y después el User (el resto cae en cascada).
+    Task DeleteWithDataAsync(int userId);
 }

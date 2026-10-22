@@ -1,5 +1,8 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
+using AppNutricion.DataAccess.Interfaces;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AppNutricion.Tests.Infraestructura;
 
@@ -8,9 +11,11 @@ public static class UsuarioDePrueba
 {
     private static int _ultimoId = 100_000;
 
-    public static (int Id, HttpClient Client) Nuevo(ApiFactory factory)
+    public static (int Id, HttpClient Client) Nuevo(WebApplicationFactory<Program> factory)
     {
         var id = Interlocked.Increment(ref _ultimoId);
+        // El token tiene que ser de un usuario que existe (la API rechaza los de cuentas borradas).
+        if (factory.Services.GetService<IUserAccountStore>() is UserAccountStoreEnMemoria usuarios) usuarios.Agregar(id);
         var client = factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokensDePrueba.Para(id));
         return (id, client);

@@ -17,11 +17,16 @@ public class ApiFactory : WebApplicationFactory<Program>
 
     protected virtual string Entorno => "Testing";
 
+    // Los tests de auth hacen muchos login/registro seguidos desde la misma "IP": el límite real (5 por minuto)
+    // solo se prueba en ApiFactoryRateLimit, que devuelve null y deja el valor por defecto.
+    protected virtual string? LimiteDeAuth => "100000";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(Entorno);
         builder.UseSetting("ConnectionStrings:DefaultConnection", CadenaDeConexionFalsa);
         builder.UseSetting("Jwt:Key", ClaveJwtFalsa);
+        if (LimiteDeAuth is not null) builder.UseSetting("RateLimiting:AuthPermitLimit", LimiteDeAuth);
         builder.ConfigureTestServices(services =>
         {
             // El seed de alimentos escribe en la base al arrancar (si existe foods_seed.json).

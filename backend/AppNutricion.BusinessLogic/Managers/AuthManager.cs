@@ -11,7 +11,7 @@ public class AuthManager(IUserAccountStore userStore, IPasswordHasher<User> pass
 {
     private const int MaxEmailLength = 256;   // varchar(256) en Users.Email
     private const int MinPasswordLength = 8;
-    private const int MaxPasswordLength = 128;
+    public const int MaxPasswordLength = 128;
 
     // Hash (PasswordHasher v3) de una contraseña aleatoria que no se guardó en ningún lado.
     private const string DummyPasswordHash = "AQAAAAIAAYagAAAAEANfj9Z9jxn2mvOhLY9GFsV3FkQ8hn2lKOpEAhWCIwpqEqXl0M+JoUOvEpQ5o6LAbg==";
