@@ -197,6 +197,21 @@ public class NutritionCalculatorCalculateTests
         Assert.Equal(1614, NutritionCalculator.Calculate(input).Calories);
     }
 
+    // Recalculo de GET /targets: el ritmo ya es el aplicado y no se recorta de nuevo.
+    // 1 kg pedido con 80 kg (máximo 0,8): 2759 − 1100 = 1659 kcal; 5 kg / 1 = 5 semanas.
+    [Fact]
+    public void Calculate_SinLimitesDeRitmo_UsaElRitmoTalCualSinAvisar()
+    {
+        var input = Base(GoalType.LoseFat, 1.0m, 75m) with { ApplyRateLimits = false };
+
+        var r = NutritionCalculator.Calculate(input);
+
+        Assert.Equal(1.0m, r.AppliedWeeklyRateKg);
+        Assert.False(r.WeeklyRateCapped);
+        Assert.Equal(1659, r.Calories);
+        Assert.Equal(5.0m, r.ProjectedWeeks);
+    }
+
     // Menores de 18: LoseFat no se permite.
     [Fact]
     public void Calculate_MenorDe18ConLoseFat_LanzaArgumentExceptionDeGoalType()

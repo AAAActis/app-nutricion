@@ -111,19 +111,39 @@ public class ObjetivosEndpointsTests(ApiFactoryPerfil factory) : IClassFixture<A
         Assert.Equal(4.0m, t.GetProperty("projection").GetProperty("weeks").GetDecimal());   // 2 kg / 0,5
     }
 
-    // Ritmo pedido 1 kg; el máximo con 80 kg es 0,8. Se guarda lo pedido, se aplica 0,8 y se avisa.
+    // Ritmo pedido 1 kg; el máximo con 80 kg es 0,8. Se aplica y se guarda 0,8; el aviso sale solo en el POST.
     [Fact]
-    public async Task Post_RitmoPorEncimaDelMaximo_AplicaElMaximoYAvisa()
+    public async Task Post_RitmoPorEncimaDelMaximo_GuardaElAplicadoYAvisaSoloEnElPost()
     {
         var client = await UsuarioAsync();
 
         var t = await CreadoAsync(await CrearAsync(client, "LoseFat", 1.0m));
+        var targets = await TargetsAsync(client);
+        var goals = await JsonAsync(await client.GetAsync("/api/me/goals"));
 
-        Assert.Equal(1.0m, t.GetProperty("weeklyRateKg").GetDecimal());
+        Assert.Equal(0.8m, t.GetProperty("weeklyRateKg").GetDecimal());
         Assert.Equal(0.8m, t.GetProperty("appliedWeeklyRateKg").GetDecimal());
         Assert.Equal(1879m, t.GetProperty("calories").GetDecimal());
         Assert.Equal(["WeeklyRateCapped"], CodigosDeAviso(t));
-        Assert.Equal(["WeeklyRateCapped"], CodigosDeAviso(await TargetsAsync(client)));
+        Assert.Empty(CodigosDeAviso(targets));
+        Assert.Equal(0.8m, goals[0].GetProperty("weeklyRateKg").GetDecimal());
+    }
+
+    // LoseFat 0,8 con 80 kg (justo el máximo). Después el peso baja a 70: el máximo sería 0,7, pero GET /targets
+    // proyecta con el 0,8 guardado, sin recortar ni avisar. 5 kg / 0,8 = 6,25 semanas → 44 días → 04/12/2026.
+    [Fact]
+    public async Task GetTargets_ConMenosPeso_ProyectaConElRitmoGuardadoSinRecortar()
+    {
+        var client = await UsuarioAsync();
+        Assert.Equal(HttpStatusCode.Created, (await CrearAsync(client, "LoseFat", 0.8m, 65m)).StatusCode);
+
+        await client.PostAsJsonAsync("/api/me/metrics", new { weightKg = 70m, date = Hoy });   // corrige el peso de hoy
+        var t = await TargetsAsync(client);
+
+        Assert.Equal(0.8m, t.GetProperty("appliedWeeklyRateKg").GetDecimal());
+        Assert.Empty(CodigosDeAviso(t));
+        Assert.Equal(6.3m, t.GetProperty("projection").GetProperty("weeks").GetDecimal());
+        Assert.Equal("2026-12-04", t.GetProperty("projection").GetProperty("estimatedDate").GetString());
     }
 
     // Mujer de 25 años, 165 cm, 60 kg, sedentaria, LoseFat 0,5 → 1064 kcal: se usa el piso de 1200 y se avisa.
