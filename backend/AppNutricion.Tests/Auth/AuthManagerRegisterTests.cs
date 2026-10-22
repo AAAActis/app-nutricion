@@ -95,19 +95,18 @@ public class AuthManagerRegisterTests
         Assert.Equal(PasswordVerificationResult.Success, verificacion);
     }
 
+    // Las fechas salen del TimeProvider inyectado: el mismo reloj que usa el token.
     [Fact]
-    public async Task RegisterAsync_GuardaConsentimientoVersionadoYFechasEnUtc()
+    public async Task RegisterAsync_GuardaConsentimientoVersionadoYFechasDelRelojEnUtc()
     {
-        var antes = DateTime.UtcNow;
         var (_, guardado) = await RegistrarAsync("ana@mail.com", PasswordValida);
-        var despues = DateTime.UtcNow;
 
         Assert.NotNull(guardado);
         Assert.Equal("2026-10-21", guardado.ConsentVersion);
+        Assert.Equal(Ahora.UtcDateTime, guardado.CreatedAt);
+        Assert.Equal(Ahora.UtcDateTime, guardado.ConsentAcceptedAt);
         Assert.Equal(DateTimeKind.Utc, guardado.CreatedAt.Kind);
         Assert.Equal(DateTimeKind.Utc, guardado.ConsentAcceptedAt.Kind);
-        Assert.InRange(guardado.CreatedAt, antes, despues);
-        Assert.InRange(guardado.ConsentAcceptedAt, antes, despues);
     }
 
     // Bordes aceptados: password de 8 y de 128 caracteres, email de 256.
