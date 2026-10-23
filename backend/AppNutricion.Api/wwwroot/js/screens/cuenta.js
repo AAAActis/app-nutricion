@@ -5,6 +5,7 @@ import { api } from "../api.js";
 import { clearSession } from "../auth.js";
 import { el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit } from "../forms.js";
+import { download } from "../download.js";
 import { today } from "../format.js";
 import { go, setFlash } from "../router.js";
 
@@ -62,14 +63,4 @@ export async function render(container) {
       el("h2", {}, "Borrar mi cuenta"),
       el("p", {}, "Se borran tu cuenta y todos tus datos. Antes podés descargarlos."),
       form));
-}
-
-// Descarga un texto como archivo, sin pasar por el servidor.
-function download(fileName, text) {
-  const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-  const link = el("a", { href: url, download: fileName });
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

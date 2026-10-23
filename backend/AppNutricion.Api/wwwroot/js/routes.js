@@ -14,8 +14,8 @@ export const routes = [
   { path: "/peso", screen: "peso", title: "Peso", auth: true, nav: true },
   { path: "/objetivo", screen: "objetivo", title: "Objetivo", auth: true, nav: true },
   { path: "/perfil", screen: "perfil", title: "Perfil", auth: true, nav: true },
-  { path: "/rutinas", screen: "rutinas", title: "Rutinas", auth: true, nav: true },   // S12 (Santi)
-  { path: "/chat", screen: "chat", title: "Asistente", auth: true, nav: true },       // S12 (Santi)
+  { path: "/rutinas", screen: "rutinas", title: "Rutinas", auth: true, nav: true },
+  { path: "/chat", screen: "chat", title: "Asistente", auth: true, nav: true },
   { path: "/cuenta", screen: "cuenta", title: "Cuenta", auth: true, nav: true },
 ];
 
