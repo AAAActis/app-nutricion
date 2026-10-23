@@ -15,6 +15,7 @@ namespace AppNutricion.Tests.Infraestructura;
 public class ApiFactoryRateLimit : ApiFactoryAuth
 {
     protected override string? LimiteDeAuth => null;
+    protected override string? LimiteDeChat => null;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

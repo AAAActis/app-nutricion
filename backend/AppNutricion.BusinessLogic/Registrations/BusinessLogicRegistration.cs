@@ -1,10 +1,13 @@
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Managers;
+using AppNutricion.BusinessLogic.Options;
 using AppNutricion.BusinessLogic.Services;
 using AppNutricion.Entities.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace AppNutricion.BusinessLogic.Registrations;
 
@@ -34,6 +37,12 @@ public static class BusinessLogicRegistration
         // Cuenta: borrado y exportación (J5).
         services.AddScoped<IAccountManager, AccountManager>();
 
+        // Asistente (S9/S10). El modelo sale de Llm:Provider; sin clave, el Fake.
+        services.AddSingleton(sp => LlmOptions.From(sp.GetRequiredService<IConfiguration>()));
+        services.AddSingleton(sp => ChatModelFactory.Create(sp.GetRequiredService<LlmOptions>(), sp.GetRequiredService<ILogger<ChatModelFactory>>()));
+        services.AddScoped<IRoutineSummaryProvider, EmptyRoutineSummaryProvider>();
+        services.AddScoped<AssistantTools>();
+        services.AddScoped<IAssistantManager, AssistantManager>();
         // Rutinas y entrenamientos (S7).
         services.AddScoped<IRoutineManager, RoutineManager>();
         services.AddScoped<IWorkoutManager, WorkoutManager>();

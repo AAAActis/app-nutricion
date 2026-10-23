@@ -158,7 +158,7 @@ Authorization: Bearer {{token}}
 
 ###
 
-DELETE {{AppNutricion.Api_HostAddress}}/api/workouts/1
+  DELETE {{AppNutricion.Api_HostAddress}}/api/workouts/1
 Authorization: Bearer {{token}}
 
 ###

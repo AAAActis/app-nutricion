@@ -34,6 +34,8 @@ public class ExportStore(ApplicationDbContext context) : IExportStore
                 .OrderBy(w => w.Date).ThenBy(w => w.Id).AsSplitQuery().ToListAsync(),
             await context.Conversations.AsNoTracking().Where(c => c.UserId == userId)
                 .Include(c => c.Messages.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id))
-                .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id).AsSplitQuery().ToListAsync());
+                .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id).AsSplitQuery().ToListAsync(),
+            await context.AssistantSuggestions.AsNoTracking().Include(s => s.Food).Where(s => s.UserId == userId)
+                .OrderBy(s => s.CreatedAt).ThenBy(s => s.Id).ToListAsync());
     }
 }

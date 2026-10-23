@@ -15,7 +15,8 @@ public record UserDataExport(
     List<Recipe> Recipes,
     List<Routine> Routines,
     List<WorkoutLog> WorkoutLogs,
-    List<Conversation> Conversations);
+    List<Conversation> Conversations,
+    List<AssistantSuggestion> AssistantSuggestions);
 
 // Solo lectura.
 public interface IExportStore

@@ -16,7 +16,8 @@ public record ExportOutput(
     List<ExportRecipeOutput> Recipes,
     List<ExportRoutineOutput> Routines,
     List<ExportWorkoutLogOutput> WorkoutLogs,
-    List<ExportConversationOutput> Conversations)
+    List<ExportConversationOutput> Conversations,
+    List<ExportAssistantSuggestionOutput> AssistantSuggestions)
 {
     public static ExportOutput From(UserDataExport e) => new(
         ExportAccountOutput.From(e.User),
@@ -35,7 +36,9 @@ public record ExportOutput(
         e.WorkoutLogs.Select(w => new ExportWorkoutLogOutput(w.Date, w.RoutineDayId, w.DurationMinutes, w.EstimatedCaloriesBurned, w.Notes, w.CreatedAt,
             w.Sets.Select(s => new ExportWorkoutSetOutput(s.SetNumber, s.ExerciseId, s.Exercise.Name, s.Reps, s.WeightKg)).ToList())).ToList(),
         e.Conversations.Select(c => new ExportConversationOutput(c.Title, c.CreatedAt, c.UpdatedAt,
-            c.Messages.Select(m => new ExportChatMessageOutput(m.Role.ToString(), m.Content, m.CreatedAt)).ToList())).ToList());
+            c.Messages.Select(m => new ExportChatMessageOutput(m.Role.ToString(), m.Content, m.CreatedAt)).ToList())).ToList(),
+        e.AssistantSuggestions.Select(s => new ExportAssistantSuggestionOutput(s.FoodId, s.Food.Name, s.QuantityGrams, s.MealType.ToString(), s.Date,
+            s.Status.ToString(), s.MealEntryId, s.CreatedAt, s.ResolvedAt)).ToList());
 }
 
 public record ExportAccountOutput(int Id, string Email, DateTime ConsentAcceptedAt, string ConsentVersion, DateTime CreatedAt)
@@ -75,3 +78,6 @@ public record ExportWorkoutLogOutput(DateOnly Date, int? RoutineDayId, int Durat
 public record ExportChatMessageOutput(string Role, string Content, DateTime CreatedAt);
 
 public record ExportConversationOutput(string? Title, DateTime CreatedAt, DateTime UpdatedAt, List<ExportChatMessageOutput> Messages);
+
+public record ExportAssistantSuggestionOutput(int FoodId, string FoodName, decimal QuantityGrams, string MealType, DateOnly Date, string Status,
+    int? MealEntryId, DateTime CreatedAt, DateTime? ResolvedAt);
