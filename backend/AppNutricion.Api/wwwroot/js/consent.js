@@ -14,8 +14,9 @@ export const CONSENT_TEXT = [
     + "(fecha de nacimiento, sexo biológico, altura, nivel de actividad y zona horaria), tu historial de peso, "
     + "tus objetivos, tus comidas, tus rutinas y entrenamientos, y tus conversaciones con el asistente.",
   "Finalidad: calcular tus objetivos de calorías y macros, registrar lo que comés y entrenás, y mostrarte tu "
-    + "progreso. Son datos de salud: no los compartimos ni los vendemos. Al asistente de IA nunca le mandamos tu "
-    + "email ni tu nombre.",
+    + "progreso. Son datos de salud: "
+    + "No los vendemos. Solo los compartimos con el servicio de inteligencia artificial del asistente (Google Gemini), como se explica más abajo. "
+    + "Al asistente de IA nunca le mandamos tu email ni tu nombre.",
   "Estos datos son necesarios para usar el servicio: sin ellos la aplicación no puede calcular ni guardar nada.",
   "Las calorías, los macros, el IMC y las proyecciones son estimaciones, no consejo médico.",
   "El asistente usa un servicio externo de inteligencia artificial (Google Gemini). Le enviamos "
