@@ -33,7 +33,7 @@ public class AssistantTools(IFoodManager foodManager, ISummaryManager summaryMan
             """{"type":"object","properties":{"q":{"type":"string","description":"Nombre del alimento"}},"required":["q"]}"""),
         new(DailyTotals, "Totales consumidos en un día, el objetivo y lo que falta. Sin fecha, hoy.",
             """{"type":"object","properties":{"fecha":{"type":"string","description":"YYYY-MM-DD"}}}"""),
-        new(ListRoutines, "Rutinas de entrenamiento disponibles para el usuario, con sus días.",
+        new(ListRoutines, "Rutinas de entrenamiento disponibles para el usuario (precargadas y propias), con sus días y ejercicios (series, repeticiones y peso objetivo).",
             """{"type":"object","properties":{}}"""),
         new(ProposeIntake, "Propone registrar una comida. No la registra: el usuario la confirma o la ignora. Usá un foodId de buscar_alimento.",
             """{"type":"object","properties":{"foodId":{"type":"integer"},"gramos":{"type":"number"},"mealType":{"type":"string","enum":["Breakfast","Lunch","AfternoonSnack","Dinner","Snack"]},"fecha":{"type":"string","description":"YYYY-MM-DD; sin fecha, hoy"}},"required":["foodId","gramos","mealType"]}"""),
@@ -103,7 +103,21 @@ public class AssistantTools(IFoodManager foodManager, ISummaryManager summaryMan
     }
 
     private async Task<ToolOutcome> RoutinesAsync(int userId) =>
-        Ok(new { rutinas = (await routines.GetAsync(userId)).Select(r => new { nombre = r.Name }) });
+        Ok(new
+        {
+            rutinas = (await routines.GetAsync(userId)).Select(r => new
+            {
+                nombre = r.Name, precargada = r.IsPreset,
+                dias = r.Days.Select(d => new
+                {
+                    numero = d.DayNumber, nombre = d.Name,
+                    ejercicios = d.Exercises.Select(e => new
+                    {
+                        nombre = e.Name, grupoMuscular = e.MuscleGroup, series = e.Sets, repeticiones = e.Reps, pesoKg = e.WeightKg,
+                    }),
+                }),
+            }),
+        });
 
     private async Task<ToolOutcome> ProposeAsync(int userId, JsonElement args)
     {
