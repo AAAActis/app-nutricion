@@ -68,7 +68,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 |---|---|---|---|---|---|
 | S1 | Docker Compose con Postgres, volumen y healthcheck; `.env.example`; `.env` en `.gitignore`; README del compose | Santi | En revisión: compose levantado y `healthy` en la máquina de Santi; README del compose escrito; puerto restringido a `127.0.0.1`; `.gitignore` reescrito en UTF-8. Falta que Javi y Lauti lo levanten en sus máquinas | `fix/gitignore-utf8`, `feature/db-modelo-datos` | — |
 | S2 | Base de datos: entidades, DbContext, migraciones, índices y relaciones (acordado con Javi y Lauti) | Santi | En revisión: 19 tablas, configuración por tabla, migración `InitialCreate`. Modelo en `docs/MODELO-DATOS.md`. Falta ratificarlo en la reunión y el review de Lauti | `feature/db-modelo-datos` | S1, acuerdo de los 3 |
-| S3 | Archivo `foods_seed`: 50 a 100 básicos de ARGENFOODS + productos de Open Food Facts con macros completos, normalizado a 100 g; que otro lo revise | Santi | Pendiente | — | Verificar fuentes |
+| S3 | Archivo `foods_seed`: 50 a 100 básicos de ARGENFOODS + productos de Open Food Facts con macros completos, normalizado a 100 g; que otro lo revise | Santi | En revisión (PR #15): 65 básicos de ARGENFOODS cargan sin descartes y la segunda carga es idempotente (probado con el cargador real sobre SQLite). Falta: la prueba de carga contra Postgres (la base no levantaba, WinNat) y sumar OFF (503) en un segundo commit (D21-seed) | — | Verificar fuentes |
 | S4 | Dockerfile de la API y compose completo | Santi | Pendiente | — | S1, J1 |
 | S5 | Scripts de respaldo y restauración de la base | Santi | Pendiente | — | S1 |
 | S6 | Seeds de demo: usuario de ejemplo con 2 semanas de peso, comidas y entrenamientos; 2 o 3 rutinas | Santi | Pendiente | — | S2 |
@@ -117,7 +117,6 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | `contexto.md` y el archivo de n8n siguen en el historial del repo público. ¿Se pasa el repo a privado o se limpia el historial (`git filter-repo` + force push, antes de que Javi y Lauti trabajen encima)? | Santi | Seguridad del repo |
 | Hora exacta de entrega del martes 27 | Docente | Plan del lunes |
 | Proveedor del LLM y quién consigue la clave (verificar cuota y precios vigentes) | Los 3 | S9 |
-| ¿ARGENFOODS tiene descarga (Excel/CSV) o se copia a mano? | Santi | S3, L2 |
 | ¿Habrá CI (GitHub Actions)? | Javi | Regla de "CI verde antes de mergear" |
 | Cómo se registra la autoría con el docente, ya que el grupo figura de 5 | Javi / docente | Entrega |
 

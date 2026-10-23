@@ -103,3 +103,9 @@ Notas:
 - Para la cinta, la velocidad está en el nombre porque el MET depende de ella: 5 km/h ≈ 3,1 mph y 8 km/h ≈ 5,0 mph.
 - En el sitio, los códigos con valor estimado (no medido) aparecen en rojo. Ese color no se pudo leer en la extracción, así que no está verificado cuáles de estos son estimados.
 - Las series y repeticiones de las rutinas precargadas son una programación habitual de principiante e intermedio (de 3 a 4 series de 5 a 15 repeticiones). No son datos medidos.
+## Fuentes y licencias
+
+El archivo lo genera `tools/foods-seed/foods-seed.cs` (cómo regenerarlo en `tools/foods-seed/README.md`).
+
+- **ARGENFOODS** (`source = "Argenfoods"`): Universidad Nacional de Luján (UNLu). *Tabla de Composición de Alimentos*, base de datos ARGENFOODS, proyecto INFOODS (Universidad de las Naciones Unidas / FAO). https://www.argenfood.unlu.edu.ar/ . Uso sin fines comerciales autorizado por la UNLu, sin alterar los datos y citando a los autores, los titulares del derecho y esta referencia. `externalId` es el código del alimento en la tabla.
+- **Open Food Facts** (`source = "OpenFoodFacts"`): datos de https://openfoodfacts.org, bajo [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/); contenidos individuales bajo DbCL. Esta base derivada se comparte en las mismas condiciones (ODbL). Datos sin garantía y no aptos para uso médico.
