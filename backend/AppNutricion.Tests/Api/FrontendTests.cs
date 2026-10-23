@@ -131,6 +131,11 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("rectificación (desde Perfil)")]
     [InlineData("supresión (desde Cuenta)")]
     [InlineData("art. 6 de la Ley 25.326")]
+    [InlineData("Contacto: infobbasolutions@gmail.com.")]
+    [InlineData("Google Gemini")]
+    [InlineData("mensajes que escribís en el chat")]
+    [InlineData("nunca tu email ni tu nombre")]
+    [InlineData("pueden usarse para mejorar sus servicios")]
     public void Consentimiento_IncluyeLoQuePideLaLey(string texto)
     {
         var consent = Archivos(".js").SingleOrDefault(a => a.Ruta == "js/consent.js");
@@ -145,6 +150,26 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js");
 
         Assert.DoesNotContain("cifrada", consent.Contenido);
+    }
+
+    // El texto que acepta el usuario no puede tener datos sin completar.
+    [Fact]
+    public void Consentimiento_SinNadaPorCompletar()
+    {
+        var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js");
+
+        Assert.DoesNotContain("<COMPLETAR", consent.Contenido);
+    }
+
+    // El aviso del proveedor de IA va antes de los derechos, como el resto de lo que se hace con los datos.
+    [Fact]
+    public void Consentimiento_AvisoDeGeminiAntesDeLosDerechos()
+    {
+        var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js").Contenido;
+
+        var gemini = consent.IndexOf("Google Gemini", StringComparison.Ordinal);
+        var derechos = consent.IndexOf("Tus derechos", StringComparison.Ordinal);
+        Assert.True(gemini >= 0 && gemini < derechos, $"Google Gemini en {gemini}, Tus derechos en {derechos}");
     }
 
     // El texto de consentimiento del registro es el de la versión que guarda la API.
