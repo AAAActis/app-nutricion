@@ -1,0 +1,135 @@
+{
+  "exercises": [
+    { "name": "Sentadilla", "muscleGroup": "Legs", "metValue": 5.0, "compendiumCode": "02052" },
+    { "name": "Peso muerto", "muscleGroup": "Back", "metValue": 5.0, "compendiumCode": "02052" },
+    { "name": "Press de banca", "muscleGroup": "Chest", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Press inclinado con mancuernas", "muscleGroup": "Chest", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Aperturas con mancuernas", "muscleGroup": "Chest", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Flexiones de brazos", "muscleGroup": "Chest", "metValue": 3.8, "compendiumCode": "02022" },
+    { "name": "Dominadas", "muscleGroup": "Back", "metValue": 3.8, "compendiumCode": "02022" },
+    { "name": "Remo con barra", "muscleGroup": "Back", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Jalón al pecho", "muscleGroup": "Back", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Press militar", "muscleGroup": "Shoulders", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Elevaciones laterales", "muscleGroup": "Shoulders", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Curl de bíceps", "muscleGroup": "Arms", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Extensión de tríceps en polea", "muscleGroup": "Arms", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Fondos en paralelas", "muscleGroup": "Arms", "metValue": 3.8, "compendiumCode": "02022" },
+    { "name": "Estocadas", "muscleGroup": "Legs", "metValue": 3.8, "compendiumCode": "02022" },
+    { "name": "Prensa de piernas", "muscleGroup": "Legs", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Curl femoral", "muscleGroup": "Legs", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Hip thrust", "muscleGroup": "Legs", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Elevación de talones", "muscleGroup": "Legs", "metValue": 3.5, "compendiumCode": "02054" },
+    { "name": "Plancha", "muscleGroup": "Core", "metValue": 2.8, "compendiumCode": "02024" },
+    { "name": "Abdominales (crunch)", "muscleGroup": "Core", "metValue": 2.8, "compendiumCode": "02024" },
+    { "name": "Swing con kettlebell", "muscleGroup": "FullBody", "metValue": 9.8, "compendiumCode": "02058" },
+    { "name": "Burpees", "muscleGroup": "FullBody", "metValue": 7.5, "compendiumCode": "02020" },
+    { "name": "Cinta: caminata (5 km/h)", "muscleGroup": "Cardio", "metValue": 3.8, "compendiumCode": "17355" },
+    { "name": "Cinta: trote (8 km/h)", "muscleGroup": "Cardio", "metValue": 8.5, "compendiumCode": "12030" },
+    { "name": "Bicicleta fija", "muscleGroup": "Cardio", "metValue": 6.8, "compendiumCode": "01200" },
+    { "name": "Elíptico", "muscleGroup": "Cardio", "metValue": 5.0, "compendiumCode": "02048" },
+    { "name": "Remo ergómetro", "muscleGroup": "Cardio", "metValue": 7.3, "compendiumCode": "02070" },
+    { "name": "Saltar la soga", "muscleGroup": "Cardio", "metValue": 11.0, "compendiumCode": "02068" }
+  ],
+  "routines": [
+    {
+      "name": "Principiante cuerpo completo (2 días)",
+      "description": "Dos días no consecutivos por semana. Ejercicios básicos con todo el cuerpo en cada sesión.",
+      "days": [
+        {
+          "dayNumber": 1, "name": "Cuerpo completo A",
+          "exercises": [
+            { "exercise": "Sentadilla", "order": 1, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Press de banca", "order": 2, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Remo con barra", "order": 3, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Abdominales (crunch)", "order": 4, "targetSets": 2, "targetReps": 15 }
+          ]
+        },
+        {
+          "dayNumber": 2, "name": "Cuerpo completo B",
+          "exercises": [
+            { "exercise": "Prensa de piernas", "order": 1, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Press militar", "order": 2, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Jalón al pecho", "order": 3, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Estocadas", "order": 4, "targetSets": 2, "targetReps": 10 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cuerpo completo (3 días)",
+      "description": "Tres días por semana con un día de descanso entre sesiones.",
+      "days": [
+        {
+          "dayNumber": 1, "name": "Cuerpo completo A",
+          "exercises": [
+            { "exercise": "Sentadilla", "order": 1, "targetSets": 3, "targetReps": 8 },
+            { "exercise": "Press de banca", "order": 2, "targetSets": 3, "targetReps": 8 },
+            { "exercise": "Remo con barra", "order": 3, "targetSets": 3, "targetReps": 8 },
+            { "exercise": "Curl de bíceps", "order": 4, "targetSets": 3, "targetReps": 12 }
+          ]
+        },
+        {
+          "dayNumber": 2, "name": "Cuerpo completo B",
+          "exercises": [
+            { "exercise": "Peso muerto", "order": 1, "targetSets": 3, "targetReps": 5 },
+            { "exercise": "Press militar", "order": 2, "targetSets": 3, "targetReps": 8 },
+            { "exercise": "Dominadas", "order": 3, "targetSets": 3, "targetReps": 8 },
+            { "exercise": "Extensión de tríceps en polea", "order": 4, "targetSets": 3, "targetReps": 12 }
+          ]
+        },
+        {
+          "dayNumber": 3, "name": "Cuerpo completo C",
+          "exercises": [
+            { "exercise": "Prensa de piernas", "order": 1, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Press inclinado con mancuernas", "order": 2, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Jalón al pecho", "order": 3, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Abdominales (crunch)", "order": 4, "targetSets": 3, "targetReps": 15 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Torso/Pierna (4 días)",
+      "description": "Cuatro días por semana alternando torso y pierna.",
+      "days": [
+        {
+          "dayNumber": 1, "name": "Torso A",
+          "exercises": [
+            { "exercise": "Press de banca", "order": 1, "targetSets": 4, "targetReps": 6 },
+            { "exercise": "Remo con barra", "order": 2, "targetSets": 4, "targetReps": 8 },
+            { "exercise": "Press militar", "order": 3, "targetSets": 3, "targetReps": 8 },
+            { "exercise": "Curl de bíceps", "order": 4, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Extensión de tríceps en polea", "order": 5, "targetSets": 3, "targetReps": 10 }
+          ]
+        },
+        {
+          "dayNumber": 2, "name": "Pierna A",
+          "exercises": [
+            { "exercise": "Sentadilla", "order": 1, "targetSets": 4, "targetReps": 6 },
+            { "exercise": "Curl femoral", "order": 2, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Elevación de talones", "order": 3, "targetSets": 4, "targetReps": 12 },
+            { "exercise": "Abdominales (crunch)", "order": 4, "targetSets": 3, "targetReps": 15 }
+          ]
+        },
+        {
+          "dayNumber": 3, "name": "Torso B",
+          "exercises": [
+            { "exercise": "Press inclinado con mancuernas", "order": 1, "targetSets": 4, "targetReps": 10 },
+            { "exercise": "Dominadas", "order": 2, "targetSets": 4, "targetReps": 8 },
+            { "exercise": "Elevaciones laterales", "order": 3, "targetSets": 3, "targetReps": 12 },
+            { "exercise": "Fondos en paralelas", "order": 4, "targetSets": 3, "targetReps": 10 }
+          ]
+        },
+        {
+          "dayNumber": 4, "name": "Pierna B",
+          "exercises": [
+            { "exercise": "Peso muerto", "order": 1, "targetSets": 3, "targetReps": 5 },
+            { "exercise": "Prensa de piernas", "order": 2, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Estocadas", "order": 3, "targetSets": 3, "targetReps": 10 },
+            { "exercise": "Hip thrust", "order": 4, "targetSets": 3, "targetReps": 10 }
+          ]
+        }
+      ]
+    }
+  ]
+}
