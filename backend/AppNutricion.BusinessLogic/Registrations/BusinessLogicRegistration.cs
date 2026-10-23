@@ -51,6 +51,7 @@ public static class BusinessLogicRegistration
         services.AddScoped<IWorkoutManager, WorkoutManager>();
         services.AddScoped<ITrainingSeedService, TrainingSeedService>();
         services.AddHostedService<TrainingSeedHostedService>();
+        services.AddScoped<IDemoDataService, DemoDataService>();
         return services;
     }
 }

@@ -38,7 +38,8 @@ public class ApiFactory : WebApplicationFactory<Program>
         {
             // El seed de alimentos escribe en la base al arrancar (si existe foods_seed.json).
             var seed = services.Where(d => d.ServiceType == typeof(IHostedService)
-                                           && (d.ImplementationType == typeof(FoodSeedHostedService) || d.ImplementationType == typeof(TrainingSeedHostedService))).ToList();
+                                           && (d.ImplementationType == typeof(FoodSeedHostedService) || d.ImplementationType == typeof(TrainingSeedHostedService)
+                                               || d.ImplementationType == typeof(DemoDataHostedService))).ToList();
             foreach (var descriptor in seed)
             {
                 services.Remove(descriptor);
