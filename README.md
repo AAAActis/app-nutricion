@@ -65,3 +65,14 @@ dotnet ef migrations add <NombreEnPascalCase> --project backend/AppNutricion.Dat
 Regla del equipo: **una migración por PR**, y si dos PR traen migraciones, el segundo en mergearse regenera la suya sobre `develop` actualizado.
 
 El modelo de datos está documentado en [`docs/MODELO-DATOS.md`](docs/MODELO-DATOS.md). El estado del proyecto, en [`docs/ESTADO.md`](docs/ESTADO.md).
+
+## Datos de demo
+
+En Development (`Demo:Enabled = true` en `appsettings.Development.json`; en `appsettings.json` es `false`), al arrancar la API carga un usuario de demo **con los managers de la API**, con las mismas validaciones que los endpoints: nunca escribe directo en la base. Es idempotente: si lo que carga ya está, no agrega nada.
+
+| Dato | Valor |
+|---|---|
+| Email | `demo@example.com` |
+| Contraseña | `demo-nutricion-2026` |
+
+Son credenciales de demo, no un secreto. El usuario trae consentimiento, perfil, 14 días de peso hasta hoy con tendencia a la baja (se ve la línea de tendencia), un objetivo LoseFat activo, comidas de esos días con alimentos del seed (pollo, arroz, huevo, pan francés, banana, avena y queso; hoy, solo desayuno y almuerzo), 3 entrenamientos con la rutina precargada "Torso/Pierna (4 días)", una receta y un favorito. Las fechas son relativas al día en que arranca la API. Necesita los seeds de alimentos y de rutinas, que se cargan antes.
