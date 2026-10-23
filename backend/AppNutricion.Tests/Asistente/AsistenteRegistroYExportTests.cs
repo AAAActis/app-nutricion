@@ -62,7 +62,7 @@ public class AsistenteRegistroYExportTests(ApiFactoryAuth factory) : IClassFixtu
 
         Assert.IsType<FakeChatModel>(scope.ServiceProvider.GetRequiredService<IChatModel>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IAssistantManager>());
-        Assert.IsType<EmptyRoutineSummaryProvider>(scope.ServiceProvider.GetRequiredService<IRoutineSummaryProvider>());
+        Assert.IsType<RoutineSummaryProvider>(scope.ServiceProvider.GetRequiredService<IRoutineSummaryProvider>());
     }
 
     [Fact]

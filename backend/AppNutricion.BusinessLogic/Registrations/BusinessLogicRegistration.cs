@@ -42,7 +42,7 @@ public static class BusinessLogicRegistration
         services.AddSingleton(sp => ChatModelFactory.Create(sp.GetRequiredService<LlmOptions>(), sp.GetRequiredService<ILogger<ChatModelFactory>>(),
             () => ActivatorUtilities.CreateInstance<OpenAiCompatibleChatModel>(sp)));
         services.AddHttpClient(OpenAiCompatibleChatModel.HttpClientName);
-        services.AddScoped<IRoutineSummaryProvider, EmptyRoutineSummaryProvider>();
+        services.AddScoped<IRoutineSummaryProvider, RoutineSummaryProvider>();
         services.AddScoped<AssistantTools>();
         services.AddScoped<IAssistantManager, AssistantManager>();
         // Rutinas y entrenamientos (S7).
