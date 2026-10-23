@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using AppNutricion.BusinessLogic.Constants;
 using AppNutricion.Tests.Infraestructura;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 
@@ -47,6 +48,10 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("/js/router.js", "text/javascript")]
     [InlineData("/js/auth.js", "text/javascript")]
     [InlineData("/css/app.css", "text/css")]
+    [InlineData("/js/download.js", "text/javascript")]
+    [InlineData("/js/screens/rutinas.js", "text/javascript")]
+    [InlineData("/js/screens/chat.js", "text/javascript")]
+    [InlineData("/js/screens/dia.js", "text/javascript")]
     public async Task ArchivosBase_200(string ruta, string tipo)
     {
         var response = await factory.CreateClient().GetAsync(ruta);
@@ -109,6 +114,63 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         }
         foreach (var (ruta, contenido) in Archivos(".js"))
             Assert.False(Regex.IsMatch(contenido, @"import\s[^;]*from\s+[""']https?:"), $"{ruta} importa un módulo externo");
+    }
+
+    // Toda ruta "/api/…" escrita entre comillas en el JS existe en la API (sin mirar el método). Los ${…} de los
+    // template strings cuentan como un valor de ruta ({id:int}) y el query string no se compara.
+    [Fact]
+    public void Js_SoloLlamaRutasQueExistenEnLaApi()
+    {
+        _ = factory.Server;   // arranca la app para que los endpoints estén mapeados
+        var patrones = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Select(e => e.RoutePattern.RawText?.TrimStart('/'))
+            .Where(p => p is not null && p.StartsWith("api/"))
+            .Select(p => new Regex("^/" + Regex.Replace(Regex.Escape(p!), @"\\\{[^/]*}", "[^/]+") + "$"))
+            .ToList();
+
+        Assert.NotEmpty(patrones);
+        foreach (var (ruta, contenido) in Archivos(".js"))
+            foreach (Match match in Regex.Matches(contenido, @"[""'`](/api/[^""'`\s?]*)"))
+            {
+                var path = Regex.Replace(match.Groups[1].Value, @"\$\{[^}]*}", "1");
+                Assert.True(patrones.Any(p => p.IsMatch(path)), $"{ruta} llama a {match.Groups[1].Value}, que no existe en la API");
+            }
+    }
+
+    // Rutinas y chat ya tienen API en develop: no pueden seguir en "Próximamente".
+    [Theory]
+    [InlineData("js/screens/rutinas.js")]
+    [InlineData("js/screens/chat.js")]
+    public void Pantalla_YaNoEsProximamente(string archivo)
+    {
+        var pantalla = Archivos(".js").Single(a => a.Ruta == archivo);
+
+        Assert.DoesNotContain("renderPending", pantalla.Contenido);
+    }
+
+    // Cada pantalla usa los endpoints de su historia y muestra lo que la API pide mostrar.
+    [Theory]
+    [InlineData("js/screens/rutinas.js", "\"/api/exercises\"")]
+    [InlineData("js/screens/rutinas.js", "`/api/routines/${")]
+    [InlineData("js/screens/rutinas.js", "\"/api/workouts\"")]
+    [InlineData("js/screens/rutinas.js", "`/api/workouts?from=${")]
+    [InlineData("js/screens/rutinas.js", ".estimatedCaloriesBurned")]
+    [InlineData("js/screens/rutinas.js", ".disclaimer")]
+    [InlineData("js/screens/chat.js", "\"/api/assistant/conversations\"")]
+    [InlineData("js/screens/chat.js", "`/api/assistant/conversations/${")]
+    [InlineData("js/screens/chat.js", "`/api/assistant/suggestions/${")]
+    [InlineData("js/screens/chat.js", ".degraded")]
+    [InlineData("js/screens/chat.js", "maxlength: 1000")]
+    [InlineData("js/screens/chat.js", "Estimación, no es consejo médico")]
+    [InlineData("js/screens/dia.js", "`/api/summary/weekly?endDate=${")]
+    [InlineData("js/screens/dia.js", ".streak")]
+    [InlineData("js/screens/dia.js", "`/api/meals/export?from=${")]
+    public void Pantalla_UsaSusEndpoints(string archivo, string texto)
+    {
+        var pantalla = Archivos(".js").Single(a => a.Ruta == archivo);
+
+        Assert.Contains(texto, pantalla.Contenido);
     }
 
     // Leyenda del art. 3 de la Resolución 14/2018 de la AAIP, copiada textual de
