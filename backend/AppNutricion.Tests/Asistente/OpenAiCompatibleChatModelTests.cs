@@ -124,17 +124,27 @@ public class OpenAiCompatibleChatModelTests
         Assert.DoesNotContain("clave-de-test", logs);
     }
 
+    // El cuerpo trae choices válidos: lo que corta es el status, no el JSON.
     [Theory]
-    [InlineData(HttpStatusCode.TooManyRequests, """{"error":{"code":429}}""")]
-    [InlineData(HttpStatusCode.InternalServerError, """{"error":{"code":500}}""")]
-    [InlineData(HttpStatusCode.OK, """{"choices":[{"message":""")]
-    [InlineData(HttpStatusCode.OK, """{"choices":[]}""")]
-    public async Task ErrorHttpOJsonInvalido_TiraExcepcion(HttpStatusCode status, string json)
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.InternalServerError)]
+    public async Task StatusDeError_TiraHttpRequestException(HttpStatusCode status)
     {
-        var handler = HandlerFalso.Json(json, status);
+        var handler = HandlerFalso.Json(RespuestaTexto, status);
 
-        await Assert.ThrowsAnyAsync<Exception>(() => Modelo(handler).CompleteAsync("p", [new ChatTurn(ChatRole.User, "hola")], [Buscar], CancellationToken.None));
+        await Assert.ThrowsAsync<HttpRequestException>(() => Modelo(handler).CompleteAsync("p", [new ChatTurn(ChatRole.User, "hola")], [Buscar], CancellationToken.None));
+        Assert.Contains(_logger.Entries, e => e.Message.Contains(((int)status).ToString()));
         Assert.DoesNotContain(_logger.Entries, e => e.Message.Contains("clave-de-test"));
+    }
+
+    [Theory]
+    [InlineData("""{"choices":[{"message":""")]
+    [InlineData("""{"choices":[]}""")]
+    public async Task JsonInvalidoOSinChoices_TiraJsonException(string json)
+    {
+        var handler = HandlerFalso.Json(json);
+
+        await Assert.ThrowsAsync<JsonException>(() => Modelo(handler).CompleteAsync("p", [new ChatTurn(ChatRole.User, "hola")], [Buscar], CancellationToken.None));
     }
 
     // ---- Elección del modelo ----

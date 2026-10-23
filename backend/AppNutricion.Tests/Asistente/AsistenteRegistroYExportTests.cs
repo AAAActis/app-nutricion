@@ -80,7 +80,9 @@ public class AsistenteRegistroYExportTests(ApiFactoryAuth factory) : IClassFixtu
     [Fact]
     public void LosTestsEnDevelopment_UsanElFake()
     {
-        using var desarrollo = new ApiFactoryDesarrollo();
+        // Clave falsa: el test no depende de que la máquina tenga Llm:ApiKey en user-secrets.
+        using var base_ = new ApiFactoryDesarrollo();
+        using var desarrollo = base_.WithWebHostBuilder(b => b.UseSetting("Llm:ApiKey", "clave-de-test"));
 
         Assert.IsType<FakeChatModel>(desarrollo.Services.GetRequiredService<IChatModel>());
     }
