@@ -152,6 +152,16 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.DoesNotContain("cifrada", consent.Contenido);
     }
 
+    // Los datos sí se comparten con Gemini: decir que no se comparten contradice el aviso del asistente.
+    [Fact]
+    public void Consentimiento_NoDiceQueNoSeComparten()
+    {
+        var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js");
+
+        Assert.DoesNotContain("no los compartimos", consent.Contenido);
+        Assert.Contains("No los vendemos. Solo los compartimos con el servicio de inteligencia artificial del asistente (Google Gemini), como se explica más abajo.", consent.Contenido);
+    }
+
     // El texto que acepta el usuario no puede tener datos sin completar.
     [Fact]
     public void Consentimiento_SinNadaPorCompletar()
