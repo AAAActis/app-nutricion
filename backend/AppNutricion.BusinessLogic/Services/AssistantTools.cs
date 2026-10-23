@@ -103,7 +103,7 @@ public class AssistantTools(IFoodManager foodManager, ISummaryManager summaryMan
     }
 
     private async Task<ToolOutcome> RoutinesAsync(int userId) =>
-        Ok(new { rutinas = (await routines.GetAsync(userId)).Select(r => new { nombre = r.Name, dias = r.Days }) });
+        Ok(new { rutinas = (await routines.GetAsync(userId)).Select(r => new { nombre = r.Name }) });
 
     private async Task<ToolOutcome> ProposeAsync(int userId, JsonElement args)
     {
