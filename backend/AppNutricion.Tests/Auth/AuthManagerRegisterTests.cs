@@ -102,7 +102,7 @@ public class AuthManagerRegisterTests
         var (_, guardado) = await RegistrarAsync("ana@mail.com", PasswordValida);
 
         Assert.NotNull(guardado);
-        Assert.Equal("2026-10-21", guardado.ConsentVersion);
+        Assert.Equal("2026-10-22", guardado.ConsentVersion);   // texto con responsable, derechos y leyenda AAIP
         Assert.Equal(Ahora.UtcDateTime, guardado.CreatedAt);
         Assert.Equal(Ahora.UtcDateTime, guardado.ConsentAcceptedAt);
         Assert.Equal(DateTimeKind.Utc, guardado.CreatedAt.Kind);
