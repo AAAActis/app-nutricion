@@ -173,6 +173,30 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Contains(texto, pantalla.Contenido);
     }
 
+    // Cada botón de una sugerencia llama a su acción: un "Aceptar" que ignora no crea la comida y nadie lo nota.
+    [Theory]
+    [InlineData("accept", "Aceptar")]
+    [InlineData("ignore", "Ignorar")]
+    public void Chat_CadaBotonDeSugerenciaUsaSuAccion(string accion, string boton)
+    {
+        var chat = Archivos(".js").Single(a => a.Ruta == "js/screens/chat.js").Contenido;
+
+        Assert.Matches(new Regex($@"resolve\(`/api/assistant/suggestions/\$\{{s\.id\}}/{accion}`\)\s*\}}\s*,\s*""{boton}"""), chat);
+    }
+
+    // Usos puntuales que un Contains suelto no ata: la condición del aviso degraded, el header del 429 y las kcal
+    // del entrenamiento recién guardado.
+    [Theory]
+    [InlineData("js/screens/chat.js", "if (reply.degraded)")]
+    [InlineData("js/api.js", "response.headers.get(\"Retry-After\")")]
+    [InlineData("js/screens/rutinas.js", "num(saved.estimatedCaloriesBurned, 0)")]
+    public void Js_UsoPuntual(string archivo, string texto)
+    {
+        var js = Archivos(".js").Single(a => a.Ruta == archivo);
+
+        Assert.Contains(texto, js.Contenido);
+    }
+
     // Leyenda del art. 3 de la Resolución 14/2018 de la AAIP, copiada textual de
     // https://www.argentina.gob.ar/normativa/nacional/resoluci%C3%B3n-14-2018-307621/texto (22/10/2026).
     private const string LeyendaAaip =
