@@ -93,6 +93,53 @@ Authorization: Bearer {{token}}
 
 ###
 
+# Asistente (S9/S10). Sin clave responde el Fake (guionado). En Development, con la clave cargada, responde Gemini (D24):
+#   dotnet user-secrets set "Llm:ApiKey" "<GEMINI_API_KEY>" --project backend/AppNutricion.Api
+# 20 mensajes por minuto por usuario; el plan gratis de Gemini tiene su propio cupo (ver AI Studio).
+
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/assistant/conversations
+Authorization: Bearer {{token}}
+
+###
+
+# "comí 150 g de arroz" deja una sugerencia Pending (no crea la comida).
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations/1/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "content": "comí 150 g de arroz" }
+
+###
+
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations/1/messages
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "content": "cuánto me falta" }
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/assistant/conversations/1/messages
+Authorization: Bearer {{token}}
+
+###
+
+# Crea la comida con los macros de Foods. Ya resuelta → 409.
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/suggestions/1/accept
+Authorization: Bearer {{token}}
+
+###
+
+POST {{AppNutricion.Api_HostAddress}}/api/assistant/suggestions/1/ignore
+Authorization: Bearer {{token}}
+
+###
+
 # Rutinas y entrenamientos (S7). Las kcal son una estimación: MET promedio × último peso × horas (D22).
 
 GET {{AppNutricion.Api_HostAddress}}/api/exercises?muscleGroup=Legs
