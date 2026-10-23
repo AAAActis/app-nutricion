@@ -29,7 +29,7 @@ public class OpenFoodFactsTests
             .ReturnsAsync((1, 0));
         _http = new HttpClient(_handler);
         OpenFoodFactsService.Configure(_http);
-        _manager = new FoodManager(_store.Object, new OpenFoodFactsService(_http, _offLogger), NullLogger<FoodManager>.Instance);
+        _manager = new FoodManager(_store.Object, new OpenFoodFactsService(_http, _offLogger), NullLogger<FoodManager>.Instance, TimeProvider.System);
     }
 
     private const string FullProduct = """

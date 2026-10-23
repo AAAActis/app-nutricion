@@ -78,7 +78,7 @@ public sealed class AssistantManagerTests : IDisposable
     private AssistantManager Manager(IChatModel modelo, double timeoutSegundos = 10)
     {
         var userToday = new UserToday(Mock.Of<IProfileStore>(), _reloj);
-        var meals = new MealEntryManager(new MealEntryStore(_db.NuevoContexto()), _foods.Object, userToday, _reloj);
+        var meals = new MealEntryManager(new MealEntryStore(_db.NuevoContexto()), _foods.Object, Mock.Of<IRecipeManager>(), userToday, _reloj);
         var tools = new AssistantTools(_foods.Object, _summary.Object, _routines.Object, userToday);
         return new AssistantManager(new AssistantStore(_db.NuevoContexto()), modelo, tools, meals, _summary.Object, _goals.Object,
             _routines.Object, new LlmOptions { TimeoutSeconds = timeoutSegundos }, _reloj);

@@ -29,6 +29,22 @@ public class MealsController(IMealEntryManager mealManager, ICurrentUser current
         }
     }
 
+    // Una receta (L9) como comida: aparte de POST /api/meals para no cambiar su contrato.
+    [HttpPost("recipe")]
+    public async Task<ActionResult<MealEntryOutput>> CreateFromRecipe(CreateRecipeMealInput input)
+    {
+        var userId = currentUser.RequireUserId();
+        try
+        {
+            var entry = await mealManager.CreateFromRecipeAsync(userId, input.RecipeId, input.Servings, input.MealType, input.Date);
+            return entry is null ? NotFound() : Created((string?)null, MealEntryOutput.From(entry));
+        }
+        catch (ArgumentException ex) when (ex.ParamName is not null)
+        {
+            return this.ValidationProblemFor(ex);
+        }
+    }
+
     [HttpPut("{id:int}")]
     public async Task<ActionResult<MealEntryOutput>> Update(int id, UpdateMealEntryInput input)
     {

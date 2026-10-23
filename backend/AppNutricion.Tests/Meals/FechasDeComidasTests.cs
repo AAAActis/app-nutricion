@@ -33,7 +33,7 @@ public class FechasDeComidasTests
         });
         _store.Setup(s => s.UpdateAsync(It.IsAny<MealEntry>(), UserId)).ReturnsAsync(true);
         _store.Setup(s => s.GetByDateAsync(UserId, It.IsAny<DateOnly>(), It.IsAny<MealType?>())).ReturnsAsync([]);
-        _manager = new MealEntryManager(_store.Object, foods.Object, new UserToday(_perfiles.Object, _reloj), _reloj);
+        _manager = new MealEntryManager(_store.Object, foods.Object, Mock.Of<IRecipeManager>(), new UserToday(_perfiles.Object, _reloj), _reloj);
     }
 
     private void ConPerfilEnCordoba() =>

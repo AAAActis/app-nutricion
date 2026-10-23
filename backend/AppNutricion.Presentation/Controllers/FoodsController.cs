@@ -1,5 +1,7 @@
+using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.Presentation.Auth;
+using AppNutricion.Presentation.Input;
 using AppNutricion.Presentation.Output;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -72,4 +74,71 @@ public class FoodsController(IFoodManager foodManager, ICurrentUser currentUser)
         var foods = await foodManager.GetRecentAsync(userId, limit);
         return foods.Select(FoodOutput.From).ToList();
     }
+
+    // Personalizados (L8): solo los Custom del usuario del token; de otro o compartido → 404.
+    [Authorize]
+    [HttpPost("custom")]
+    public async Task<ActionResult<FoodOutput>> CreateCustom(CustomFoodInput input)
+    {
+        var userId = currentUser.RequireUserId();
+        try
+        {
+            var food = await foodManager.CreateCustomAsync(userId, ToData(input));
+            return Created((string?)null, FoodOutput.From(food));
+        }
+        catch (ArgumentException ex) when (ex.ParamName is not null)
+        {
+            return this.ValidationProblemFor(ex);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("custom")]
+    public async Task<ActionResult<List<FoodOutput>>> GetCustom()
+    {
+        var foods = await foodManager.GetCustomAsync(currentUser.RequireUserId());
+        return foods.Select(FoodOutput.From).ToList();
+    }
+
+    [Authorize]
+    [HttpGet("custom/{id:int}")]
+    public async Task<ActionResult<FoodOutput>> GetCustomById(int id)
+    {
+        var food = await foodManager.GetCustomByIdAsync(id, currentUser.RequireUserId());
+        return food is null ? NotFound() : FoodOutput.From(food);
+    }
+
+    [Authorize]
+    [HttpPut("custom/{id:int}")]
+    public async Task<ActionResult<FoodOutput>> UpdateCustom(int id, CustomFoodInput input)
+    {
+        var userId = currentUser.RequireUserId();
+        try
+        {
+            var food = await foodManager.UpdateCustomAsync(id, userId, ToData(input));
+            return food is null ? NotFound() : FoodOutput.From(food);
+        }
+        catch (ArgumentException ex) when (ex.ParamName is not null)
+        {
+            return this.ValidationProblemFor(ex);
+        }
+    }
+
+    [Authorize]
+    [HttpDelete("custom/{id:int}")]
+    public async Task<IActionResult> DeleteCustom(int id)
+    {
+        var userId = currentUser.RequireUserId();
+        try
+        {
+            return await foodManager.DeleteCustomAsync(id, userId) ? NoContent() : NotFound();
+        }
+        catch (ConflictException ex)
+        {
+            return this.ConflictProblemFor(ex);
+        }
+    }
+
+    private static CustomFoodData ToData(CustomFoodInput i) =>
+        new(i.Name, i.Brand, i.CaloriesPer100g, i.ProteinPer100g, i.CarbsPer100g, i.FatPer100g, i.PortionName, i.PortionWeightGrams);
 }

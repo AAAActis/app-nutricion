@@ -18,6 +18,7 @@ public static class BusinessLogicRegistration
         services.AddScoped<IFoodManager, FoodManager>();
         services.AddScoped<IUserToday, UserToday>();
         services.AddScoped<IMealEntryManager, MealEntryManager>();
+        services.AddScoped<IRecipeManager, RecipeManager>();
         services.AddScoped<ISummaryManager, SummaryManager>();
         services.AddScoped<IFoodSeedService, FoodSeedService>();
         services.AddHostedService<FoodSeedHostedService>();
