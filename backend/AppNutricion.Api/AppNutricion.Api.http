@@ -93,7 +93,9 @@ Authorization: Bearer {{token}}
 
 ###
 
-# Asistente (S9/S10). Provider "Fake" por defecto: sin clave responde guionado. 20 mensajes por minuto por usuario.
+# Asistente (S9/S10). Sin clave responde el Fake (guionado). En Development, con la clave cargada, responde Gemini (D24):
+#   dotnet user-secrets set "Llm:ApiKey" "<GEMINI_API_KEY>" --project backend/AppNutricion.Api
+# 20 mensajes por minuto por usuario; el plan gratis de Gemini tiene su propio cupo (ver AI Studio).
 
 POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations
 Authorization: Bearer {{token}}
@@ -105,7 +107,7 @@ Authorization: Bearer {{token}}
 
 ###
 
-# Con el Fake, "comí 150 g de arroz" deja una sugerencia Pending (no crea la comida).
+# "comí 150 g de arroz" deja una sugerencia Pending (no crea la comida).
 POST {{AppNutricion.Api_HostAddress}}/api/assistant/conversations/1/messages
 Authorization: Bearer {{token}}
 Content-Type: application/json

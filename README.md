@@ -44,6 +44,14 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Po
 
 Los secretos quedan fuera del repo (en tu perfil de usuario), no en `appsettings.json`.
 
+Asistente con el LLM real (opcional: sin clave usa el modelo Fake). En Development apunta a Gemini `gemini-3.8-flash` por su endpoint compatible con OpenAI (D24); la clave se saca en https://aistudio.google.com/apikey:
+
+```powershell
+dotnet user-secrets set "Llm:ApiKey" "<GEMINI_API_KEY>" --project backend/AppNutricion.Api
+```
+
+Para pasar a otro proveedor compatible con OpenAI se cambian solo `Llm:BaseUrl`, `Llm:Model` y la clave.
+
 ### 4. Migraciones
 
 ```powershell
