@@ -135,8 +135,8 @@ public class DatosDemoTests
         using var testing = new ApiFactory();
         using var desarrollo = new ApiFactoryDesarrollo();
 
-        Assert.Equal("false", testing.Services.GetRequiredService<IConfiguration>()["Demo:Enabled"]);
-        Assert.Equal("true", desarrollo.Services.GetRequiredService<IConfiguration>()["Demo:Enabled"]);
+        Assert.False(bool.Parse(testing.Services.GetRequiredService<IConfiguration>()["Demo:Enabled"]!));
+        Assert.True(bool.Parse(desarrollo.Services.GetRequiredService<IConfiguration>()["Demo:Enabled"]!));
     }
 
     // ---- Los datos ----
