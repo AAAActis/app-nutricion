@@ -51,7 +51,9 @@ public static class BusinessLogicRegistration
         services.AddScoped<IWorkoutManager, WorkoutManager>();
         services.AddScoped<ITrainingSeedService, TrainingSeedService>();
         services.AddHostedService<TrainingSeedHostedService>();
+        // Datos de demo (solo con Demo:Enabled = true), después de los seeds que usa.
         services.AddScoped<IDemoDataService, DemoDataService>();
+        services.AddHostedService<DemoDataHostedService>();
         return services;
     }
 }
