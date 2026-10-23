@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using AppNutricion.BusinessLogic.Exceptions;
 using AppNutricion.BusinessLogic.Interfaces;
@@ -8,6 +9,7 @@ using AppNutricion.DataAccess.Interfaces;
 using AppNutricion.DataAccess.Stores;
 using AppNutricion.Entities.Entities;
 using AppNutricion.Entities.Enums;
+using AppNutricion.Tests.Foods;
 using AppNutricion.Tests.Infraestructura;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
@@ -404,6 +406,44 @@ public sealed class AssistantManagerTests : IDisposable
         Assert.Empty(reply.Suggestions);
         Assert.Equal([ChatRole.User, ChatRole.Assistant], (await Mensajes()).Select(m => m.Role));
         Assert.Equal(reply.Message.Content, (await Mensajes()).Last().Content);
+    }
+
+    // ---- Con el adaptador real (OpenAiCompatibleChatModel) sobre un HttpMessageHandler falso ----
+
+    [Theory]
+    [InlineData(HttpStatusCode.TooManyRequests, """{"error":{"code":429}}""")]
+    [InlineData(HttpStatusCode.InternalServerError, """{"error":{"code":500}}""")]
+    [InlineData(HttpStatusCode.OK, "esto no es json")]
+    public async Task ElProveedorRealFalla_DegradedConLosTotales(HttpStatusCode status, string json)
+    {
+        var modelo = new OpenAiCompatibleChatModel(HandlerFalso.Json(json, status).Factory(), OpenAiCompatibleChatModelTests.Opciones,
+            new ListLogger<OpenAiCompatibleChatModel>());
+
+        var reply = await Manager(modelo).SendAsync(UserId, _conversacion, "comí 150 g de arroz");
+
+        Assert.True(reply!.Degraded);
+        Assert.Equal("El asistente no está disponible en este momento. Hoy llevás 500 kcal de 2000.", reply.Message.Content);
+        Assert.Empty(reply.Suggestions);
+    }
+
+    [Fact]
+    public async Task ConElProveedorReal_ElResultadoDeLaHerramientaVuelveComoMensajeToolConLaFirma()
+    {
+        var respuestas = new Queue<string>([
+            """{"choices":[{"message":{"role":"assistant","content":null,"tool_calls":[{"id":"fc-1","type":"function","function":{"name":"buscar_alimento","arguments":"{\"q\":\"arroz\"}"},"extra_content":{"google":{"thought_signature":"sig-1"}}}]}}]}""",
+            """{"choices":[{"message":{"role":"assistant","content":"Encontré arroz."}}]}""",
+        ]);
+        var handler = new HandlerFalso(() => new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(respuestas.Dequeue()) });
+        var modelo = new OpenAiCompatibleChatModel(handler.Factory(), OpenAiCompatibleChatModelTests.Opciones, new ListLogger<OpenAiCompatibleChatModel>());
+
+        var reply = await Manager(modelo).SendAsync(UserId, _conversacion, "comí arroz");
+
+        Assert.Equal("Encontré arroz.", reply!.Message.Content);
+        var mensajes = JsonDocument.Parse(handler.Body).RootElement.GetProperty("messages").EnumerateArray().ToArray();
+        Assert.Equal(["system", "user", "assistant", "tool"], mensajes.Select(m => m.GetProperty("role").GetString()));
+        Assert.Equal("sig-1", mensajes[2].GetProperty("tool_calls")[0].GetProperty("extra_content").GetProperty("google").GetProperty("thought_signature").GetString());
+        Assert.Equal("fc-1", mensajes[3].GetProperty("tool_call_id").GetString());
+        Assert.Contains(_arroz.Name, mensajes[3].GetProperty("content").GetString());
     }
 
     [Fact]

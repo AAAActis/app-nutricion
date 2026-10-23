@@ -7,7 +7,7 @@ namespace AppNutricion.BusinessLogic.Services;
 // Elige el IChatModel según Llm:Provider. Sin clave (o sin adaptador todavía) avisa y usa el Fake: la API arranca igual.
 public class ChatModelFactory
 {
-    public static IChatModel Create(LlmOptions options, ILogger<ChatModelFactory> logger)
+    public static IChatModel Create(LlmOptions options, ILogger<ChatModelFactory> logger, Func<IChatModel> openAiCompatible)
     {
         if (options.Provider.Equals(LlmOptions.FakeProvider, StringComparison.OrdinalIgnoreCase)) return new FakeChatModel();
         if (options.ApiKey is null)

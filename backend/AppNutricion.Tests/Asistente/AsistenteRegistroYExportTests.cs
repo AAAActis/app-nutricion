@@ -26,7 +26,7 @@ public class AsistenteRegistroYExportTests(ApiFactoryAuth factory) : IClassFixtu
     {
         var logger = new ListLogger<ChatModelFactory>();
 
-        Assert.IsType<FakeChatModel>(ChatModelFactory.Create(new LlmOptions(), logger));
+        Assert.IsType<FakeChatModel>(ChatModelFactory.Create(new LlmOptions(), logger, () => throw new InvalidOperationException()));
         Assert.Empty(logger.Warnings);
     }
 
@@ -35,7 +35,7 @@ public class AsistenteRegistroYExportTests(ApiFactoryAuth factory) : IClassFixtu
     {
         var logger = new ListLogger<ChatModelFactory>();
 
-        Assert.IsType<FakeChatModel>(ChatModelFactory.Create(new LlmOptions { Provider = "OpenAI" }, logger));
+        Assert.IsType<FakeChatModel>(ChatModelFactory.Create(new LlmOptions { Provider = "OpenAI" }, logger, () => throw new InvalidOperationException()));
         Assert.Contains(logger.Warnings, w => w.Contains("OpenAI") && w.Contains("ApiKey"));
     }
 
@@ -44,14 +44,14 @@ public class AsistenteRegistroYExportTests(ApiFactoryAuth factory) : IClassFixtu
     {
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Llm:Provider"] = "OpenAI", ["Llm:ApiKey"] = "clave", ["Llm:Model"] = "m", ["Llm:TimeoutSeconds"] = "2.5",
+            ["Llm:Provider"] = "OpenAI", ["Llm:ApiKey"] = "clave", ["Llm:Model"] = "m", ["Llm:BaseUrl"] = "https://llm.test", ["Llm:TimeoutSeconds"] = "2.5",
         }).Build();
 
         var opciones = LlmOptions.From(config);
         var porDefecto = LlmOptions.From(new ConfigurationBuilder().Build());
 
-        Assert.Equal(("OpenAI", "clave", "m", 2.5), (opciones.Provider, opciones.ApiKey, opciones.Model, opciones.TimeoutSeconds));
-        Assert.Equal(("Fake", (string?)null, 10d), (porDefecto.Provider, porDefecto.ApiKey, porDefecto.TimeoutSeconds));
+        Assert.Equal(("OpenAI", "clave", "m", "https://llm.test", 2.5), (opciones.Provider, opciones.ApiKey, opciones.Model, opciones.BaseUrl, opciones.TimeoutSeconds));
+        Assert.Equal(("Fake", (string?)null, (string?)null, (string?)null, 10d), (porDefecto.Provider, porDefecto.ApiKey, porDefecto.Model, porDefecto.BaseUrl, porDefecto.TimeoutSeconds));
     }
 
     [Fact]
@@ -63,6 +63,26 @@ public class AsistenteRegistroYExportTests(ApiFactoryAuth factory) : IClassFixtu
         Assert.IsType<FakeChatModel>(scope.ServiceProvider.GetRequiredService<IChatModel>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IAssistantManager>());
         Assert.IsType<EmptyRoutineSummaryProvider>(scope.ServiceProvider.GetRequiredService<IRoutineSummaryProvider>());
+    }
+
+    [Fact]
+    public void LaApiConProviderOpenAICompatibleYClave_RegistraElAdaptador()
+    {
+        using var conClave = factory.WithWebHostBuilder(b => b
+            .UseSetting("Llm:Provider", LlmOptions.OpenAiCompatibleProvider).UseSetting("Llm:ApiKey", "clave-de-test")
+            .UseSetting("Llm:BaseUrl", "https://llm.test").UseSetting("Llm:Model", "m"));
+
+        Assert.IsType<OpenAiCompatibleChatModel>(conClave.Services.GetRequiredService<IChatModel>());
+    }
+
+    // Development carga los user-secrets (con la clave real) y appsettings.Development.json (OpenAICompatible):
+    // los tests nunca deben llamar al proveedor real.
+    [Fact]
+    public void LosTestsEnDevelopment_UsanElFake()
+    {
+        using var desarrollo = new ApiFactoryDesarrollo();
+
+        Assert.IsType<FakeChatModel>(desarrollo.Services.GetRequiredService<IChatModel>());
     }
 
     // ---- J5: el export muestra las sugerencias ----

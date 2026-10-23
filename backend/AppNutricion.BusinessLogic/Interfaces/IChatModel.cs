@@ -6,7 +6,7 @@ namespace AppNutricion.BusinessLogic.Interfaces;
 public record ChatToolDefinition(string Name, string Description, string ParametersJsonSchema);
 
 // Un pedido del modelo de ejecutar una herramienta. ArgumentsJson lo arma el LLM: se valida como si viniera de un cliente.
-public record ChatToolCall(string Id, string Name, string ArgumentsJson);
+public record ChatToolCall(string Id, string Name, string ArgumentsJson, string? ProviderMetadataJson = null);
 
 // Un turno de la charla que se le manda al modelo. El del asistente puede traer ToolCalls; el de una
 // herramienta trae el ToolCallId que responde.

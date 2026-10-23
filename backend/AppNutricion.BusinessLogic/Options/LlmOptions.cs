@@ -8,11 +8,13 @@ public class LlmOptions
 {
     public const string SectionName = "Llm";
     public const string FakeProvider = "Fake";
+    public const string OpenAiCompatibleProvider = "OpenAICompatible";
     public const double DefaultTimeoutSeconds = 10;
 
     public string Provider { get; init; } = FakeProvider;
     public string? ApiKey { get; init; }
     public string? Model { get; init; }
+    public string? BaseUrl { get; init; }
     public double TimeoutSeconds { get; init; } = DefaultTimeoutSeconds;
 
     // Se lee a mano para no sumar el paquete del binder a BusinessLogic.
