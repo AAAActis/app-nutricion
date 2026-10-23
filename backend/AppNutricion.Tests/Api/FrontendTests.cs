@@ -204,6 +204,9 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         "tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus " +
         "derechos por incumplimiento de las normas vigentes en materia de protección de datos personales";
 
+    // El párrafo del asistente, no la mención de Gemini en la Finalidad: los tests de texto y de posición se anclan acá.
+    private const string AvisoGemini = "El asistente usa un servicio externo de inteligencia artificial (Google Gemini).";
+
     // Lo que tiene que decir el consentimiento (Ley 25.326, art. 6, y Res. AAIP 14/2018, art. 3).
     [Theory]
     [InlineData(LeyendaAaip)]
@@ -217,6 +220,11 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("rectificación (desde Perfil)")]
     [InlineData("supresión (desde Cuenta)")]
     [InlineData("art. 6 de la Ley 25.326")]
+    [InlineData("Contacto: infobbasolutions@gmail.com.")]
+    [InlineData(AvisoGemini)]
+    [InlineData("mensajes que escribís en el chat")]
+    [InlineData("nunca tu email ni tu nombre")]
+    [InlineData("pueden usarse para mejorar sus servicios")]
     public void Consentimiento_IncluyeLoQuePideLaLey(string texto)
     {
         var consent = Archivos(".js").SingleOrDefault(a => a.Ruta == "js/consent.js");
@@ -231,6 +239,36 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js");
 
         Assert.DoesNotContain("cifrada", consent.Contenido);
+    }
+
+    // Los datos sí se comparten con Gemini: decir que no se comparten contradice el aviso del asistente.
+    [Fact]
+    public void Consentimiento_NoDiceQueNoSeComparten()
+    {
+        var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js");
+
+        Assert.DoesNotContain("no los compartimos", consent.Contenido);
+        Assert.Contains("Son datos de salud: no los vendemos. Solo los compartimos con el servicio de inteligencia artificial del asistente (Google Gemini), como se explica más abajo.", consent.Contenido);
+    }
+
+    // El texto que acepta el usuario no puede tener datos sin completar.
+    [Fact]
+    public void Consentimiento_SinNadaPorCompletar()
+    {
+        var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js");
+
+        Assert.DoesNotContain("<COMPLETAR", consent.Contenido);
+    }
+
+    // El aviso del proveedor de IA va antes de los derechos, como el resto de lo que se hace con los datos.
+    [Fact]
+    public void Consentimiento_AvisoDeGeminiAntesDeLosDerechos()
+    {
+        var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js").Contenido;
+
+        var gemini = consent.IndexOf(AvisoGemini, StringComparison.Ordinal);
+        var derechos = consent.IndexOf("Tus derechos", StringComparison.Ordinal);
+        Assert.True(gemini >= 0 && gemini < derechos, $"El aviso de Gemini en {gemini}, Tus derechos en {derechos}");
     }
 
     // El texto de consentimiento del registro es el de la versión que guarda la API.
