@@ -6,8 +6,8 @@ namespace AppNutricion.BusinessLogic.Validators;
 // Reglas para alimentos que vienen de afuera (seed, Open Food Facts). Devuelve el motivo o null si es válido.
 public static class FoodValidator
 {
-    private const decimal MaxCaloriesPer100g = 900m; // grasa pura ≈ 900 kcal
-    private const decimal MaxMacrosPer100g = 100m;
+    public const decimal MaxCaloriesPer100g = 900m; // grasa pura ≈ 900 kcal
+    public const decimal MaxMacrosPer100g = 100m;
 
     public static string? GetInvalidReason(Food food)
     {
