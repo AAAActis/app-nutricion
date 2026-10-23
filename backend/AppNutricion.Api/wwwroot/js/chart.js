@@ -8,8 +8,9 @@ const HEIGHT = 260;
 const PAD = { top: 16, right: 16, bottom: 32, left: 48 };
 const TREND_WINDOW = 7;
 
-// metrics: [{ date: "YYYY-MM-DD", weightKg }] ordenado por fecha.
-export function weightChart(metrics) {
+// metrics: [{ date: "YYYY-MM-DD", weightKg }] ordenado por fecha. showTrend: la API ya calculó la tendencia
+// (14 registros); con menos, la línea de tendencia no se dibuja.
+export function weightChart(metrics, showTrend = false) {
   const weights = metrics.map((m) => Number(m.weightKg));
   const min = Math.floor(Math.min(...weights) - 1);
   const max = Math.ceil(Math.max(...weights) + 1);
@@ -42,7 +43,7 @@ export function weightChart(metrics) {
     svg("text", { x: PAD.left - 6, y: y(min) + 4, "text-anchor": "end" }, `${min} kg`),
     svg("text", { x: PAD.left, y: HEIGHT - 10 }, dateText(metrics[0].date)),
     svg("text", { x: WIDTH - PAD.right, y: HEIGHT - 10, "text-anchor": "end" }, dateText(metrics[last].date)),
-    metrics.length > 1 ? svg("polyline", { class: "trend", points: trend }) : null,
+    showTrend && metrics.length > 1 ? svg("polyline", { class: "trend", points: trend }) : null,
     metrics.length > 1 ? svg("polyline", { class: "line", points }) : null,
     weights.map((kg, i) => svg("circle", { class: "point", cx: x(i), cy: y(kg), r: 3.5 },
       svg("title", {}, `${dateText(metrics[i].date)}: ${num(kg)} kg`))));
