@@ -17,7 +17,15 @@ export async function render(container) {
       el("strong", {}, `Consentimiento (versión ${CONSENT_VERSION})`),
       el("div", { class: "consent", tabindex: 0 }, CONSENT_TEXT.map((p) => el("p", {}, p))),
       el("label", { class: "checkbox" },
-        el("input", { type: "checkbox", name: "consentAccepted", "aria-describedby": "consent-error" }),
+        el("input", {
+          type: "checkbox", name: "consentAccepted", "aria-describedby": "consent-error",
+          // Al tildarlo se va el error "Hay que aceptar el consentimiento" del envío anterior.
+          onchange: (event) => {
+            if (!event.target.checked) return;
+            consentError.textContent = "";
+            event.target.removeAttribute("aria-invalid");
+          },
+        }),
         el("span", {}, "Leí y acepto el tratamiento de mis datos.")),
       consentError),
     formError(),
