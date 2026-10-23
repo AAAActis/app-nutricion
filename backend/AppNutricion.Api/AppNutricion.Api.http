@@ -209,3 +209,77 @@ Authorization: Bearer {{token}}
 Authorization: Bearer {{token}}
 
 ###
+
+# ---- Alimentos personalizados (L8) y recetas (L9) ----
+# Con token. De otro usuario o no Custom → 404. Borrar un Custom que está en una receta → 409.
+POST {{AppNutricion.Api_HostAddress}}/api/foods/custom
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Torta de la abuela", "brand": "Casera", "caloriesPer100g": 300, "proteinPer100g": 5, "carbsPer100g": 40, "fatPer100g": 12, "portionName": "porción", "portionWeightGrams": 80 }
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/foods/custom
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/foods/custom/1
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{AppNutricion.Api_HostAddress}}/api/foods/custom/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Torta light", "caloriesPer100g": 220, "proteinPer100g": 6, "carbsPer100g": 30, "fatPer100g": 8 }
+
+###
+
+DELETE {{AppNutricion.Api_HostAddress}}/api/foods/custom/1
+Authorization: Bearer {{token}}
+
+###
+
+# Cada ingrediente tiene que ser compartido o Custom propio; si no → 400 con "ingredients[i].foodId".
+POST {{AppNutricion.Api_HostAddress}}/api/recipes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Arroz con torta", "servings": 2, "ingredients": [ { "foodId": 1, "quantityGrams": 200 }, { "foodId": 2, "quantityGrams": 100 } ] }
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/recipes
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/recipes/1
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{AppNutricion.Api_HostAddress}}/api/recipes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Arroz con torta", "servings": 3, "ingredients": [ { "foodId": 1, "quantityGrams": 250 } ] }
+
+###
+
+DELETE {{AppNutricion.Api_HostAddress}}/api/recipes/1
+Authorization: Bearer {{token}}
+
+###
+
+# Receta como comida: porciones de la receta (admite 0.5), macros congelados desde Foods.
+POST {{AppNutricion.Api_HostAddress}}/api/meals/recipe
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "recipeId": 1, "servings": 1.5, "mealType": "Dinner", "date": "2026-10-22" }
+
+###
