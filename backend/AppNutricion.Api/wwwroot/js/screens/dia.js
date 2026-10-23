@@ -7,15 +7,10 @@
 import { api } from "../api.js";
 import { el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
-import { num, today } from "../format.js";
+import { download } from "../download.js";
+import { MEAL_TYPES, addDays, dateText, num, today } from "../format.js";
+import { profileTimeZone } from "../profile.js";
 
-const MEAL_TYPES = [
-  ["Breakfast", "Desayuno"],
-  ["Lunch", "Almuerzo"],
-  ["AfternoonSnack", "Merienda"],
-  ["Dinner", "Cena"],
-  ["Snack", "Colación"],
-];
 const SEARCH_LIMIT = 20;
 const SEARCH_DELAY_MS = 300;
 
@@ -25,15 +20,21 @@ export async function render(container) {
   const status = el("div");
   const summary = el("section", { class: "card" });
   const mealsCard = el("section", { class: "card" });
+  const weekCard = el("section", { class: "card" });
   const dateInput = el("input", { type: "date", name: "date", value: state.date });
 
   const reload = async () => {
     const date = encodeURIComponent(state.date);
-    const [meals, daily] = await Promise.all([api(`/api/meals?date=${date}`), api(`/api/summary/daily?date=${date}`)]);
+    const [meals, daily, weekly] = await Promise.all([
+      api(`/api/meals?date=${date}`),
+      api(`/api/summary/daily?date=${date}`),
+      api(`/api/summary/weekly?endDate=${date}`),
+    ]);
     state.meals = meals;
     state.summary = daily;
     renderSummary(summary, daily);
     renderMeals(mealsCard, state, reload, status);
+    renderWeek(weekCard, weekly);
   };
 
   dateInput.addEventListener("change", async () => {
@@ -49,18 +50,71 @@ export async function render(container) {
     status,
     summary,
     mealsCard,
-    await foodPicker(state, reload, status));
+    await foodPicker(state, reload, status),
+    weekCard,
+    exportCard(state));
 
   await reload();
 }
 
-async function profileTimeZone() {
-  try {
-    return (await api("/api/me/profile")).timeZoneId;
-  } catch (error) {
-    if (error.status === 404) return undefined;
-    throw error;
-  }
+// ---------- Resumen semanal: los 7 días que terminan en la fecha elegida (GET /api/summary/weekly) ----------
+// { days: [{ date, calories, proteinG, carbsG, fatG, logged }], averages | null, daysLogged, targetCalories | null,
+//   streak }. Los promedios son solo de los días con comidas; la racha cuenta días seguidos con comidas hasta hoy.
+
+function renderWeek(card, weekly) {
+  const target = weekly.targetCalories === null ? null : Number(weekly.targetCalories);
+  const averages = weekly.averages;
+  setChildren(card,
+    el("h2", {}, "Semana"),
+    el("div", { class: "stats" },
+      stat(`${weekly.streak} ${weekly.streak === 1 ? "día" : "días"}`, "Racha (días seguidos con comidas)"),
+      stat(`${weekly.daysLogged} de ${weekly.days.length}`, "Días con comidas"),
+      stat(averages ? `${num(averages.calories, 0)} kcal` : "—", "Promedio por día cargado"),
+      stat(target === null ? "—" : `${num(target, 0)} kcal`, "Meta diaria")),
+    averages
+      ? el("p", { class: "muted small" },
+        `Promedio de macros: P ${num(averages.proteinG)} g · C ${num(averages.carbsG)} g · G ${num(averages.fatG)} g`)
+      : null,
+    el("table", {},
+      el("thead", {}, el("tr", {}, el("th", {}, "Día"), el("th", {}, "kcal"), el("th", {}, "P / C / G (g)"))),
+      el("tbody", {}, weekly.days.map((day) => el("tr", {},
+        el("td", {}, dateText(day.date)),
+        el("td", {},
+          day.logged ? num(day.calories, 0) : el("span", { class: "muted" }, "sin comidas"),
+          day.logged && target ? el("progress", { max: target, value: Math.min(Number(day.calories), target), class: Number(day.calories) > target ? "over" : false }) : null),
+        el("td", {}, day.logged ? `${num(day.proteinG, 0)} / ${num(day.carbsG, 0)} / ${num(day.fatG, 0)}` : "—"))))));
+}
+
+function stat(value, label) {
+  return el("div", { class: "stat" }, el("span", { class: "value" }, value), el("span", { class: "label" }, label));
+}
+
+// ---------- Exportar comidas a CSV (GET /api/meals/export?from&to, hasta 366 días) ----------
+
+const EXPORT_DAYS = 30;
+
+function exportCard(state) {
+  const status = el("div");
+  const form = el("form", { class: "inline", novalidate: true },
+    field("Desde", el("input", { type: "date", name: "from", value: addDays(state.date, -(EXPORT_DAYS - 1)), required: true })),
+    field("Hasta", el("input", { type: "date", name: "to", value: state.date, required: true })),
+    formError(),
+    el("button", { type: "submit", class: "button" }, "Descargar CSV"));
+
+  onSubmit(form, async (data) => {
+    const from = String(data.get("from"));
+    const to = String(data.get("to"));
+    const csv = await api(`/api/meals/export?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    // fetch saca el BOM al leer el texto: se vuelve a poner para que Excel lea bien las tildes.
+    download(`comidas_${from}_${to}.csv`, `﻿${csv}`, "text/csv;charset=utf-8");
+    setChildren(status, notice("ok", "Listo: se descargó el CSV con tus comidas."));
+  });
+
+  return el("section", { class: "card" },
+    el("h2", {}, "Exportar comidas"),
+    el("p", { class: "muted small" }, "Un CSV con fecha, comida, alimento, gramos, kcal y macros de cada registro."),
+    status,
+    form);
 }
 
 // ---------- Resumen del día contra el objetivo (lo calcula la API) ----------

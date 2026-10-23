@@ -221,3 +221,16 @@ th, td { text-align: left; padding: 0.35rem 0.25rem; border-bottom: 1px solid va
   .stats { grid-template-columns: repeat(4, 1fr); }
   form.inline { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); align-items: end; }
 }
+
+/* Rutinas: una serie del entrenamiento. */
+.set-row { border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem 0.75rem 0.75rem; display: grid; gap: 0.5rem; }
+.set-row legend { font-weight: 600; padding: 0 0.25rem; }
+
+/* Asistente: mensajes del chat y comidas sugeridas. */
+.chat-log { display: grid; gap: 0.5rem; margin-bottom: var(--gap); }
+.chat-message { border-radius: var(--radius); padding: 0.5rem 0.75rem; max-width: 90%; }
+.chat-message.user { background: var(--ok-bg); color: var(--ok-text); justify-self: end; }
+.chat-message.assistant { background: var(--bg); border: 1px solid var(--border); justify-self: start; }
+.chat-text { margin: 0.25rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.suggestion { padding: 0.4rem 0; }
+textarea { font: inherit; width: 100%; padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
