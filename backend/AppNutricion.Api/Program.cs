@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using AppNutricion.Api;
 using AppNutricion.Api.OpenApi;
 using AppNutricion.BusinessLogic.Interfaces;
 using AppNutricion.BusinessLogic.Options;
@@ -84,6 +85,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Frontend (J12, D4): HTML/CSS/JS de wwwroot, mismo origen que la API (sin CORS). "/" sirve index.html.
+// Si no hay archivo, sigue de largo: /api, /health y Swagger no cambian. El HTML sale con una CSP que solo
+// permite recursos del mismo origen (nada de CDN ni scripts inline).
+app.UseDefaultFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        if (context.File.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+            context.Context.Response.Headers.ContentSecurityPolicy = FrontendSecurity.ContentSecurityPolicy;
+    },
+});
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
