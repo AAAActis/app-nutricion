@@ -1,7 +1,7 @@
 // Ingreso: POST /api/auth/login { email, password } → { accessToken, expiresAt }.
 import { api } from "../api.js";
 import { saveSession } from "../auth.js";
-import { el } from "../dom.js";
+import { append, el } from "../dom.js";
 import { field, formError, onSubmit } from "../forms.js";
 import { go } from "../router.js";
 
@@ -17,10 +17,10 @@ export async function render(container) {
     await goToFirstScreen();
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Ingresar"),
     el("section", { class: "card" }, form),
-    el("p", {}, "¿No tenés cuenta? ", el("a", { href: "#/registro" }, "Creá una")));
+    el("p", {}, "¿No tenés cuenta? ", el("a", { href: "#/registro" }, "Creá una"))]);
 }
 
 // Login y guardado de la sesión. Lo usa también el registro.

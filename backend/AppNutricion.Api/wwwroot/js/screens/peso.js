@@ -2,7 +2,7 @@
 // GET /api/me/metrics → { metrics: [{ date, weightKg }], trend: { lastAverageKg, previousAverageKg, changeKg } | null }.
 import { api } from "../api.js";
 import { weightChart } from "../chart.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit } from "../forms.js";
 import { dateText, num } from "../format.js";
 
@@ -27,11 +27,11 @@ export async function render(container) {
     await loadHistory(history);
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Peso"),
     status,
     el("section", { class: "card" }, form),
-    history);
+    history]);
 
   await loadHistory(history);
 }

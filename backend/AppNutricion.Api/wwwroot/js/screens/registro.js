@@ -1,7 +1,7 @@
 // Registro: POST /api/auth/register { email, password, consentAccepted } → 201. Después entra solo (login).
 import { api } from "../api.js";
 import { CONSENT_TEXT, CONSENT_VERSION } from "../consent.js";
-import { el } from "../dom.js";
+import { append, el } from "../dom.js";
 import { formError, field, onSubmit } from "../forms.js";
 import { go } from "../router.js";
 import { login } from "./login.js";
@@ -34,8 +34,8 @@ export async function render(container) {
     go("/perfil");
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Crear cuenta"),
     el("section", { class: "card" }, form),
-    el("p", {}, "¿Ya tenés cuenta? ", el("a", { href: "#/login" }, "Ingresá")));
+    el("p", {}, "¿Ya tenés cuenta? ", el("a", { href: "#/login" }, "Ingresá"))]);
 }
