@@ -39,7 +39,9 @@ public static class BusinessLogicRegistration
 
         // Asistente (S9/S10). El modelo sale de Llm:Provider; sin clave, el Fake.
         services.AddSingleton(sp => LlmOptions.From(sp.GetRequiredService<IConfiguration>()));
-        services.AddSingleton(sp => ChatModelFactory.Create(sp.GetRequiredService<LlmOptions>(), sp.GetRequiredService<ILogger<ChatModelFactory>>()));
+        services.AddSingleton(sp => ChatModelFactory.Create(sp.GetRequiredService<LlmOptions>(), sp.GetRequiredService<ILogger<ChatModelFactory>>(),
+            () => ActivatorUtilities.CreateInstance<OpenAiCompatibleChatModel>(sp)));
+        services.AddHttpClient(OpenAiCompatibleChatModel.HttpClientName);
         services.AddScoped<IRoutineSummaryProvider, EmptyRoutineSummaryProvider>();
         services.AddScoped<AssistantTools>();
         services.AddScoped<IAssistantManager, AssistantManager>();
