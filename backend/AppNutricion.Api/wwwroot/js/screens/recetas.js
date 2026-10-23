@@ -155,7 +155,7 @@ function renderEditor(card, recipe, onSaved) {
   };
 
   const form = el("form", { novalidate: true },
-    field("Nombre", el("input", { name: "name", maxlength: 120, value: recipe?.name ?? "", required: true })),
+    field("Nombre", el("input", { type: "text", name: "name", maxlength: 120, value: recipe?.name ?? "", required: true })),
     field("Porciones que rinde", el("input", { type: "number", name: "servings", min: 1, max: 50, step: "1", value: recipe?.servings ?? 1, required: true, inputmode: "numeric" })),
     el("h3", {}, "Ingredientes"),
     rowsList,
