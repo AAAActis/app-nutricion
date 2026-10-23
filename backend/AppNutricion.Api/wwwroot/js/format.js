@@ -25,3 +25,30 @@ export function today(timeZone) {
     return new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   }
 }
+
+// "YYYY-MM-DD" más n días (n puede ser negativo), en UTC para que no lo mueva la zona horaria.
+export function addDays(iso, days) {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+// Un DateTime UTC de la API ("2026-10-22T14:05:00Z") como fecha y hora en la zona pedida.
+export function dateTimeText(isoUtc, timeZone) {
+  if (!isoUtc) return "—";
+  const options = { dateStyle: "short", timeStyle: "short", timeZone: timeZone || undefined };
+  try {
+    return new Intl.DateTimeFormat("es-AR", options).format(new Date(isoUtc));
+  } catch {
+    return new Intl.DateTimeFormat("es-AR", { dateStyle: "short", timeStyle: "short" }).format(new Date(isoUtc));
+  }
+}
+
+// Tipos de comida de la API (MealType) con su nombre en pantalla, en el orden del día.
+export const MEAL_TYPES = [
+  ["Breakfast", "Desayuno"],
+  ["Lunch", "Almuerzo"],
+  ["AfternoonSnack", "Merienda"],
+  ["Dinner", "Cena"],
+  ["Snack", "Colación"],
+];

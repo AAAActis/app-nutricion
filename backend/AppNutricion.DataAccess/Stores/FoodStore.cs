@@ -103,6 +103,41 @@ public class FoodStore(ApplicationDbContext context) : IFoodStore
         return (inserted, updated);
     }
 
+    public Task<List<Food>> GetCustomAsync(int userId) =>
+        CustomOf(userId).OrderBy(f => f.NormalizedName).ThenBy(f => f.Id).ToListAsync();
+
+    public Task<Food?> GetCustomByIdAsync(int id, int userId) =>
+        CustomOf(userId).FirstOrDefaultAsync(f => f.Id == id);
+
+    public async Task AddAsync(Food food)
+    {
+        context.Foods.Add(food);
+        await context.SaveChangesAsync();
+    }
+
+    // Source, dueño y CreatedAt no se tocan.
+    public async Task<bool> UpdateCustomAsync(Food food, int userId) =>
+        await CustomOf(userId).Where(f => f.Id == food.Id).ExecuteUpdateAsync(s => s
+            .SetProperty(f => f.Name, food.Name)
+            .SetProperty(f => f.NormalizedName, food.NormalizedName)
+            .SetProperty(f => f.Brand, food.Brand)
+            .SetProperty(f => f.CaloriesPer100g, food.CaloriesPer100g)
+            .SetProperty(f => f.ProteinPer100g, food.ProteinPer100g)
+            .SetProperty(f => f.CarbsPer100g, food.CarbsPer100g)
+            .SetProperty(f => f.FatPer100g, food.FatPer100g)
+            .SetProperty(f => f.PortionName, food.PortionName)
+            .SetProperty(f => f.PortionWeightGrams, food.PortionWeightGrams)) > 0;
+
+    // Las MealEntries quedan con FoodId null (SetNull); favoritos y sugerencias caen en cascada.
+    public async Task<bool> DeleteCustomAsync(int id, int userId) =>
+        await CustomOf(userId).Where(f => f.Id == id).ExecuteDeleteAsync() > 0;
+
+    public Task<bool> IsInAnyRecipeAsync(int foodId) =>
+        context.RecipeIngredients.AnyAsync(i => i.FoodId == foodId);
+
+    private IQueryable<Food> CustomOf(int userId) =>
+        context.Foods.AsNoTracking().Where(f => f.Source == FoodSource.Custom && f.CreatedByUserId == userId);
+
     private IQueryable<Food> Visible(int? userId) =>
         context.Foods.AsNoTracking().Where(f => f.CreatedByUserId == null || f.CreatedByUserId == userId);
 }

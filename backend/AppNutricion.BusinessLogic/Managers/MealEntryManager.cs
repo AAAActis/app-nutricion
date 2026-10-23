@@ -8,16 +8,18 @@ using AppNutricion.Entities.Enums;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, IUserToday userToday, TimeProvider timeProvider)
+public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, IRecipeManager recipeManager, IUserToday userToday, TimeProvider timeProvider)
     : IMealEntryManager
 {
     private const decimal MaxGrams = 5000;
     private const int ItemNameMaxLength = 200;
     private const int MaxExportDays = 366;
+    private const decimal MaxRecipeServings = 20;
 
     public async Task<MealEntry?> CreateAsync(int userId, int foodId, decimal quantity, bool isUnits, MealType mealType, DateOnly date, int? recipeId)
     {
-        if (recipeId is not null) throw new ArgumentException("Las recetas llegan en L9: por ahora solo se cargan alimentos.", nameof(recipeId));
+        // Contrato del frontend sin cambios: una receta se carga por su endpoint, con porciones en vez de gramos.
+        if (recipeId is not null) throw new ArgumentException("Para cargar una receta usá POST /api/meals/recipe.", nameof(recipeId));
         ValidateMealType(mealType);
         await userToday.ValidateDiaryDateAsync(userId, date, nameof(date));
 
@@ -58,14 +60,21 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         if (quantity is { } amount)
         {
             // Editar la cantidad es una acción nueva del usuario: "re-congela" los valores desde Foods (D19),
-            // así no se arrastra el redondeo de lo guardado (1 g → 5000 g). Sin el alimento, proporcional.
+            // así no se arrastra el redondeo de lo guardado (1 g → 5000 g). Sin el alimento o la receta, proporcional.
+            if (isUnits == true && entry.RecipeId is not null)
+                throw new ArgumentException("Una comida de receta se edita en gramos.", nameof(isUnits));
             var food = entry.FoodId is { } foodId ? await foodManager.GetByIdAsync(foodId, userId) : null;
+            var recipe = entry.RecipeId is { } recipeId ? await recipeManager.GetAsync(recipeId, userId) : null;
             if (isUnits == true && food is null)
                 throw new ArgumentException("El alimento ya no existe: editá la cantidad en gramos.", nameof(quantity));
             var grams = ValidGrams(isUnits == true ? foodManager.ConvertToGrams(food!, amount, true) : amount);
             if (food is not null)
             {
                 Freeze(entry, food, grams);
+            }
+            else if (recipe is not null)
+            {
+                Freeze(entry, recipe, grams, grams / recipe.TotalGrams);
             }
             else
             {
@@ -79,6 +88,33 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         }
 
         return await store.UpdateAsync(entry, userId) ? entry : null;
+    }
+
+    public async Task<MealEntry?> CreateFromRecipeAsync(int userId, int recipeId, decimal servings, MealType mealType, DateOnly date)
+    {
+        if (servings is <= 0 or > MaxRecipeServings)
+            throw new ArgumentException($"Las porciones tienen que ser más de 0 y hasta {MaxRecipeServings}.", nameof(servings));
+        ValidateMealType(mealType);
+        await userToday.ValidateDiaryDateAsync(userId, date, nameof(date));
+
+        var recipe = await recipeManager.GetAsync(recipeId, userId);
+        if (recipe is null) return null;
+        var factor = servings / recipe.Recipe.Servings;
+        var grams = Math.Round(recipe.TotalGrams * factor, 2);
+        if (grams > MaxGrams)
+            throw new ArgumentException($"Esas porciones pesan más de {MaxGrams} g: cargá menos.", nameof(servings));
+
+        var entry = new MealEntry
+        {
+            UserId = userId,
+            RecipeId = recipe.Recipe.Id,
+            Date = date,
+            MealType = mealType,
+            CreatedAt = timeProvider.GetUtcNow().UtcDateTime,
+        };
+        Freeze(entry, recipe, grams, factor);
+        await store.AddAsync([entry]);
+        return entry;
     }
 
     public Task<bool> DeleteAsync(int id, int userId) => store.DeleteAsync(id, userId);
@@ -153,6 +189,17 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
         entry.SavedProtein = Math.Round(grams * food.ProteinPer100g / 100, 2);
         entry.SavedCarbs = Math.Round(grams * food.CarbsPer100g / 100, 2);
         entry.SavedFat = Math.Round(grams * food.FatPer100g / 100, 2);
+    }
+
+    // Igual desde una receta: sus totales salen de Foods (D6); factor = qué parte de la receta entera se comió.
+    private static void Freeze(MealEntry entry, RecipeDetail recipe, decimal grams, decimal factor)
+    {
+        entry.ItemName = recipe.Recipe.Name;
+        entry.QuantityGrams = grams;
+        entry.SavedCalories = Math.Round(recipe.Totals.Calories * factor, 2);
+        entry.SavedProtein = Math.Round(recipe.Totals.ProteinG * factor, 2);
+        entry.SavedCarbs = Math.Round(recipe.Totals.CarbsG * factor, 2);
+        entry.SavedFat = Math.Round(recipe.Totals.FatG * factor, 2);
     }
 
     private static decimal ValidGrams(decimal grams)

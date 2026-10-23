@@ -15,6 +15,7 @@ public class MealEntryManagerTests
 
     private readonly Mock<IMealEntryStore> _store = new();
     private readonly Mock<IFoodManager> _foods = new();
+    private readonly Mock<IRecipeManager> _recetas = new();
     private readonly MealEntryManager _manager;
     private readonly Food _pan = new()
     {
@@ -31,7 +32,7 @@ public class MealEntryManagerTests
         _store.Setup(s => s.AddAsync(It.IsAny<IEnumerable<MealEntry>>()))
             .Callback((IEnumerable<MealEntry> e) => _agregadas.AddRange(e));
         _store.Setup(s => s.UpdateAsync(It.IsAny<MealEntry>(), UserId)).ReturnsAsync(true);
-        _manager = new MealEntryManager(_store.Object, _foods.Object, new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
+        _manager = new MealEntryManager(_store.Object, _foods.Object, _recetas.Object, new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
     }
 
     private Task<MealEntry?> Crear(decimal quantity, bool isUnits = false, DateOnly? date = null, int foodId = 3, int? recipeId = null) =>
@@ -155,7 +156,7 @@ public class MealEntryManagerTests
     public async Task Create_ConRecipeId_LanzaArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() => Crear(100, recipeId: 1));
-        Assert.Contains("L9", ex.Message);
+        Assert.Contains("/api/meals/recipe", ex.Message);
         Assert.Equal("recipeId", ex.ParamName);
     }
 

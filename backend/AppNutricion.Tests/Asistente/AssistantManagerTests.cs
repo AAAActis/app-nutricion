@@ -58,7 +58,7 @@ public sealed class AssistantManagerTests : IDisposable
         _foods.Setup(f => f.ConvertToGrams(It.IsAny<Food>(), It.IsAny<decimal>(), false)).Returns((Food _, decimal q, bool _) => q);
         Totales(consumidas: 500, objetivo: 2000);
         _goals.Setup(g => g.ListAsync(UserId)).ReturnsAsync([new Goal { UserId = UserId, GoalType = GoalType.LoseFat, IsActive = true, TargetCalories = 2000 }]);
-        _routines.Setup(r => r.GetAsync(UserId)).ReturnsAsync([new RoutineSummary("Torso/Pierna (4 días)", ["Torso A", "Pierna A"])]);
+        _routines.Setup(r => r.GetAsync(UserId)).ReturnsAsync([new RoutineSummary("Torso/Pierna (4 días)", true, [new RoutineDaySummary(1, "Torso A", []), new RoutineDaySummary(2, "Pierna A", [])])]);
     }
 
     public void Dispose() => _db.Dispose();
@@ -78,7 +78,7 @@ public sealed class AssistantManagerTests : IDisposable
     private AssistantManager Manager(IChatModel modelo, double timeoutSegundos = 10)
     {
         var userToday = new UserToday(Mock.Of<IProfileStore>(), _reloj);
-        var meals = new MealEntryManager(new MealEntryStore(_db.NuevoContexto()), _foods.Object, userToday, _reloj);
+        var meals = new MealEntryManager(new MealEntryStore(_db.NuevoContexto()), _foods.Object, Mock.Of<IRecipeManager>(), userToday, _reloj);
         var tools = new AssistantTools(_foods.Object, _summary.Object, _routines.Object, userToday);
         return new AssistantManager(new AssistantStore(_db.NuevoContexto()), modelo, tools, meals, _summary.Object, _goals.Object,
             _routines.Object, new LlmOptions { TimeoutSeconds = timeoutSegundos }, _reloj);
