@@ -53,6 +53,25 @@ public sealed class AlimentosPersonalizadosStoreTests : IDisposable
         Assert.Equal([_miAlfajor, _miTorta], mios.Select(f => f.Id));
     }
 
+    // Defensa: la base solo exige dueño a los Custom, no prohíbe dueño en los demás. Uno así no es "personalizado".
+    [Fact]
+    public async Task GetCustom_UnNoCustomConDueño_NoEsPersonalizadoNiSeBorra()
+    {
+        int raro;
+        await using (var context = _db.NuevoContexto())
+        {
+            var food = Alimento("Aaa raro", FoodSource.Argenfoods, Yo);
+            food.ExternalId = "raro";
+            context.Foods.Add(food);
+            await context.SaveChangesAsync();
+            raro = food.Id;
+        }
+
+        Assert.DoesNotContain(raro, (await NuevoStore().GetCustomAsync(Yo)).Select(f => f.Id));
+        Assert.Null(await NuevoStore().GetCustomByIdAsync(raro, Yo));
+        Assert.False(await NuevoStore().DeleteCustomAsync(raro, Yo));
+    }
+
     [Fact]
     public async Task GetCustomById_ElMio_SiElDeOtroOUnCompartido_No()
     {
