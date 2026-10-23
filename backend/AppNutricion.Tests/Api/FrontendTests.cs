@@ -100,6 +100,21 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
                 Assert.False(contenido.Contains(prohibido), $"{ruta} usa {prohibido}");
     }
 
+    // node.append(null) escribe "null" en la pantalla. Fuera de dom.js se usan append() y setChildren(), que
+    // ignoran null/undefined/false; replaceChildren() nativo solo vacío (para limpiar).
+    [Fact]
+    public void Js_SinAppendNiReplaceChildrenNativosConArgumentos()
+    {
+        var js = Archivos(".js").Where(a => a.Ruta != "js/dom.js").ToList();
+
+        Assert.NotEmpty(js);
+        foreach (var (ruta, contenido) in js)
+        {
+            Assert.False(Regex.IsMatch(contenido, @"\.append\("), $"{ruta} usa .append( nativo: usá append() o setChildren() de dom.js");
+            Assert.False(Regex.IsMatch(contenido, @"\.replaceChildren\(\s*[^)\s]"), $"{ruta} usa .replaceChildren(...) con argumentos: usá setChildren() de dom.js");
+        }
+    }
+
     // Sin CDN ni scripts externos: la demo anda sin internet.
     [Fact]
     public void Html_SinScriptsNiEstilosExternos()
