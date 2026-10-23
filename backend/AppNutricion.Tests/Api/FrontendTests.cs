@@ -118,6 +118,9 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         "tiene la atribución de atender las denuncias y reclamos que interpongan quienes resulten afectados en sus " +
         "derechos por incumplimiento de las normas vigentes en materia de protección de datos personales";
 
+    // El párrafo del asistente, no la mención de Gemini en la Finalidad: los tests de texto y de posición se anclan acá.
+    private const string AvisoGemini = "El asistente usa un servicio externo de inteligencia artificial (Google Gemini).";
+
     // Lo que tiene que decir el consentimiento (Ley 25.326, art. 6, y Res. AAIP 14/2018, art. 3).
     [Theory]
     [InlineData(LeyendaAaip)]
@@ -132,7 +135,7 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("supresión (desde Cuenta)")]
     [InlineData("art. 6 de la Ley 25.326")]
     [InlineData("Contacto: infobbasolutions@gmail.com.")]
-    [InlineData("Google Gemini")]
+    [InlineData(AvisoGemini)]
     [InlineData("mensajes que escribís en el chat")]
     [InlineData("nunca tu email ni tu nombre")]
     [InlineData("pueden usarse para mejorar sus servicios")]
@@ -177,9 +180,9 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     {
         var consent = Archivos(".js").Single(a => a.Ruta == "js/consent.js").Contenido;
 
-        var gemini = consent.IndexOf("Google Gemini", StringComparison.Ordinal);
+        var gemini = consent.IndexOf(AvisoGemini, StringComparison.Ordinal);
         var derechos = consent.IndexOf("Tus derechos", StringComparison.Ordinal);
-        Assert.True(gemini >= 0 && gemini < derechos, $"Google Gemini en {gemini}, Tus derechos en {derechos}");
+        Assert.True(gemini >= 0 && gemini < derechos, $"El aviso de Gemini en {gemini}, Tus derechos en {derechos}");
     }
 
     // El texto de consentimiento del registro es el de la versión que guarda la API.
