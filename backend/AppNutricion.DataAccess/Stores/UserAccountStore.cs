@@ -31,4 +31,15 @@ public class UserAccountStore(ApplicationDbContext context) : IUserAccountStore
             return false;
         }
     }
+
+    // En Postgres, borrar solo el User falla si un Food Custom suyo está en una Recipe suya: la cascada
+    // User → Foods choca con RecipeIngredients.FoodId (NoAction) antes de que la cascada User → Recipes
+    // borre los ingredientes. Por eso primero las Recipes (sus ingredientes caen en cascada) y después el User.
+    public async Task DeleteWithDataAsync(int userId)
+    {
+        await using var transaction = await context.Database.BeginTransactionAsync();
+        await context.Recipes.Where(r => r.UserId == userId).ExecuteDeleteAsync();
+        await context.Users.Where(u => u.Id == userId).ExecuteDeleteAsync();
+        await transaction.CommitAsync();
+    }
 }

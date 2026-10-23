@@ -92,3 +92,73 @@ GET {{AppNutricion.Api_HostAddress}}/api/meals/export?from=2026-10-21&to=2026-10
 Authorization: Bearer {{token}}
 
 ###
+
+# Rutinas y entrenamientos (S7). Las kcal son una estimación: MET promedio × último peso × horas (D22).
+
+GET {{AppNutricion.Api_HostAddress}}/api/exercises?muscleGroup=Legs
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/routines
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/routines/1
+Authorization: Bearer {{token}}
+
+###
+
+POST {{AppNutricion.Api_HostAddress}}/api/routines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Mi rutina",
+  "description": "Piernas y torso",
+  "days": [
+    { "dayNumber": 1, "name": "Piernas", "exercises": [ { "exerciseId": 1, "order": 1, "targetSets": 3, "targetReps": 10, "targetWeightKg": 60 } ] }
+  ]
+}
+
+###
+
+# Una precargada responde 409; una de otro usuario, 404.
+DELETE {{AppNutricion.Api_HostAddress}}/api/routines/1
+Authorization: Bearer {{token}}
+
+###
+
+# Sin peso registrado responde 409.
+POST {{AppNutricion.Api_HostAddress}}/api/workouts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "routineDayId": null,
+  "date": "2026-10-22",
+  "durationMinutes": 45,
+  "notes": "Piernas",
+  "sets": [
+    { "exerciseId": 1, "setNumber": 1, "reps": 8, "weightKg": 60 },
+    { "exerciseId": 1, "setNumber": 2, "reps": 8, "weightKg": 70 }
+  ]
+}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/workouts?from=2026-10-01&to=2026-10-22
+Authorization: Bearer {{token}}
+
+###
+
+GET {{AppNutricion.Api_HostAddress}}/api/workouts/1
+Authorization: Bearer {{token}}
+
+###
+
+  DELETE {{AppNutricion.Api_HostAddress}}/api/workouts/1
+Authorization: Bearer {{token}}
+
+###

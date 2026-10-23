@@ -17,16 +17,26 @@ public class ApiFactory : WebApplicationFactory<Program>
 
     protected virtual string Entorno => "Testing";
 
+    // Los tests de auth hacen muchos login/registro seguidos desde la misma "IP": el límite real (5 por minuto)
+    // solo se prueba en ApiFactoryRateLimit, que devuelve null y deja el valor por defecto.
+    protected virtual string? LimiteDeAuth => "100000";
+
+    // Igual para el chat del asistente (20 por minuto por usuario): el límite real se prueba en ApiFactoryRateLimit
+    // y en ApiFactoryAsistenteRateLimit, que devuelven null.
+    protected virtual string? LimiteDeChat => "100000";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(Entorno);
         builder.UseSetting("ConnectionStrings:DefaultConnection", CadenaDeConexionFalsa);
         builder.UseSetting("Jwt:Key", ClaveJwtFalsa);
+        if (LimiteDeAuth is not null) builder.UseSetting("RateLimiting:AuthPermitLimit", LimiteDeAuth);
+        if (LimiteDeChat is not null) builder.UseSetting("RateLimiting:AssistantChatPermitLimit", LimiteDeChat);
         builder.ConfigureTestServices(services =>
         {
             // El seed de alimentos escribe en la base al arrancar (si existe foods_seed.json).
             var seed = services.Where(d => d.ServiceType == typeof(IHostedService)
-                                           && d.ImplementationType == typeof(FoodSeedHostedService)).ToList();
+                                           && (d.ImplementationType == typeof(FoodSeedHostedService) || d.ImplementationType == typeof(TrainingSeedHostedService))).ToList();
             foreach (var descriptor in seed)
             {
                 services.Remove(descriptor);
