@@ -5,7 +5,9 @@
 // Alimentos: GET /api/foods/search?q&limit, GET /api/foods/favorites, GET /api/foods/recent,
 // POST y DELETE /api/foods/{id}/favorite. Los de Open Food Facts traen attribution (ODbL).
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { foodBadge, nutritionFacts } from "../nutrition.js";
+import { icon } from "../icons.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
 import { download } from "../download.js";
 import { MEAL_TYPES, addDays, dateText, num, today } from "../format.js";
@@ -17,42 +19,58 @@ const SEARCH_DELAY_MS = 300;
 export async function render(container) {
   const state = { date: today(await profileTimeZone()), meals: [], summary: null, favorites: new Set() };
 
-  const status = el("div");
-  const summary = el("section", { class: "card" });
-  const mealsCard = el("section", { class: "card" });
-  const weekCard = el("section", { class: "card" });
+  let revision = 0;
+  const days = el("nav", { class: "day-strip", "aria-label": "Días del registro" });
+  const activity = el("section", { class: "card activity-card" });
+  const status = el("div", { class: "day-status" });
+  const summary = el("section", { class: "card summary-card" });
+  const mealsCard = el("section", { class: "card meals-card" });
+  const weekCard = el("section", { class: "card week-card" });
   const dateInput = el("input", { type: "date", name: "date", value: state.date });
 
   const reload = async () => {
+    const current = ++revision;
     const date = encodeURIComponent(state.date);
     const [meals, daily, weekly] = await Promise.all([
       api(`/api/meals?date=${date}`),
       api(`/api/summary/daily?date=${date}`),
       api(`/api/summary/weekly?endDate=${date}`),
     ]);
+    const workouts = await api("/api/workouts?from=" + date + "&to=" + date).catch((error) => ({ error }));
+    if (current !== revision) return;
     state.meals = meals;
     state.summary = daily;
     renderSummary(summary, daily);
     renderMeals(mealsCard, state, reload, status);
-    renderWeek(weekCard, weekly);
+    renderWeek(weekCard, weekly, selectDate);
+    renderDays(days, weekly.days, state.date, selectDate);
+    renderActivity(activity, workouts);
   };
+
+  function selectDate(date) {
+    dateInput.value = date;
+    dateInput.dispatchEvent(new Event("change"));
+  }
 
   dateInput.addEventListener("change", async () => {
     if (!dateInput.value) return;
     state.date = dateInput.value;
     status.replaceChildren();
-    await reload();
+    try { await reload(); }
+    catch (error) { setChildren(status, notice("error", error.title)); }
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Mi día"),
-    el("div", { class: "row" }, el("label", { for: "dia-fecha" }, "Fecha"), Object.assign(dateInput, { id: "dia-fecha" })),
+    el("div", { class: "row day-toolbar" }, el("label", { for: "dia-fecha" }, "Fecha"), Object.assign(dateInput, { id: "dia-fecha" })),
+    days,
     status,
     summary,
     mealsCard,
     await foodPicker(state, reload, status),
     weekCard,
-    exportCard(state));
+    activity,
+    exportCard(state)]);
 
   await reload();
 }
@@ -61,7 +79,7 @@ export async function render(container) {
 // { days: [{ date, calories, proteinG, carbsG, fatG, logged }], averages | null, daysLogged, targetCalories | null,
 //   streak }. Los promedios son solo de los días con comidas; la racha cuenta días seguidos con comidas hasta hoy.
 
-function renderWeek(card, weekly) {
+function renderWeek(card, weekly, selectDate) {
   const target = weekly.targetCalories === null ? null : Number(weekly.targetCalories);
   const averages = weekly.averages;
   setChildren(card,
@@ -78,7 +96,7 @@ function renderWeek(card, weekly) {
     el("table", {},
       el("thead", {}, el("tr", {}, el("th", {}, "Día"), el("th", {}, "kcal"), el("th", {}, "P / C / G (g)"))),
       el("tbody", {}, weekly.days.map((day) => el("tr", {},
-        el("td", {}, dateText(day.date)),
+        el("td", {}, el("button", { type: "button", class: "link-button", onclick: () => selectDate(day.date) }, dateText(day.date))),
         el("td", {},
           day.logged ? num(day.calories, 0) : el("span", { class: "muted" }, "sin comidas"),
           day.logged && target ? el("progress", { max: target, value: Math.min(Number(day.calories), target), class: Number(day.calories) > target ? "over" : false }) : null),
@@ -110,7 +128,7 @@ function exportCard(state) {
     setChildren(status, notice("ok", "Listo: se descargó el CSV con tus comidas."));
   });
 
-  return el("section", { class: "card" },
+  return el("section", { class: "card export-card" },
     el("h2", {}, "Exportar comidas"),
     el("p", { class: "muted small" }, "Un CSV con fecha, comida, alimento, gramos, kcal y macros de cada registro."),
     status,
@@ -129,23 +147,25 @@ const MACROS = [
 function renderSummary(card, daily) {
   const { consumed, targets, remaining } = daily;
   setChildren(card,
-    el("h2", {}, "Resumen"),
+    el("div", { class: "summary-heading" }, el("h2", {}, "Resumen"),
+      el("a", { href: "#/objetivo" }, "Ver objetivo")),
     targets ? null : notice("warning", "Sin objetivo activo: solo se ven los totales. ", el("a", { href: "#/objetivo" }, "Crear objetivo")),
     MACROS.map(([key, label, unit, decimals]) => {
       const value = Number(consumed[key]);
       const target = targets ? Number(targets[key]) : null;
       const left = remaining?.[key];
-      return el("div", { class: "field" },
-        el("div", { class: "item" },
-          el("span", { class: "name" }, label),
-          el("span", {}, target === null
-            ? `${num(value, decimals)} ${unit}`
-            : `${num(value, decimals)} de ${num(target, decimals)} ${unit} · ${leftText(left, unit, decimals)}`)),
-        target ? el("progress", { max: target, value: Math.min(value, target), class: left?.exceeded ? "over" : false }) : null);
+      return el("div", { class: "field macro macro-" + key + (left?.exceeded ? " is-over" : "") },
+        el("span", { class: "macro-label" }, label),
+        el("div", { class: "macro-amount" }, el("strong", {}, num(value, decimals)),
+          el("span", {}, target === null ? " " + unit : " de " + num(target, decimals) + " " + unit)),
+        target ? el("progress", {
+          max: target, value: Math.min(value, target), class: left?.exceeded ? "over" : false,
+          "aria-label": label + ": " + num(value, decimals) + " de " + num(target, decimals) + " " + unit,
+        }) : null,
+        left ? el("span", { class: "macro-remaining" }, leftText(left, unit, decimals)) : null);
     }),
     el("p", { class: "muted small" }, daily.disclaimer));
 }
-
 function leftText(left, unit, decimals) {
   if (!left) return "";
   const amount = num(Math.abs(Number(left.value)), decimals);
@@ -155,22 +175,24 @@ function leftText(left, unit, decimals) {
 // ---------- Comidas del día ----------
 
 function renderMeals(card, state, reload, status) {
-  const byType = MEAL_TYPES.map(([type, label]) => [label, state.meals.filter((m) => m.mealType === type)])
-    .filter(([, list]) => list.length > 0);
+  const byType = MEAL_TYPES.map(([type, label]) => [type, label, state.meals.filter((m) => m.mealType === type)])
+    .filter(([, , list]) => list.length > 0);
   setChildren(card,
     el("h2", {}, "Comidas"),
     byType.length === 0 ? el("p", { class: "muted" }, "No hay comidas cargadas este día.") : null,
-    byType.map(([label, list]) => [
-      el("h3", {}, label),
-      el("ul", { class: "list" }, list.map((meal) => mealItem(meal, state, reload, status))),
-    ]));
+    byType.map(([type, label, list]) => {
+      const totals = state.summary.byMealType?.find((m) => m.mealType === type);
+      return el("section", { class: "meal-group", "aria-label": label },
+        el("h3", {}, label),
+        totals ? nutritionFacts(totals, true) : null,
+        el("ul", { class: "list" }, list.map((meal) => mealItem(meal, state, reload, status))));
+    }));
 }
-
 function mealItem(meal, state, reload, status) {
   const li = el("li");
   const show = () => setChildren(li,
     el("div", { class: "item" },
-      el("span", { class: "name" }, meal.itemName),
+      el("span", { class: "food-name" }, foodBadge(Boolean(meal.recipeId)), el("span", { class: "name" }, meal.itemName)),
       el("span", {}, `${num(meal.quantityGrams)} g · ${num(meal.savedCalories, 0)} kcal`),
       el("span", { class: "row" },
         el("button", { type: "button", class: "button secondary small", onclick: edit }, "Editar"),
@@ -271,8 +293,8 @@ async function foodPicker(state, reload, status) {
   });
 
   show([], "Escribí al menos 2 letras.");
-  return el("section", { class: "card" },
-    el("h2", {}, "Agregar comida"),
+  return el("section", { class: "card food-picker" },
+    el("div", { class: "item" }, el("h2", {}, "Agregar comida"), el("a", { href: "#/recetas", class: "small" }, "Usar una receta")),
     el("div", { class: "tabs", role: "tablist" }, tabButtons),
     el("label", { for: "buscar-alimento", class: "muted small" }, "Buscar alimento"),
     search,
@@ -359,4 +381,36 @@ function mealTypeNow() {
   if (hour < 19) return "AfternoonSnack";
   if (hour < 23) return "Dinner";
   return "Snack";
+}
+
+// Solo se muestran los días y el indicador logged devueltos por el resumen semanal.
+// El color de "Con registros" no evalúa si la alimentación del día fue adecuada.
+function renderDays(slot, days, selected, selectDate) {
+  const weekday = new Intl.DateTimeFormat("es-AR", { weekday: "short", timeZone: "UTC" });
+  setChildren(slot,
+    el("div", { class: "day-strip-heading" }, el("span", {}, "Tus días"),
+      el("span", { class: "muted small" }, "● Con registros")),
+    el("div", { class: "day-buttons" }, days.map((day) =>
+      el("button", {
+        type: "button", class: "day-button" + (day.logged ? " has-records" : ""),
+        "aria-pressed": day.date === selected ? "true" : "false",
+        "aria-label": dateText(day.date) + (day.logged ? ", con registros" : ", sin registros"),
+        onclick: () => selectDate(day.date),
+      }, el("span", {}, weekday.format(new Date(day.date + "T12:00:00Z"))),
+      el("strong", {}, day.date.slice(-2)), el("span", { class: "day-dot", "aria-hidden": "true" })))));
+}
+
+// Los entrenamientos y sus estimaciones salen de la API. No se restan de las metas de ingesta.
+function renderActivity(card, workouts) {
+  setChildren(card,
+    el("div", { class: "item" }, el("h2", {}, "Actividad del día"),
+      el("a", { href: "#/rutinas", class: "small" }, "Ver rutinas")),
+    workouts.error ? notice("error", workouts.error.title) : null,
+    workouts.error ? null : workouts.length === 0 ? el("p", { class: "muted small" }, "No hay entrenamientos registrados en esta fecha.") :
+      el("ul", { class: "list" }, workouts.map((workout) => el("li", {},
+        el("div", { class: "food-name" }, el("span", { class: "food-badge", "aria-hidden": "true" }, icon("rutinas")),
+          el("strong", {}, num(workout.durationMinutes, 0) + " min · " + num(workout.setCount, 0) + " series")),
+        el("p", { class: "small" }, num(workout.estimatedCaloriesBurned, 0) + " kcal estimadas · " + num(workout.volumeKg, 0) + " kg de volumen"),
+        workout.notes ? el("p", { class: "muted small" }, workout.notes) : null,
+        el("p", { class: "muted small disclaimer" }, workout.disclaimer)))));
 }

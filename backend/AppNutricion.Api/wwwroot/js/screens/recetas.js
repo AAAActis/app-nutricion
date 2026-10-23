@@ -1,245 +1,189 @@
-// Recetas (L12, sobre la API de L9). GET /api/recipes y GET /api/recipes/{id} → { id, name, servings, totalGrams,
-// totals, perServing: { calories, proteinG, carbsG, fatG }, ingredients: [{ foodId, foodName, quantityGrams, calories,
-// proteinG, carbsG, fatG }] } (calculado desde Foods en cada pedido). Alta: POST /api/recipes { name, servings,
-// ingredients: [{ foodId, quantityGrams }] }; edición: PUT /api/recipes/{id}; borrado: DELETE /api/recipes/{id}.
-// Cargar al día: POST /api/meals/recipe { recipeId, servings, mealType, date }. Buscador: GET /api/foods/search (con el
-// token trae también los alimentos propios).
+// Recetas propias: la API calcula totales y valores por porción desde los alimentos.
+// Este módulo solo edita los datos de entrada y representa las respuestas, sin cálculos nutricionales.
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options, setNotice } from "../forms.js";
-import { MEAL_TYPES, num, today } from "../format.js";
+import { MEAL_TYPES, dateText, num, today } from "../format.js";
 import { profileTimeZone } from "../profile.js";
+import { foodBadge, nutritionFacts } from "../nutrition.js";
 
-const MAX_INGREDIENTS = 30;
-const SEARCH_LIMIT = 10;
-const SEARCH_DELAY_MS = 300;
-const DEFAULT_GRAMS = 100;
-// El mismo texto que el resumen de Mi día (NutritionDefaults.Disclaimer); la receta no lo trae.
 const DISCLAIMER = "Estimación, no es consejo médico.";
 
 export async function render(container) {
-  const state = { today: today(await profileTimeZone()) };
-  const status = el("div");
-  const list = el("section", { class: "card" });
-  const detail = el("section", { class: "card", hidden: true });
-  const editor = el("section", { class: "card" });
+  const localToday = today(await profileTimeZone());
+  const status = el("div", { class: "recipes-status" });
+  const collection = el("div", { class: "recipe-list" });
+  const detail = el("section", { class: "card recipe-detail", hidden: true });
+  const editor = el("section", { class: "card recipe-editor", hidden: true });
+  let selected = null;
+  let detailRevision = 0;
 
-  const reload = async () => renderList(list, await api("/api/recipes"), { open, edit });
+  async function loadList() {
+    const recipes = await api("/api/recipes");
+    setChildren(collection, recipes.length === 0
+      ? el("section", { class: "card empty-recipes" }, foodBadge(true), el("h2", {}, "Tus recetas, en un solo lugar"),
+        el("p", { class: "muted" }, "Todavía no creaste recetas. Combiná alimentos de la búsqueda y guardá las porciones que preparás."))
+      : recipes.map((recipe) => el("article", { class: "card recipe-preview" },
+        el("div", { class: "food-name" }, foodBadge(true),
+          el("div", {}, el("h2", {}, recipe.name),
+            el("p", { class: "muted small" }, num(recipe.servings, 0) + " porciones · " + num(recipe.totalGrams) + " g en total"))),
+        el("p", { class: "eyebrow" }, "POR PORCIÓN"),
+        nutritionFacts(recipe.perServing, true),
+        el("button", {
+          type: "button", class: "button secondary",
+          onclick: () => openRecipe(recipe.id).catch((error) => setNotice(status, "error", error.title)),
+        }, "Ver receta"))));
+  }
 
-  async function open(id) {
-    detail.hidden = false;
-    setChildren(detail, el("p", { class: "muted" }, "Cargando…"));
-    try {
-      renderDetail(detail, await api(`/api/recipes/${id}`), state, { edit, remove });
-    } catch (error) {
-      setChildren(detail, notice("error", error.title));
-    }
+  async function openRecipe(id) {
+    const version = ++detailRevision;
+    const recipe = await api(`/api/recipes/${id}`);
+    if (version !== detailRevision) return;
+    selected = recipe;
+    editor.hidden = true;
+    showRecipe(recipe);
     detail.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function edit(recipe) {
-    renderEditor(editor, recipe, async (saved) => {
-      setNotice(status, "ok", `Guardada: ${saved.name}.`);
-      edit(null);
-      await reload();
-      await open(saved.id);
+  function showRecipe(recipe) {
+    detail.hidden = false;
+    const mealStatus = el("div");
+    const mealForm = el("form", { class: "inline", novalidate: true },
+      field("Porciones a registrar", el("input", { type: "number", id: "recipe-meal-servings", name: "servings", min: "0.01", max: 20, step: "0.01", value: 1, required: true, inputmode: "decimal" })),
+      field("Comida", el("select", { id: "recipe-meal-type", name: "mealType" }, options(MEAL_TYPES, "Lunch"))),
+      field("Fecha", el("input", { type: "date", id: "recipe-meal-date", name: "date", value: localToday, required: true })),
+      formError(),
+      el("button", { type: "submit", class: "button" }, "Registrar comida"));
+    onSubmit(mealForm, async (data) => {
+      await api("/api/meals/recipe", {
+        method: "POST",
+        body: { recipeId: recipe.id, servings: Number(data.get("servings")), mealType: data.get("mealType"), date: data.get("date") },
+      });
+      setChildren(mealStatus, notice("ok", "Receta registrada el " + dateText(data.get("date")) + ". ", el("a", { href: "#/dia" }, "Ver Mi día")));
     });
-    if (recipe) editor.scrollIntoView({ behavior: "smooth", block: "start" });
+    setChildren(detail,
+      el("div", { class: "item" }, el("div", { class: "food-name" }, foodBadge(true), el("h2", {}, recipe.name)),
+        el("div", { class: "row" },
+          el("button", { type: "button", class: "button secondary small", onclick: () => editRecipe(recipe) }, "Editar receta"),
+          el("button", { type: "button", class: "button secondary small", onclick: () => removeRecipe(recipe) }, "Borrar receta"))),
+      el("p", { class: "muted small" }, num(recipe.servings, 0) + " porciones · " + num(recipe.totalGrams) + " g en total"),
+      el("h3", {}, "Por porción"), nutritionFacts(recipe.perServing),
+      el("h3", {}, "Receta completa"), nutritionFacts(recipe.totals, true),
+      el("h3", {}, "Ingredientes"),
+      el("ul", { class: "list" }, recipe.ingredients.map((ingredient) => el("li", {},
+        el("div", { class: "item" }, el("span", { class: "name" }, ingredient.foodName),
+          el("span", {}, num(ingredient.quantityGrams) + " g")),
+        nutritionFacts(ingredient, true)))),
+      el("p", { class: "muted small disclaimer" }, DISCLAIMER),
+      el("h3", {}, "Agregar a mis comidas"), mealForm, mealStatus);
   }
 
-  async function remove(recipe) {
-    if (!confirm(`¿Borrar la receta "${recipe.name}"?`)) return;
+  async function removeRecipe(recipe) {
+    if (!confirm('¿Borrar la receta "' + recipe.name + '"?')) return;
     try {
       await api(`/api/recipes/${recipe.id}`, { method: "DELETE" });
+      ++detailRevision;
+      selected = null;
       detail.hidden = true;
-      setNotice(status, "ok", `Borrada: ${recipe.name}.`);
-      await reload();
-    } catch (error) {
-      setNotice(status, "error", error.title);
-    }
+      editor.hidden = true;
+      await loadList();
+      setNotice(status, "ok", "Receta borrada.");
+    } catch (error) { setNotice(status, "error", error.title); }
   }
 
-  container.append(el("h1", {}, "Recetas"), status, list, detail, editor);
-  edit(null);
-  await reload();
-}
+  function editRecipe(recipe = null) {
+    ++detailRevision;
+    editor.hidden = false;
+    detail.hidden = true;
+    let ingredients = (recipe?.ingredients ?? []).map((i) => ({ foodId: i.foodId, foodName: i.foodName, quantityGrams: String(i.quantityGrams) }));
+    const ingredientsSlot = el("div", { class: "ingredient-rows" });
+    const results = el("ul", { class: "list recipe-search-results", "aria-live": "polite" });
+    const searchStatus = el("div");
+    const name = el("input", { type: "text", id: "recipe-name", name: "name", maxlength: 120, required: true, value: recipe?.name ?? "" });
+    const servings = el("input", { type: "number", id: "recipe-servings", name: "servings", min: 1, max: 50, step: 1, required: true, value: recipe?.servings ?? 1 });
+    const form = el("form", { novalidate: true },
+      field("Nombre de la receta", name), field("Porciones que rinde", servings),
+      el("h3", {}, "Ingredientes"), ingredientsSlot, formError(),
+      el("div", { class: "row" },
+        el("button", { type: "submit", class: "button" }, "Guardar receta"),
+        el("button", { type: "button", class: "button secondary", onclick: () => {
+          editor.hidden = true;
+          if (selected) showRecipe(selected);
+        } }, "Cancelar")));
 
-// ---------- Lista ----------
-
-function renderList(card, recipes, { open }) {
-  setChildren(card,
-    el("h2", {}, "Mis recetas"),
-    recipes.length === 0 ? el("p", { class: "muted" }, "Todavía no creaste recetas.") : null,
-    el("ul", { class: "list" }, recipes.map((recipe) => el("li", {},
-      el("div", { class: "item" },
-        el("span", { class: "name" }, recipe.name),
-        el("span", {}, `${num(recipe.perServing.calories, 0)} kcal por porción · ${recipe.servings} ${recipe.servings === 1 ? "porción" : "porciones"}`),
-        el("button", { type: "button", class: "button secondary small", onclick: () => open(recipe.id) }, "Ver"))))));
-}
-
-// ---------- Detalle y cargar al día ----------
-
-function renderDetail(card, recipe, state, { edit, remove }) {
-  const macroCells = (m) => [
-    el("td", {}, num(m.calories, 0)),
-    el("td", {}, `${num(m.proteinG)} / ${num(m.carbsG)} / ${num(m.fatG)}`),
-  ];
-  setChildren(card,
-    el("div", { class: "item" },
-      el("h2", {}, recipe.name),
-      el("span", { class: "row" },
-        el("button", { type: "button", class: "button secondary small", onclick: () => edit(recipe) }, "Editar"),
-        el("button", { type: "button", class: "button secondary small", onclick: () => remove(recipe) }, "Borrar"))),
-    el("p", { class: "muted small" }, `${recipe.servings} ${recipe.servings === 1 ? "porción" : "porciones"} · ${num(recipe.totalGrams)} g en total`),
-    el("table", {},
-      el("thead", {}, el("tr", {}, el("th", {}, "Ingrediente"), el("th", {}, "g"), el("th", {}, "kcal"), el("th", {}, "P / C / G (g)"))),
-      el("tbody", {}, recipe.ingredients.map((i) => el("tr", {},
-        el("td", {}, i.foodName), el("td", {}, num(i.quantityGrams)), macroCells(i)))),
-      el("tfoot", {},
-        el("tr", {}, el("th", {}, "Total"), el("td", {}, num(recipe.totalGrams)), macroCells(recipe.totals)),
-        el("tr", {}, el("th", {}, "Por porción"), el("td", {}, num(recipe.totalGrams / recipe.servings)), macroCells(recipe.perServing)))),
-    el("p", { class: "muted small disclaimer" }, DISCLAIMER),
-    loadForm(recipe, state));
-}
-
-function loadForm(recipe, state) {
-  const result = el("div");
-  const form = el("form", { class: "inline", novalidate: true },
-    field("Porciones", el("input", { type: "number", name: "servings", min: 0.5, max: 20, step: "0.5", value: 1, required: true, inputmode: "decimal" })),
-    field("Comida", el("select", { name: "mealType" }, options(MEAL_TYPES, "Lunch"))),
-    field("Fecha", el("input", { type: "date", name: "date", value: state.today, required: true })),
-    formError(),
-    el("button", { type: "submit", class: "button" }, "Cargar al día"));
-
-  onSubmit(form, async (data) => {
-    const servings = data.get("servings");
-    const date = String(data.get("date"));
-    await api("/api/meals/recipe", {
-      method: "POST",
-      body: { recipeId: recipe.id, servings: servings === "" ? 0 : Number(servings), mealType: data.get("mealType"), date: date || null },
-    });
-    setNotice(result, "ok", `Cargada: ${num(servings)} ${Number(servings) === 1 ? "porción" : "porciones"} de ${recipe.name}. `,
-      el("a", { href: "#/dia" }, "Ver en Mi día"));
-  });
-
-  return el("div", {}, el("h3", {}, "Cargar al día"), result, form);
-}
-
-// ---------- Crear y editar ----------
-
-// Los ingredientes viven en "rows" y la lista se vuelve a dibujar en cada cambio (como las series de Rutinas): así
-// los nombres de los campos ("ingredients[1].quantityGrams") coinciden con el índice de los errores de la API.
-function renderEditor(card, recipe, onSaved) {
-  let rows = recipe
-    ? recipe.ingredients.map((i) => ({ food: { id: i.foodId, name: i.foodName }, grams: i.quantityGrams }))
-    : [{ food: null, grams: DEFAULT_GRAMS }];
-  const rowsList = el("div");
-  const addButton = el("button", {
-    type: "button",
-    class: "button secondary small",
-    onclick: () => {
-      rows.push({ food: null, grams: DEFAULT_GRAMS });
-      renderRows();
-    },
-  }, "Agregar ingrediente");
-
-  const renderRows = () => {
-    addButton.disabled = rows.length >= MAX_INGREDIENTS;
-    setChildren(rowsList,
-      rows.length === 0 ? el("p", { class: "muted" }, "Agregá al menos un ingrediente.") : null,
-      rows.map((row, i) => ingredientRow(row, i, renderRows, () => {
-        rows.splice(i, 1);
-        renderRows();
-      })),
-      rows.length >= MAX_INGREDIENTS ? el("p", { class: "muted small" }, `Máximo ${MAX_INGREDIENTS} ingredientes.`) : null);
-  };
-
-  const form = el("form", { novalidate: true },
-    field("Nombre", el("input", { type: "text", name: "name", maxlength: 120, value: recipe?.name ?? "", required: true })),
-    field("Porciones que rinde", el("input", { type: "number", name: "servings", min: 1, max: 50, step: "1", value: recipe?.servings ?? 1, required: true, inputmode: "numeric" })),
-    el("h3", {}, "Ingredientes"),
-    rowsList,
-    el("div", { class: "field-error", "data-error-for": "ingredients", "aria-live": "polite" }),
-    addButton,
-    formError(),
-    el("div", { class: "row" },
-      el("button", { type: "submit", class: "button" }, recipe ? "Guardar cambios" : "Crear receta"),
-      recipe ? el("button", { type: "button", class: "button secondary", onclick: () => renderEditor(card, null, onSaved) }, "Cancelar") : null));
-
-  onSubmit(form, async (data) => {
-    const servings = data.get("servings");
-    const saved = await api(recipe ? `/api/recipes/${recipe.id}` : "/api/recipes", {
-      method: recipe ? "PUT" : "POST",
-      body: {
-        name: String(data.get("name") ?? "").trim() || null,
-        servings: servings === "" ? 0 : Number(servings),
-        // Sin alimento elegido va 0: la API lo rechaza con el error en la fila.
-        ingredients: rows.map((row) => ({ foodId: row.food?.id ?? 0, quantityGrams: row.grams === "" ? 0 : Number(row.grams) })),
-      },
-    });
-    await onSaved(saved);
-  });
-
-  renderRows();
-  setChildren(card, el("h2", {}, recipe ? `Editar: ${recipe.name}` : "Nueva receta"), form);
-}
-
-function ingredientRow(row, i, renderRows, removeRow) {
-  const grams = el("input", { type: "number", name: `ingredients[${i}].quantityGrams`, min: 0.1, max: 5000, step: "0.1", value: row.grams, inputmode: "decimal" });
-  grams.addEventListener("input", () => { row.grams = grams.value; });
-
-  return el("fieldset", { class: "set-row" },
-    el("legend", {}, `Ingrediente ${i + 1}`),
-    row.food
-      ? el("div", { class: "item" },
-        el("span", { class: "name" }, row.food.name),
-        el("button", {
-          type: "button",
-          class: "button secondary small",
-          onclick: () => {
-            row.food = null;
-            renderRows();
-          },
-        }, "Cambiar"))
-      : foodSearch(i, (food) => {
-        row.food = food;
-        renderRows();
-      }),
-    el("div", { class: "field-error", "data-error-for": `ingredients[${i}].foodId`, "aria-live": "polite" }),
-    field("Gramos", grams),
-    el("button", { type: "button", class: "button secondary small", onclick: removeRow }, "Quitar ingrediente"));
-}
-
-function foodSearch(i, pick) {
-  const results = el("ul", { class: "list" });
-  const search = el("input", { type: "search", id: `receta-buscar-${i}`, placeholder: "Ej.: arroz, harina, huevo", autocomplete: "off" });
-  let timer = null;
-  let lastQuery = 0;
-
-  const runSearch = async () => {
-    const q = search.value.trim();
-    if (q.length < 2) {
-      results.replaceChildren();
-      return;
+    function renderIngredients() {
+      setChildren(ingredientsSlot, ingredients.length === 0 ? el("p", { class: "muted small" }, "Buscá alimentos abajo y agregalos como ingredientes.") : null,
+        ingredients.map((ingredient, i) => {
+          const quantity = el("input", {
+            type: "number", id: "recipe-ingredient-" + i + "-quantity", name: `ingredients[${i}].quantityGrams`, min: "0.01", max: 5000, step: "0.01",
+            value: ingredient.quantityGrams, inputmode: "decimal",
+            oninput: (event) => { ingredient.quantityGrams = event.target.value; },
+          });
+          return el("div", { class: "ingredient-row" },
+            el("div", { class: "field" }, el("span", { class: "name" }, ingredient.foodName),
+              el("input", { type: "hidden", name: `ingredients[${i}].foodId`, value: ingredient.foodId }),
+              el("div", { class: "field-error", "data-error-for": `ingredients[${i}].foodId`, "aria-live": "polite" })),
+            field("Cantidad (g)", quantity),
+            el("button", { type: "button", class: "button secondary small", "aria-label": "Quitar " + ingredient.foodName, onclick: () => {
+              ingredients.splice(i, 1);
+              renderIngredients();
+            } }, "Quitar"));
+        }));
     }
-    const id = ++lastQuery;
-    const foods = await api(`/api/foods/search?q=${encodeURIComponent(q)}&limit=${SEARCH_LIMIT}`);
-    if (id !== lastQuery) return;
-    setChildren(results, foods.length === 0
-      ? el("li", { class: "muted" }, "No se encontraron alimentos.")
-      : foods.map((food) => el("li", {},
-        el("div", { class: "item" },
-          el("span", {}, el("span", { class: "name" }, food.name), food.brand ? el("span", { class: "muted" }, ` · ${food.brand}`) : null),
-          el("button", { type: "button", class: "button small", onclick: () => pick(food) }, "Elegir")),
-        el("div", { class: "muted small" }, `${num(food.caloriesPer100g, 0)} kcal cada 100 g`))));
-  };
+    onSubmit(form, async (data) => {
+      const saved = await api(recipe ? `/api/recipes/${recipe.id}` : "/api/recipes", {
+        method: recipe ? "PUT" : "POST",
+        body: {
+          name: data.get("name"), servings: Number(data.get("servings")),
+          ingredients: ingredients.map((i) => ({ foodId: i.foodId, quantityGrams: Number(i.quantityGrams) })),
+        },
+      });
+      selected = saved;
+      editor.hidden = true;
+      showRecipe(saved);
+      await loadList();
+      setNotice(status, "ok", "Receta guardada.");
+    });
 
-  search.addEventListener("input", () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => runSearch().catch((error) => setChildren(results, el("li", { class: "form-error" }, error.title))), SEARCH_DELAY_MS);
-  });
-  // Enter en el buscador no envía la receta.
-  search.addEventListener("keydown", (event) => { if (event.key === "Enter") event.preventDefault(); });
+    const searchInput = el("input", { type: "search", id: "recipe-food-query", name: "q", autocomplete: "off", placeholder: "Ej.: arroz, manzana, yogur" });
+    const searchForm = el("form", { class: "inline", novalidate: true },
+      field("Buscar alimento para la receta", searchInput), formError(),
+      el("button", { type: "submit", class: "button secondary" }, "Buscar"));
+    onSubmit(searchForm, async () => {
+      searchStatus.replaceChildren();
+      results.replaceChildren();
+      const query = searchInput.value.trim();
+      if (query.length < 2) {
+        setNotice(searchStatus, "warning", "Escribí al menos 2 letras.");
+        return;
+      }
+      const foods = await api(`/api/foods/search?q=${encodeURIComponent(query)}&limit=20`);
+      setChildren(results, foods.length === 0 ? el("li", { class: "muted" }, "No se encontraron alimentos.") :
+        foods.map((food) => el("li", {},
+          el("div", { class: "item" }, el("div", { class: "food-name" }, foodBadge(), el("span", { class: "name" }, food.name)),
+            el("button", { type: "button", class: "button secondary small", onclick: () => {
+              ingredients.push({ foodId: food.id, foodName: food.name, quantityGrams: "100" });
+              renderIngredients();
+            } }, "Agregar ingrediente")),
+          food.brand ? el("div", { class: "muted small" }, food.brand) : null,
+          el("p", { class: "muted small" }, num(food.caloriesPer100g, 0) + " kcal por 100 g"),
+          food.attribution ? el("p", { class: "muted small" }, "Fuente: ",
+            el("a", { href: "https://world.openfoodfacts.org", target: "_blank", rel: "noopener noreferrer" }, food.attribution)) : null)));
+    });
+    setChildren(editor, el("h2", {}, recipe ? "Editar receta" : "Nueva receta"),
+      el("p", { class: "muted small" }, "Los valores nutricionales se muestran después de guardar la receta."),
+      form, el("hr"), searchForm, searchStatus, results);
+    renderIngredients();
+    editor.scrollIntoView({ behavior: "smooth", block: "start" });
+    name.focus({ preventScroll: true });
+  }
 
-  return el("div", {}, el("label", { for: search.id, class: "muted small" }, "Buscar alimento"), search, results);
+  append(container, [
+    el("h1", {}, "Recetas"),
+    el("div", { class: "recipes-toolbar item" },
+      el("p", { class: "muted" }, "Tus ingredientes, tus porciones, tus recetas."),
+      el("button", { type: "button", class: "button", onclick: () => editRecipe() }, "Nueva receta")),
+    status, editor, collection, detail,
+  ]);
+  await loadList();
 }

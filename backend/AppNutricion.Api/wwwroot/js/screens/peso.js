@@ -2,12 +2,12 @@
 // GET /api/me/metrics → { metrics: [{ date, weightKg }], trend: { lastAverageKg, previousAverageKg, changeKg } | null }.
 import { api } from "../api.js";
 import { weightChart } from "../chart.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit } from "../forms.js";
 import { dateText, num } from "../format.js";
 
 export async function render(container) {
-  const history = el("div");
+  const history = el("div", { class: "weight-history" });
   const status = el("div");
 
   const form = el("form", { class: "inline", novalidate: true },
@@ -27,11 +27,11 @@ export async function render(container) {
     await loadHistory(history);
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Peso"),
     status,
-    el("section", { class: "card" }, form),
-    history);
+    el("section", { class: "card weight-form" }, el("h2", {}, "Registrar peso"), form),
+    history]);
 
   await loadHistory(history);
 }
@@ -54,13 +54,19 @@ async function loadHistory(slot) {
     return;
   }
 
+  const latest = metrics[metrics.length - 1];
   setChildren(slot,
+    el("section", { class: "card weight-overview" },
+      el("div", { class: "item" }, el("div", {}, el("p", { class: "eyebrow" }, "ÚLTIMO REGISTRO"),
+        el("strong", { class: "weight-current" }, num(latest.weightKg) + " kg"),
+        el("p", { class: "muted small" }, dateText(latest.date))),
+        el("a", { href: "#/objetivo", class: "button secondary" }, "Ver mi objetivo"))),
     el("section", { class: "card" },
       el("h2", {}, "Historial"),
-      weightChart(metrics),
+      weightChart(metrics, Boolean(data.trend)),
       el("div", { class: "legend" },
         el("span", { class: "swatch-line" }, "— peso"),
-        el("span", { class: "swatch-trend" }, "- - tendencia (promedio de 7 registros)")),
+        data.trend ? el("span", { class: "swatch-trend" }, "- - tendencia (promedio de 7 registros)") : null),
       trendText(data.trend)),
     el("section", { class: "card" },
       el("h2", {}, "Registros"),

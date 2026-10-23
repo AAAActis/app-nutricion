@@ -11,13 +11,13 @@ export const routes = [
   { path: "/login", screen: "login", title: "Ingresar", auth: false, nav: false },
   { path: "/registro", screen: "registro", title: "Crear cuenta", auth: false, nav: false },
   { path: "/dia", screen: "dia", title: "Mi día", auth: true, nav: true },
+  { path: "/recetas", screen: "recetas", title: "Recetas", auth: true, nav: true },
   { path: "/peso", screen: "peso", title: "Peso", auth: true, nav: true },
   { path: "/objetivo", screen: "objetivo", title: "Objetivo", auth: true, nav: true },
   { path: "/perfil", screen: "perfil", title: "Perfil", auth: true, nav: true },
   { path: "/rutinas", screen: "rutinas", title: "Rutinas", auth: true, nav: true },
   { path: "/chat", screen: "chat", title: "Asistente", auth: true, nav: true },
   { path: "/alimentos", screen: "alimentos", title: "Mis alimentos", auth: true, nav: true },
-  { path: "/recetas", screen: "recetas", title: "Recetas", auth: true, nav: true },
   { path: "/cuenta", screen: "cuenta", title: "Cuenta", auth: true, nav: true },
 ];
 

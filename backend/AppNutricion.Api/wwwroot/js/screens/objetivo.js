@@ -2,7 +2,7 @@
 // GET /api/me/targets (404 = sin objetivo activo). Los targets: calories, proteinG, carbsG, fatG, bmi,
 // bmiCategory, projection { weeks, estimatedDate } | null, warnings [{ code, message }], disclaimer.
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
 import { dateText, num } from "../format.js";
 
@@ -60,11 +60,11 @@ export async function render(container) {
     showTargets(targetsSlot, created);
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Objetivo"),
     el("p", { class: "disclaimer" }, DISCLAIMER),
     targetsSlot,
-    el("section", { class: "card" }, el("h2", {}, targets ? "Nuevo objetivo" : "Crear objetivo"), form));
+    el("section", { class: "card" }, el("h2", {}, targets ? "Nuevo objetivo" : "Crear objetivo"), form)]);
 }
 
 function showTargets(slot, t) {
@@ -72,7 +72,8 @@ function showTargets(slot, t) {
     setChildren(slot, notice("warning", "Todavía no tenés un objetivo. Necesitás el perfil y al menos un peso registrado."));
     return;
   }
-  setChildren(slot, el("section", { class: "card" },
+  setChildren(slot, el("section", { class: "card goal-card" },
+    el("p", { class: "eyebrow" }, "OBJETIVO ACTIVO"),
     el("h2", {}, `Tu objetivo: ${GOAL_LABEL[t.goalType] ?? t.goalType}`),
     (t.warnings ?? []).map((w) => notice("warning", w.message)),
     el("div", { class: "stats" },
@@ -87,6 +88,7 @@ function showTargets(slot, t) {
       t.projection
         ? el("li", {}, `Proyección: ${num(t.projection.weeks)} semanas, cerca del ${dateText(t.projection.estimatedDate)}`)
         : null),
+    el("p", { class: "muted small" }, "Las calorías y los macros se guardan con el objetivo. Registrar un peso nuevo no los ajusta automáticamente."),
     el("p", { class: "disclaimer" }, t.disclaimer || DISCLAIMER)));
 }
 

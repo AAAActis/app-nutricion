@@ -2,8 +2,9 @@
 // se carga recién cuando se entra (import dinámico). Las rutas están en routes.js.
 
 import { isLoggedIn, clearSession } from "./auth.js";
-import { el, setChildren } from "./dom.js";
+import { append, el, setChildren } from "./dom.js";
 import { notice } from "./forms.js";
+import { icon } from "./icons.js";
 import { routes, homeLoggedIn, homeLoggedOut } from "./routes.js";
 
 let container;
@@ -48,6 +49,8 @@ async function renderCurrent() {
   }
 
   renderNav(path);
+  container.dataset.screen = route.screen;
+  document.body.dataset.session = route.auth ? "authenticated" : "guest";
   document.title = `${route.title} · Nutrición Inteligente`;
   setChildren(container, el("p", { class: "muted" }, "Cargando…"));
 
@@ -56,7 +59,7 @@ async function renderCurrent() {
     if (currentPath() !== path) return;   // el usuario ya se fue a otra pantalla
     container.replaceChildren();
     if (flash) {
-      container.append(notice(flash.kind, flash.text));
+      append(container, [notice(flash.kind, flash.text)]);
       flash = null;
     }
     await screen.render(container);
@@ -73,7 +76,7 @@ function renderNav(path) {
     return;
   }
   const links = routes.filter((r) => r.nav).map((r) =>
-    el("a", { href: `#${r.path}`, "aria-current": r.path === path ? "page" : false }, r.title));
+    el("a", { href: `#${r.path}`, "aria-current": r.path === path ? "page" : false }, icon(r.screen), el("span", {}, r.title)));
   const logout = el("button", {
     type: "button",
     class: "link-button",
@@ -81,6 +84,6 @@ function renderNav(path) {
       clearSession();
       go(homeLoggedOut);
     },
-  }, "Salir");
+  }, icon("salir"), el("span", {}, "Salir"));
   setChildren(nav, links, logout);
 }
