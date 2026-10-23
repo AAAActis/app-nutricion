@@ -2,6 +2,7 @@
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
 > Última actualización: 2026-10-22 (Javi, rama `feature/cuenta-borrado-export`: J5 en revisión; J2, J7 y J8 hechos con los PR #9 y #10). Antes: 2026-10-22 (Lauti, rama `feature/comidas`: L4 y L5 en revisión con el review de Javi del PR #8 atendido (userId de `sub`, 400 con el campo, D19, D20); mergeada con `develop` (J2, J7, J8). Javi, rama `feature/perfil-macros`: J7 y J8 en revisión, sale de `feature/auth-registro-login`; ajustes: el objetivo guarda el ritmo aplicado y menores con LoseFat controlados en el manager). Antes: Javi, rama `feature/auth-registro-login`: J2 en revisión; J1 mergeado en `develop` con el PR #7. Anterior: 2026-10-21 noche (Lauti, rama `feature/alimentos-seed-off`: L2 y L7 en revisión; D18 Open Food Facts. Antes, rama `feature/alimentos-busqueda`: L1 y L3; `Program.cs` suma `AddBusinessLogic`, `AddControllers` y `MapControllers`. Javi, rama `feature/api-esqueleto`: J1, mergeado con `develop`). Repo: https://github.com/AAAActis/app-nutricion. `<COMPLETAR>` = dato que falta.
+> 2026-10-22 (Santi, rama `feature/foods-seed`): S3 en revisión (PR #15), actualizado con develop (#13, #14), con 65 básicos de ARGENFOODS; OFF y la prueba contra Postgres quedan pendientes (D21-seed).
 > Verificado por Santi en su máquina: el compose levanta y `app-nutricion-db` queda `healthy`. El estado de ramas y del `.gitignore` se confirma en el PR de `fix/gitignore-utf8`.
 
 ## Objetivo
@@ -67,7 +68,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 |---|---|---|---|---|---|
 | S1 | Docker Compose con Postgres, volumen y healthcheck; `.env.example`; `.env` en `.gitignore`; README del compose | Santi | En revisión: compose levantado y `healthy` en la máquina de Santi; README del compose escrito; puerto restringido a `127.0.0.1`; `.gitignore` reescrito en UTF-8. Falta que Javi y Lauti lo levanten en sus máquinas | `fix/gitignore-utf8`, `feature/db-modelo-datos` | — |
 | S2 | Base de datos: entidades, DbContext, migraciones, índices y relaciones (acordado con Javi y Lauti) | Santi | En revisión: 19 tablas, configuración por tabla, migración `InitialCreate`. Modelo en `docs/MODELO-DATOS.md`. Falta ratificarlo en la reunión y el review de Lauti | `feature/db-modelo-datos` | S1, acuerdo de los 3 |
-| S3 | Archivo `foods_seed`: 50 a 100 básicos de ARGENFOODS + productos de Open Food Facts con macros completos, normalizado a 100 g; que otro lo revise | Santi | Pendiente | — | Verificar fuentes |
+| S3 | Archivo `foods_seed`: 50 a 100 básicos de ARGENFOODS + productos de Open Food Facts con macros completos, normalizado a 100 g; que otro lo revise | Santi | En revisión (PR #15): 65 básicos de ARGENFOODS cargan sin descartes y la segunda carga es idempotente (probado con el cargador real sobre SQLite). Falta: la prueba de carga contra Postgres (la base no levantaba, WinNat) y sumar OFF (503) en un segundo commit (D21-seed) | — | Verificar fuentes |
 | S4 | Dockerfile de la API y compose completo | Santi | Pendiente | — | S1, J1 |
 | S5 | Scripts de respaldo y restauración de la base | Santi | Pendiente | — | S1 |
 | S6 | Seeds de demo: usuario de ejemplo con 2 semanas de peso, comidas y entrenamientos; 2 o 3 rutinas | Santi | Pendiente | — | S2 |
@@ -105,6 +106,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | D18 | Open Food Facts (L7). Producto por código: `GET https://world.openfoodfacts.org/api/v3/product/{code}.json` (v3 recomendada, v2 deprecada). Lectura sin auth, pero con User-Agent propio (`AppName/Version (contacto)`). Límites: 15 req/min por IP para producto y 10 para búsqueda (no usar para buscar mientras se tipea); si se pasa, responde 503. Licencia: base ODbL, contenidos DbCL, imágenes CC-BY-SA. **Se puede guardar y reusar** (incluso comercialmente) mencionando la licencia y atribuyendo a Open Food Facts con link a https://openfoodfacts.org o a la página del producto; lo derivado se comparte en las mismas condiciones. Datos sin garantía y no aptos para uso médico. Fuentes: https://openfoodfacts.github.io/openfoodfacts-server/api/ y https://world.openfoodfacts.org/terms-of-use | 2026-10-21 | Lauti |
 | D19 | Editar la cantidad de una comida re-congela los macros desde Foods si el alimento existe; si no, proporcional | 2026-10-22 | Lauti (review de Javi, PR #8) |
 | D20 | Copiar a un día que ya tiene comidas de ese tipo → 409 | 2026-10-22 | Lauti (review de Javi, PR #8) |
+| D21-seed | `foods_seed.json` lo genera `tools/foods-seed/foods-seed.cs`. Fuentes: ARGENFOODS (UNLu, fichas HTML por código; uso no comercial con cita) y Open Food Facts Argentina (ODbL). Licencia mixta aceptada: base colectiva, cada parte con su licencia. En ARGENFOODS, un macro `...` o vacío vale 0 solo si la kcal publicada coincide con 4P+4C+9G (±5 % o ±5 kcal, sin ampliar): 24 fichas, listadas en `tools/foods-seed/README.md`. Extracción del 2026-10-22: 65 básicos de ARGENFOODS. OFF queda para un segundo commit porque la búsqueda devolvía 503 (se ordena por `popularity_key`, no por `unique_scans_n`) | 2026-10-22 | Santi |
 
 ## Pendientes de decisión
 
@@ -115,7 +117,6 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | `contexto.md` y el archivo de n8n siguen en el historial del repo público. ¿Se pasa el repo a privado o se limpia el historial (`git filter-repo` + force push, antes de que Javi y Lauti trabajen encima)? | Santi | Seguridad del repo |
 | Hora exacta de entrega del martes 27 | Docente | Plan del lunes |
 | Proveedor del LLM y quién consigue la clave (verificar cuota y precios vigentes) | Los 3 | S9 |
-| ¿ARGENFOODS tiene descarga (Excel/CSV) o se copia a mano? | Santi | S3, L2 |
 | ¿Habrá CI (GitHub Actions)? | Javi | Regla de "CI verde antes de mergear" |
 | Cómo se registra la autoría con el docente, ya que el grupo figura de 5 | Javi / docente | Entrega |
 
