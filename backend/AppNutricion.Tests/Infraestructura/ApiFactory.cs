@@ -30,6 +30,8 @@ public class ApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment(Entorno);
         builder.UseSetting("ConnectionStrings:DefaultConnection", CadenaDeConexionFalsa);
         builder.UseSetting("Jwt:Key", ClaveJwtFalsa);
+        // Nunca el LLM real: en Development estarían la clave de user-secrets y Provider OpenAICompatible.
+        builder.UseSetting("Llm:Provider", "Fake");
         if (LimiteDeAuth is not null) builder.UseSetting("RateLimiting:AuthPermitLimit", LimiteDeAuth);
         if (LimiteDeChat is not null) builder.UseSetting("RateLimiting:AssistantChatPermitLimit", LimiteDeChat);
         builder.ConfigureTestServices(services =>
