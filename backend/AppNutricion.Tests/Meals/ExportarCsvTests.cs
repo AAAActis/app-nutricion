@@ -23,7 +23,7 @@ public class ExportarCsvTests
     {
         _store.Setup(s => s.GetRangeAsync(UserId, It.IsAny<DateOnly>(), It.IsAny<DateOnly>())).ReturnsAsync([]);
         _manager = new MealEntryManager(
-            _store.Object, Mock.Of<IFoodManager>(), new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
+            _store.Object, Mock.Of<IFoodManager>(), Mock.Of<IRecipeManager>(), new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
     }
 
     private void ConComidas(params MealEntry[] entradas) =>

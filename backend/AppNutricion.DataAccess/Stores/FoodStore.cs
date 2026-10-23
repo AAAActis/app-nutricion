@@ -103,6 +103,18 @@ public class FoodStore(ApplicationDbContext context) : IFoodStore
         return (inserted, updated);
     }
 
+    public Task<List<Food>> GetCustomAsync(int userId) => throw new NotImplementedException();
+
+    public Task<Food?> GetCustomByIdAsync(int id, int userId) => throw new NotImplementedException();
+
+    public Task AddAsync(Food food) => throw new NotImplementedException();
+
+    public Task<bool> UpdateCustomAsync(Food food, int userId) => throw new NotImplementedException();
+
+    public Task<bool> DeleteCustomAsync(int id, int userId) => throw new NotImplementedException();
+
+    public Task<bool> IsInAnyRecipeAsync(int foodId) => throw new NotImplementedException();
+
     private IQueryable<Food> Visible(int? userId) =>
         context.Foods.AsNoTracking().Where(f => f.CreatedByUserId == null || f.CreatedByUserId == userId);
 }

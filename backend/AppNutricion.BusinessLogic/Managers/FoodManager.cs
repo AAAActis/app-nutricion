@@ -70,6 +70,16 @@ public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFact
     public Task<List<Food>> GetRecentAsync(int userId, int? limit) =>
         foodStore.GetRecentAsync(userId, Math.Clamp(limit ?? DefaultRecentLimit, 1, MaxRecentLimit));
 
+    public Task<Food> CreateCustomAsync(int userId, CustomFoodData data) => throw new NotImplementedException();
+
+    public Task<List<Food>> GetCustomAsync(int userId) => throw new NotImplementedException();
+
+    public Task<Food?> GetCustomByIdAsync(int id, int userId) => throw new NotImplementedException();
+
+    public Task<Food?> UpdateCustomAsync(int id, int userId, CustomFoodData data) => throw new NotImplementedException();
+
+    public Task<bool> DeleteCustomAsync(int id, int userId) => throw new NotImplementedException();
+
     public decimal ConvertToGrams(Food food, decimal quantity, bool isUnits)
     {
         if (!isUnits) return quantity;

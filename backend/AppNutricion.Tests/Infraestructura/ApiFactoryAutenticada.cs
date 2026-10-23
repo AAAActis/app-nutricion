@@ -14,6 +14,7 @@ public class ApiFactoryAutenticada : ApiFactory
     public Mock<IFoodManager> FoodManager { get; } = new();
     public Mock<IMealEntryManager> MealManager { get; } = new();
     public Mock<ISummaryManager> SummaryManager { get; } = new();
+    public Mock<IRecipeManager> RecipeManager { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -25,6 +26,7 @@ public class ApiFactoryAutenticada : ApiFactory
             services.AddSingleton(FoodManager.Object);
             services.AddSingleton(MealManager.Object);
             services.AddSingleton(SummaryManager.Object);
+            services.AddSingleton(RecipeManager.Object);
         });
     }
 

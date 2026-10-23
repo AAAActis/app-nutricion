@@ -8,7 +8,7 @@ using AppNutricion.Entities.Enums;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, IUserToday userToday, TimeProvider timeProvider)
+public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, IRecipeManager recipeManager, IUserToday userToday, TimeProvider timeProvider)
     : IMealEntryManager
 {
     private const decimal MaxGrams = 5000;
@@ -80,6 +80,9 @@ public class MealEntryManager(IMealEntryStore store, IFoodManager foodManager, I
 
         return await store.UpdateAsync(entry, userId) ? entry : null;
     }
+
+    public Task<MealEntry?> CreateFromRecipeAsync(int userId, int recipeId, decimal servings, MealType mealType, DateOnly date) =>
+        throw new NotImplementedException();
 
     public Task<bool> DeleteAsync(int id, int userId) => store.DeleteAsync(id, userId);
 

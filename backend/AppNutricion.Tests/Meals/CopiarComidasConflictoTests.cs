@@ -24,7 +24,7 @@ public sealed class CopiarComidasConflictoTests : IDisposable
     public void Dispose() => _db.Dispose();
 
     private MealEntryManager NuevoManager() =>
-        new(new MealEntryStore(_db.NuevoContexto()), Mock.Of<IFoodManager>(), new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
+        new(new MealEntryStore(_db.NuevoContexto()), Mock.Of<IFoodManager>(), Mock.Of<IRecipeManager>(), new UserToday(Mock.Of<IProfileStore>(), TimeProvider.System), TimeProvider.System);
 
     private async Task Guardar(DateOnly dia, MealType tipo)
     {

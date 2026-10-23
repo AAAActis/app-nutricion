@@ -8,6 +8,8 @@ public interface IMealEntryManager
 {
     Task<MealEntry?> CreateAsync(int userId, int foodId, decimal quantity, bool isUnits, MealType mealType, DateOnly date, int? recipeId);
     Task<MealEntry?> UpdateAsync(int id, int userId, decimal? quantity, bool? isUnits, MealType? mealType, DateOnly? date);
+    // Una receta como comida (L9): servings porciones, macros desde Foods (D6). Receta de otro usuario → null.
+    Task<MealEntry?> CreateFromRecipeAsync(int userId, int recipeId, decimal servings, MealType mealType, DateOnly date);
     Task<bool> DeleteAsync(int id, int userId);
     Task<List<MealEntry>> ListAsync(int userId, DateOnly? date);
     // Copia las entradas de fromDate a toDate (todas o solo un tipo) con los mismos valores congelados.
