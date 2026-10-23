@@ -58,7 +58,7 @@ public sealed class AssistantManagerTests : IDisposable
         _foods.Setup(f => f.ConvertToGrams(It.IsAny<Food>(), It.IsAny<decimal>(), false)).Returns((Food _, decimal q, bool _) => q);
         Totales(consumidas: 500, objetivo: 2000);
         _goals.Setup(g => g.ListAsync(UserId)).ReturnsAsync([new Goal { UserId = UserId, GoalType = GoalType.LoseFat, IsActive = true, TargetCalories = 2000 }]);
-        _routines.Setup(r => r.GetAsync(UserId)).ReturnsAsync([new RoutineSummary("Torso/Pierna (4 días)", ["Torso A", "Pierna A"])]);
+        _routines.Setup(r => r.GetAsync(UserId)).ReturnsAsync([new RoutineSummary("Torso/Pierna (4 días)", true, [new RoutineDaySummary(1, "Torso A", []), new RoutineDaySummary(2, "Pierna A", [])])]);
     }
 
     public void Dispose() => _db.Dispose();

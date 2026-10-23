@@ -84,12 +84,14 @@ async function readProblem(response) {
 
 // { "weightKg": ["msg"], "$.date": ["msg"] } → { weightKg: "msg", date: "msg" }.
 // Las claves vienen del ParamName del manager (ya en camelCase) o del model binding ("$.campo" o "Campo").
+// Las de una lista conservan el índice para ubicar la fila: "sets[1].reps" → "sets[1].reps".
 function normalizeErrors(errors) {
   const result = {};
   if (!errors || typeof errors !== "object") return result;
   for (const [key, messages] of Object.entries(errors)) {
-    const clean = key.replace(/^\$\.?/, "").split(".").pop() || "_";
-    const field = clean.charAt(0).toLowerCase() + clean.slice(1);
+    const path = key.replace(/^\$\.?/, "");
+    const clean = (/\[\d+\]/.test(path) ? path : path.split(".").pop()) || "_";
+    const field = clean.split(".").map((part) => part.charAt(0).toLowerCase() + part.slice(1)).join(".");
     const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
     result[field] = result[field] ? `${result[field]} ${text}` : text;
   }
