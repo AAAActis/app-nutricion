@@ -52,3 +52,10 @@ Cada ítem descartado deja un warning en el log con el motivo:
 - Volver a arrancar con el mismo archivo da `0 insertados, 0 actualizados`.
 
 Los datos de Open Food Facts van bajo licencia ODbL: hay que atribuirlos (ver D18 en `docs/ESTADO.md`).
+
+## Fuentes y licencias
+
+El archivo lo genera `tools/foods-seed/foods-seed.cs` (cómo regenerarlo en `tools/foods-seed/README.md`).
+
+- **ARGENFOODS** (`source = "Argenfoods"`): Universidad Nacional de Luján (UNLu). *Tabla de Composición de Alimentos*, base de datos ARGENFOODS, proyecto INFOODS (Universidad de las Naciones Unidas / FAO). https://www.argenfood.unlu.edu.ar/ . Uso sin fines comerciales autorizado por la UNLu, sin alterar los datos y citando a los autores, los titulares del derecho y esta referencia. `externalId` es el código del alimento en la tabla.
+- **Open Food Facts** (`source = "OpenFoodFacts"`): datos de https://openfoodfacts.org, bajo [Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/1-0/); contenidos individuales bajo DbCL. Esta base derivada se comparte en las mismas condiciones (ODbL). Datos sin garantía y no aptos para uso médico.
