@@ -2,9 +2,9 @@ using AppNutricion.Entities.Entities;
 
 namespace AppNutricion.BusinessLogic.Interfaces;
 
-// Alimento personalizado (L8): valores por 100 g; la porción es opcional, pero nombre y gramos van juntos.
-public record CustomFoodData(string? Name, string? Brand, decimal CaloriesPer100g, decimal ProteinPer100g, decimal CarbsPer100g,
-    decimal FatPer100g, string? PortionName, decimal? PortionWeightGrams);
+// Alimento personalizado (L8): valores por 100 g (obligatorios: null → 400); la porción es opcional, pero nombre y gramos van juntos.
+public record CustomFoodData(string? Name, string? Brand, decimal? CaloriesPer100g, decimal? ProteinPer100g, decimal? CarbsPer100g,
+    decimal? FatPer100g, string? PortionName, decimal? PortionWeightGrams);
 
 public interface IFoodManager
 {

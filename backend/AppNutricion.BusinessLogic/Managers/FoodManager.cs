@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace AppNutricion.BusinessLogic.Managers;
 
-public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFacts, ILogger<FoodManager> logger) : IFoodManager
+public class FoodManager(IFoodStore foodStore, IOpenFoodFactsClient openFoodFacts, ILogger<FoodManager> logger, TimeProvider timeProvider) : IFoodManager
 {
     private const int MinTermLength = 2;
     private const int DefaultLimit = 20;

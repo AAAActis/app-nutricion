@@ -17,7 +17,7 @@ public class FavoritosYRecientesManagerTests
     public FavoritosYRecientesManagerTests()
     {
         _store.Setup(s => s.GetByIdAsync(3, UserId)).ReturnsAsync(new Food { Id = 3, Name = "Pan" });
-        _manager = new FoodManager(_store.Object, Mock.Of<IOpenFoodFactsClient>(), NullLogger<FoodManager>.Instance);
+        _manager = new FoodManager(_store.Object, Mock.Of<IOpenFoodFactsClient>(), NullLogger<FoodManager>.Instance, TimeProvider.System);
     }
 
     [Fact]
