@@ -156,7 +156,7 @@ public class MealEntryManagerTests
     public async Task Create_ConRecipeId_LanzaArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() => Crear(100, recipeId: 1));
-        Assert.Contains("L9", ex.Message);
+        Assert.Contains("/api/meals/recipe", ex.Message);
         Assert.Equal("recipeId", ex.ParamName);
     }
 
