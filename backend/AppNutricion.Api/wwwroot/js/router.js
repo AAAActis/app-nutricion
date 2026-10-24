@@ -2,7 +2,7 @@
 // se carga recién cuando se entra (import dinámico). Las rutas están en routes.js.
 
 import { isLoggedIn, clearSession } from "./auth.js";
-import { el, setChildren } from "./dom.js";
+import { append, el, setChildren } from "./dom.js";
 import { notice } from "./forms.js";
 import { routes, homeLoggedIn, homeLoggedOut } from "./routes.js";
 
@@ -56,7 +56,7 @@ async function renderCurrent() {
     if (currentPath() !== path) return;   // el usuario ya se fue a otra pantalla
     container.replaceChildren();
     if (flash) {
-      container.append(notice(flash.kind, flash.text));
+      append(container, [notice(flash.kind, flash.text)]);
       flash = null;
     }
     await screen.render(container);

@@ -2,7 +2,7 @@
 // GET /api/me/targets (404 = sin objetivo activo). Los targets: calories, proteinG, carbsG, fatG, bmi,
 // bmiCategory, projection { weeks, estimatedDate } | null, warnings [{ code, message }], disclaimer.
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
 import { dateText, num } from "../format.js";
 
@@ -60,11 +60,11 @@ export async function render(container) {
     showTargets(targetsSlot, created);
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Objetivo"),
     el("p", { class: "disclaimer" }, DISCLAIMER),
     targetsSlot,
-    el("section", { class: "card" }, el("h2", {}, targets ? "Nuevo objetivo" : "Crear objetivo"), form));
+    el("section", { class: "card" }, el("h2", {}, targets ? "Nuevo objetivo" : "Crear objetivo"), form)]);
 }
 
 function showTargets(slot, t) {
