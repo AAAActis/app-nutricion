@@ -1,7 +1,7 @@
 // Registro: POST /api/auth/register { email, password, consentAccepted } → 201. Después entra solo (login).
 import { api } from "../api.js";
 import { CONSENT_TEXT, CONSENT_VERSION } from "../consent.js";
-import { el } from "../dom.js";
+import { append, el } from "../dom.js";
 import { formError, field, onSubmit } from "../forms.js";
 import { go } from "../router.js";
 import { login } from "./login.js";
@@ -17,7 +17,15 @@ export async function render(container) {
       el("strong", {}, `Consentimiento (versión ${CONSENT_VERSION})`),
       el("div", { class: "consent", tabindex: 0 }, CONSENT_TEXT.map((p) => el("p", {}, p))),
       el("label", { class: "checkbox" },
-        el("input", { type: "checkbox", name: "consentAccepted", "aria-describedby": "consent-error" }),
+        el("input", {
+          type: "checkbox", name: "consentAccepted", "aria-describedby": "consent-error",
+          // Al tildarlo se va el error "Hay que aceptar el consentimiento" del envío anterior.
+          onchange: (event) => {
+            if (!event.target.checked) return;
+            consentError.textContent = "";
+            event.target.removeAttribute("aria-invalid");
+          },
+        }),
         el("span", {}, "Leí y acepto el tratamiento de mis datos.")),
       consentError),
     formError(),
@@ -34,8 +42,8 @@ export async function render(container) {
     go("/perfil");
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Crear cuenta"),
     el("section", { class: "card" }, form),
-    el("p", {}, "¿Ya tenés cuenta? ", el("a", { href: "#/login" }, "Ingresá")));
+    el("p", {}, "¿Ya tenés cuenta? ", el("a", { href: "#/login" }, "Ingresá"))]);
 }

@@ -5,7 +5,7 @@
 // el texto es el de respaldo. Sugerencias: POST /api/assistant/suggestions/{id}/accept (crea la comida, con los
 // valores de la tabla de alimentos) o /ignore → { status, mealEntryId, … }.
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { clearErrors, field, formError, notice, setNotice, showErrors } from "../forms.js";
 import { MEAL_TYPES, dateText, dateTimeText, num } from "../format.js";
 import { profileTimeZone } from "../profile.js";
@@ -80,9 +80,9 @@ export async function render(container) {
       const conversation = state.current ?? await newConversation();
       const reply = await api(`/api/assistant/conversations/${conversation.id}/messages`, { method: "POST", body: { content } });
       if (log.querySelector("p.muted")) log.replaceChildren();
-      log.append(
+      append(log, [
         messageNode("User", content.trim(), new Date().toISOString(), [], state),
-        messageNode("Assistant", reply.message.content, reply.message.createdAt, reply.suggestions, state));
+        messageNode("Assistant", reply.message.content, reply.message.createdAt, reply.suggestions, state)]);
       if (reply.degraded)
         setNotice(status, "warning", "El asistente no está disponible en este momento: la respuesta es automática, con tus totales de hoy. Probá de nuevo en un rato.");
       else status.replaceChildren();
@@ -121,7 +121,7 @@ export async function render(container) {
     }, 1000);
   }
 
-  container.append(
+  append(container, [
     el("h1", {}, "Asistente"),
     el("p", { class: "disclaimer" }, DISCLAIMER),
     el("section", { class: "card" },
@@ -140,7 +140,7 @@ export async function render(container) {
       status,
       log,
       form,
-      el("p", { class: "muted small disclaimer" }, DISCLAIMER)));
+      el("p", { class: "muted small disclaimer" }, DISCLAIMER))]);
 
   await loadConversations();
   if (state.conversations.length > 0) await open(state.conversations[0]);

@@ -5,7 +5,7 @@
 // Alimentos: GET /api/foods/search?q&limit, GET /api/foods/favorites, GET /api/foods/recent,
 // POST y DELETE /api/foods/{id}/favorite. Los de Open Food Facts traen attribution (ODbL).
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
 import { download } from "../download.js";
 import { MEAL_TYPES, addDays, dateText, num, today } from "../format.js";
@@ -44,7 +44,7 @@ export async function render(container) {
     await reload();
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Mi día"),
     el("div", { class: "row" }, el("label", { for: "dia-fecha" }, "Fecha"), Object.assign(dateInput, { id: "dia-fecha" })),
     status,
@@ -52,7 +52,7 @@ export async function render(container) {
     mealsCard,
     await foodPicker(state, reload, status),
     weekCard,
-    exportCard(state));
+    exportCard(state)]);
 
   await reload();
 }
