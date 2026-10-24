@@ -2,7 +2,7 @@
 // carbsPer100g, fatPer100g, portionName, portionWeightGrams }]. Alta: POST /api/foods/custom; edición: PUT
 // /api/foods/custom/{id} (mismo cuerpo); borrado: DELETE /api/foods/custom/{id} → 409 si está en una receta.
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, onSubmit, setNotice } from "../forms.js";
 import { num } from "../format.js";
 
@@ -34,12 +34,12 @@ export async function render(container) {
     }
   }
 
-  container.append(
+  append(container, [
     el("h1", {}, "Mis alimentos"),
     el("p", { class: "muted" }, "Solo vos ves estos alimentos. Aparecen en el buscador de Mi día y en tus recetas."),
     status,
     list,
-    editor);
+    editor]);
 
   edit(null);
   await reload();

@@ -5,7 +5,7 @@
 // Cargar al día: POST /api/meals/recipe { recipeId, servings, mealType, date }. Buscador: GET /api/foods/search (con el
 // token trae también los alimentos propios).
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options, setNotice } from "../forms.js";
 import { MEAL_TYPES, num, today } from "../format.js";
 import { profileTimeZone } from "../profile.js";
@@ -59,7 +59,7 @@ export async function render(container) {
     }
   }
 
-  container.append(el("h1", {}, "Recetas"), status, list, detail, editor);
+  append(container, [el("h1", {}, "Recetas"), status, list, detail, editor]);
   edit(null);
   await reload();
 }
