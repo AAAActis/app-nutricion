@@ -1,7 +1,7 @@
 // Perfil: GET /api/me/profile (404 = todavía no tiene) y PUT /api/me/profile
 // { birthDate, biologicalSex, heightCm, activityLevel, timeZoneId }.
 import { api } from "../api.js";
-import { el } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
 import { go } from "../router.js";
 import { DEFAULT_TIME_ZONE, timeZones } from "../timezones.js";
@@ -51,12 +51,12 @@ export async function render(container) {
     const first = profile === null;
     profile = saved;
     if (first) go("/peso");
-    else status.replaceChildren(notice("ok", "Perfil guardado."));
+    else setChildren(status, notice("ok", "Perfil guardado."));
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Perfil"),
     profile ? null : notice("warning", "Completá tu perfil para calcular tus objetivos."),
     status,
-    el("section", { class: "card" }, form));
+    el("section", { class: "card" }, form)]);
 }

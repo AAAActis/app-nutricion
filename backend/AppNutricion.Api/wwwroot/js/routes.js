@@ -16,6 +16,8 @@ export const routes = [
   { path: "/perfil", screen: "perfil", title: "Perfil", auth: true, nav: true },
   { path: "/rutinas", screen: "rutinas", title: "Rutinas", auth: true, nav: true },
   { path: "/chat", screen: "chat", title: "Asistente", auth: true, nav: true },
+  { path: "/alimentos", screen: "alimentos", title: "Mis alimentos", auth: true, nav: true },
+  { path: "/recetas", screen: "recetas", title: "Recetas", auth: true, nav: true },
   { path: "/cuenta", screen: "cuenta", title: "Cuenta", auth: true, nav: true },
 ];
 

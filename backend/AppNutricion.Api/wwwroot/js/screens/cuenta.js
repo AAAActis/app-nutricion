@@ -3,7 +3,7 @@
 // 404/405 y la pantalla lo dice. Se activan solos cuando se mergea J5.
 import { api } from "../api.js";
 import { clearSession } from "../auth.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit } from "../forms.js";
 import { download } from "../download.js";
 import { today } from "../format.js";
@@ -52,7 +52,7 @@ export async function render(container) {
     go("/login");
   });
 
-  container.append(
+  append(container, [
     el("h1", {}, "Cuenta"),
     el("section", { class: "card" },
       el("h2", {}, "Exportar mis datos"),
@@ -62,5 +62,5 @@ export async function render(container) {
     el("section", { class: "card" },
       el("h2", {}, "Borrar mi cuenta"),
       el("p", {}, "Se borran tu cuenta y todos tus datos. Antes podés descargarlos."),
-      form));
+      form)]);
 }

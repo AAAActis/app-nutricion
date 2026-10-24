@@ -5,7 +5,7 @@
 // reps, weightKg }] } → { estimatedCaloriesBurned, disclaimer, … }; 409 sin peso registrado.
 // Historial: GET /api/workouts?from&to (hasta 366 días), GET y DELETE /api/workouts/{id}.
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options, setNotice } from "../forms.js";
 import { addDays, dateText, num, today } from "../format.js";
 import { profileTimeZone } from "../profile.js";
@@ -33,12 +33,12 @@ export async function render(container) {
   const history = historyCard(state);
   const workout = workoutCard(state, () => history.reload());
 
-  container.append(
+  append(container, [
     el("h1", {}, "Rutinas"),
     routinesCard(routines, (id) => showRoutine(detail, id, workout)),
     detail,
     workout.card,
-    history.card);
+    history.card]);
 
   await history.reload();
 }

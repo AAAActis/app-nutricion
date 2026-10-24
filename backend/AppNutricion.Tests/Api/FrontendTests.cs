@@ -52,6 +52,8 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("/js/screens/rutinas.js", "text/javascript")]
     [InlineData("/js/screens/chat.js", "text/javascript")]
     [InlineData("/js/screens/dia.js", "text/javascript")]
+    [InlineData("/js/screens/alimentos.js", "text/javascript")]
+    [InlineData("/js/screens/recetas.js", "text/javascript")]
     public async Task ArchivosBase_200(string ruta, string tipo)
     {
         var response = await factory.CreateClient().GetAsync(ruta);
@@ -98,6 +100,21 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         foreach (var (ruta, contenido) in js)
             foreach (var prohibido in new[] { "innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "eval(", "new Function" })
                 Assert.False(contenido.Contains(prohibido), $"{ruta} usa {prohibido}");
+    }
+
+    // node.append(null) escribe "null" en la pantalla. Fuera de dom.js se usan append() y setChildren(), que
+    // ignoran null/undefined/false; replaceChildren() nativo solo vacío (para limpiar).
+    [Fact]
+    public void Js_SinAppendNiReplaceChildrenNativosConArgumentos()
+    {
+        var js = Archivos(".js").Where(a => a.Ruta != "js/dom.js").ToList();
+
+        Assert.NotEmpty(js);
+        foreach (var (ruta, contenido) in js)
+        {
+            Assert.False(Regex.IsMatch(contenido, @"\.append\("), $"{ruta} usa .append( nativo: usá append() o setChildren() de dom.js");
+            Assert.False(Regex.IsMatch(contenido, @"\.replaceChildren\(\s*[^)\s]"), $"{ruta} usa .replaceChildren(...) con argumentos: usá setChildren() de dom.js");
+        }
     }
 
     // Sin CDN ni scripts externos: la demo anda sin internet.
@@ -166,11 +183,35 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("js/screens/dia.js", "`/api/summary/weekly?endDate=${")]
     [InlineData("js/screens/dia.js", ".streak")]
     [InlineData("js/screens/dia.js", "`/api/meals/export?from=${")]
+    [InlineData("js/screens/alimentos.js", "\"/api/foods/custom\"")]
+    [InlineData("js/screens/alimentos.js", "`/api/foods/custom/${")]
+    [InlineData("js/screens/alimentos.js", "error.status === 409")]
+    [InlineData("js/screens/recetas.js", "\"/api/recipes\"")]
+    [InlineData("js/screens/recetas.js", "`/api/recipes/${")]
+    [InlineData("js/screens/recetas.js", "`/api/foods/search?q=${")]
+    [InlineData("js/screens/recetas.js", "\"/api/meals/recipe\"")]
+    [InlineData("js/screens/recetas.js", "`ingredients[${i}].foodId`")]
+    [InlineData("js/screens/recetas.js", "`ingredients[${i}].quantityGrams`")]
+    [InlineData("js/screens/recetas.js", "MEAL_TYPES")]
+    [InlineData("js/screens/recetas.js", "profileTimeZone()")]
+    [InlineData("js/screens/recetas.js", "Estimación, no es consejo médico.")]
     public void Pantalla_UsaSusEndpoints(string archivo, string texto)
     {
         var pantalla = Archivos(".js").Single(a => a.Ruta == archivo);
 
         Assert.Contains(texto, pantalla.Contenido);
+    }
+
+    // Las pantallas de L12 están en el menú, antes de Cuenta.
+    [Theory]
+    [InlineData("{ path: \"/alimentos\", screen: \"alimentos\", title: \"Mis alimentos\", auth: true, nav: true }")]
+    [InlineData("{ path: \"/recetas\", screen: \"recetas\", title: \"Recetas\", auth: true, nav: true }")]
+    public void Rutas_IncluyenLasPantallasDeRecetas(string ruta)
+    {
+        var routes = Archivos(".js").Single(a => a.Ruta == "js/routes.js").Contenido;
+
+        var posicion = routes.IndexOf(ruta, StringComparison.Ordinal);
+        Assert.True(posicion >= 0 && posicion < routes.IndexOf("path: \"/cuenta\"", StringComparison.Ordinal), $"Falta {ruta} antes de Cuenta");
     }
 
     // Cada botón de una sugerencia llama a su acción: un "Aceptar" que ignora no crea la comida y nadie lo nota.

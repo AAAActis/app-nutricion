@@ -109,6 +109,17 @@ dotnet run --project backend/AppNutricion.Api
 - Swagger UI: http://localhost:5286/swagger (solo en Development).
 - Al arrancar se cargan, sin duplicar, los alimentos de `SeedData/foods_seed.json` (65 básicos de ARGENFOODS) y los ejercicios y rutinas precargadas de `SeedData/exercises_seed.json`.
 
+## Datos de demo
+
+En Development (`Demo:Enabled = true` en `appsettings.Development.json`; en `appsettings.json` es `false`), al arrancar la API carga un usuario de demo **con los managers de la API**, con las mismas validaciones que los endpoints: nunca escribe directo en la base. Es idempotente: si lo que carga ya está, no agrega nada.
+
+| Dato | Valor |
+|---|---|
+| Email | `demo@example.com` |
+| Contraseña | `demo-nutricion-2026` |
+
+Son credenciales de demo, no un secreto. El usuario trae consentimiento, perfil, 14 días de peso hasta hoy con tendencia a la baja (se ve la línea de tendencia), un objetivo LoseFat activo, comidas de esos días con alimentos del seed (pollo, arroz, huevo, pan francés, banana, avena y queso; hoy, solo desayuno y almuerzo), 3 entrenamientos con la rutina precargada "Torso/Pierna (4 días)", una receta y un favorito. Las fechas son relativas al día en que arranca la API. Necesita los seeds de alimentos y de rutinas, que se cargan antes.
+
 ## Tests
 
 ```powershell
@@ -129,3 +140,5 @@ El equipo trabaja con TDD (primero el test en rojo, después el código) y con u
 - Commits semánticos (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
 - Nunca se commitean `.env`, cadenas de conexión ni claves.
 - `docs/ESTADO.md` se actualiza antes de cada push.
+
+El modelo de datos está documentado en [`docs/MODELO-DATOS.md`](docs/MODELO-DATOS.md). El estado del proyecto, en [`docs/ESTADO.md`](docs/ESTADO.md).
