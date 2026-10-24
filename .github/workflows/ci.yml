@@ -1,0 +1,40 @@
+# CI (J11): compila y corre los tests en cada PR y en cada push a develop y main.
+# Los tests no necesitan Postgres ni secretos (ApiFactory usa una cadena de conexión y una clave JWT falsas;
+# los stores se prueban con SQLite en memoria). Las acciones van fijadas por SHA (con su versión al lado).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: .NET 10
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore backend/AppNutricion.slnx
+
+      - name: Build
+        run: dotnet build backend/AppNutricion.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test backend/AppNutricion.slnx --no-build --configuration Release --logger "console;verbosity=normal"
