@@ -446,7 +446,7 @@ function renderActivity(card, workouts) {
     workouts.error ? null : workouts.length === 0 ? el("p", { class: "muted small" }, "No hay entrenamientos registrados en esta fecha.") :
       el("ul", { class: "list" }, workouts.map((workout) => el("li", {},
         el("div", { class: "food-name" }, el("span", { class: "food-badge", "aria-hidden": "true" }, icon("rutinas")),
-          el("strong", {}, num(workout.durationMinutes, 0) + " min · " + num(workout.setCount, 0) + " series")),
+          el("strong", {}, num(workout.durationMinutes, 0) + " min · " + plural(workout.setCount, "serie", "series", 0))),
         el("p", { class: "small" }, num(workout.estimatedCaloriesBurned, 0) + " kcal estimadas · " + num(workout.volumeKg, 0) + " kg de volumen"),
         workout.notes ? el("p", { class: "muted small" }, workout.notes) : null,
         el("p", { class: "muted small disclaimer" }, workout.disclaimer)))));
