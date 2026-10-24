@@ -127,6 +127,17 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Matches(new Regex(@"\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}"), css);
     }
 
+    // B2: la tarjeta se dibuja en Mi día, copia con POST y el 409 queda como aviso (no se relanza al formulario).
+    [Fact]
+    public void MiDia_CopiarDelDiaAnterior()
+    {
+        var dia = Archivos(".js").Single(a => a.Ruta == "js/screens/dia.js").Contenido;
+
+        Assert.Matches(new Regex(@"append\(container, \[[^\]]*\bcopyCard\(state, reload, status\),", RegexOptions.Singleline), dia);
+        Assert.Contains("api(\"/api/meals/copy\", { method: \"POST\", body })", dia);
+        Assert.Matches(new Regex(@"if \(error\.status === 409\) \{\s*setChildren\(status, notice\(""warning"", error\.title\)\);\s*return;\s*\}"), dia);
+    }
+
     // "1 entrenamientos" (B4 del recorrido): un contador seguido de una palabra en plural fijo. Se usa plural() de format.js.
     [Fact]
     public void Js_ContadoresSinPluralFijo()
