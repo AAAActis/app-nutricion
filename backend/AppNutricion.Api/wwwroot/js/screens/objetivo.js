@@ -4,7 +4,7 @@
 import { api } from "../api.js";
 import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
-import { dateText, num } from "../format.js";
+import { dateText, num, plural } from "../format.js";
 
 export const DISCLAIMER = "Estimación, no es consejo médico.";
 
@@ -85,7 +85,7 @@ function showTargets(slot, t) {
       t.goalType === "Maintain" ? null : el("li", {}, `Ritmo: ${num(t.appliedWeeklyRateKg, 2)} kg por semana`),
       t.targetWeightKg ? el("li", {}, `Peso meta: ${num(t.targetWeightKg)} kg`) : null,
       t.projection
-        ? el("li", {}, `Proyección: ${num(t.projection.weeks)} semanas, cerca del ${dateText(t.projection.estimatedDate)}`)
+        ? el("li", {}, `Proyección: ${plural(t.projection.weeks, "semana", "semanas")}, cerca del ${dateText(t.projection.estimatedDate)}`)
         : null),
     el("p", { class: "disclaimer" }, t.disclaimer || DISCLAIMER)));
 }

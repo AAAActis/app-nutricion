@@ -133,6 +133,9 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--da
 .field-error, .form-error { color: var(--danger); font-size: 0.9rem; min-height: 0; }
 .form-error:empty, .field-error:empty { display: none; }
 
+/* El atributo hidden tiene que ganarle a los display de las clases (.field es grid): Objetivo oculta "Ritmo semanal" con Mantener. */
+[hidden] { display: none !important; }
+
 .button {
   display: inline-block;
   padding: 0.6rem 1rem;
