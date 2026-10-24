@@ -20,7 +20,6 @@ const SEARCH_DELAY_MS = 300;
 export async function render(container) {
   const state = { date: today(await profileTimeZone()), meals: [], summary: null, favorites: new Set() };
 
-  let revision = 0;
   const days = el("nav", { class: "day-strip", "aria-label": "Días del registro" });
   const activity = el("section", { class: "card activity-card" });
   const status = el("div", { class: "day-status" });
@@ -30,7 +29,6 @@ export async function render(container) {
   const dateInput = el("input", { type: "date", name: "date", value: state.date });
 
   const reload = async () => {
-    const current = ++revision;
     const date = encodeURIComponent(state.date);
     const [meals, daily, weekly] = await Promise.all([
       api(`/api/meals?date=${date}`),
@@ -38,7 +36,6 @@ export async function render(container) {
       api(`/api/summary/weekly?endDate=${date}`),
     ]);
     const workouts = await api("/api/workouts?from=" + date + "&to=" + date).catch((error) => ({ error }));
-    if (current !== revision) return;
     state.meals = meals;
     state.summary = daily;
     renderSummary(summary, daily);
@@ -57,8 +54,7 @@ export async function render(container) {
     if (!dateInput.value) return;
     state.date = dateInput.value;
     status.replaceChildren();
-    try { await reload(); }
-    catch (error) { setChildren(status, notice("error", error.title)); }
+    await reload();
   });
 
   append(container, [
