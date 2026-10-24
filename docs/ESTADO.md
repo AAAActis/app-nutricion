@@ -1,7 +1,8 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-23 (Javi, rama `docs/entrega`): estado de las tareas al día con los PR #1 a #26 (tabla "PR del repositorio"); README general (J14), `docs/AUDITORIA-SEGURIDAD.md` (J13) y CI con GitHub Actions (J11), en revisión.
+> Última actualización: 2026-10-23 (Javi, rama `fix/recorrido-bugs`): bugs del recorrido de Lauti (L13) en revisión: B2 "Copiar del día anterior" en Mi día, B3 "Ritmo semanal" oculto con Mantener (`[hidden]` en `app.css`) y B4 plurales de los contadores (`plural()` de `format.js`). Tablas al día: S6 (#27), L11 y L12 (#25), L13 (#29) y J11, J13 y J14 (#28) hechas; #25 a #30 en "PR del repositorio".
+> 2026-10-23 (Javi, rama `docs/entrega`): estado de las tareas al día con los PR #1 a #26 (tabla "PR del repositorio"); README general (J14), `docs/AUDITORIA-SEGURIDAD.md` (J13) y CI con GitHub Actions (J11).
 > 2026-10-23 (Javi, rama `feature/datos-demo`): S6 datos de demo cargados por la API (managers) solo con `Demo:Enabled`; usuario y contraseña de demo en el README.
 > 2026-10-23 (Javi, rama `fix/frontend-detalles`): detalles de la prueba en el navegador: el perfil ya no muestra "null" (`append` de `dom.js` en todo el frontend; `FrontendTests` prohíbe el `.append(` nativo), el error del consentimiento se borra al tildarlo y la línea de tendencia del peso (y su leyenda) solo aparece con 14 registros. Con el #25 en develop, Mis alimentos y Recetas también pasan a `append` (el mismo cambio que el #29 de Lauti).
 > 2026-10-23 (Lauti, rama `fix/recorrido-lauti`): L13 en revisión. Recorrido completo como usuario sobre develop + `fix/frontend-detalles` + `feature/datos-demo` + `docs/entrega`, en Chrome headless contra Postgres. Bug propio arreglado: Mis alimentos y Recetas usaban `.append` nativo (rojo con el test nuevo de `fix/frontend-detalles`). Los bugs de otros archivos van al grupo.
@@ -45,10 +46,10 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | J8 | Motor de macros (Mifflin-St Jeor) con tests y límites de seguridad; IMC y proyección de meta | Javi | Hecho (PR #10): `NutritionCalculator` puro con tests de unidad (Mifflin-St Jeor, factores de actividad, ritmo máximo, piso 1500/1200, macros (proteína con tope en el 30 % de las kcal), IMC OMS, proyección). Valores por defecto en `NutritionDefaults`, a ratificar. Estimación, no consejo médico | `feature/perfil-macros` | J7 |
 | J9 | Paginación y filtros estándar para todas las listas | Javi | Pendiente | — | J1 |
 | J10 | Tests de integración de auth y aislamiento entre usuarios | Javi | Pendiente | — | J2 |
-| J11 | CI con GitHub Actions (compila y corre tests en cada PR) | Javi | En revisión: `.github/workflows/ci.yml` (build y tests en cada PR y push a develop/main, .NET 10, acciones con versión fija) | `docs/entrega` | J1 |
+| J11 | CI con GitHub Actions (compila y corre tests en cada PR) | Javi | Hecha: `.github/workflows/ci.yml` (build y tests en cada PR y push a develop/main, .NET 10, acciones con versión fija) | PR #28 | J1 |
 | J12 | Frontend base: layout, estilos, manejo del token, login/registro, perfil, objetivos, macros, gráfico de peso | Javi | Hecha: HTML/CSS/JS sin frameworks en `backend/AppNutricion.Api/wwwroot` (mismo origen, sin CORS ni CDN, CSP solo `'self'`). Router por hash; `js/api.js` (token, ProblemDetails con el error al lado de cada campo, 401 → `#/login`, 429 con `Retry-After`); token en sessionStorage. Pantallas: registro con consentimiento versionado (`ConsentVersions.Current` = `2026-10-23`: responsable con contacto infobbasolutions@gmail.com, finalidad, aviso de que el asistente usa Google Gemini (qué datos recibe y que Google puede usarlos para mejorar sus servicios), derechos del art. 6 de la Ley 25.326 y leyenda textual del art. 3 de la Res. AAIP 14/2018; `fix/consentimiento-gemini`), login, perfil, peso con gráfico SVG y tendencia, objetivo con targets y aviso, Mi día (resumen de `GET /api/summary/daily` de L6 y comidas del día, buscador, carga, edición, borrado, favoritos, recientes, atribución ODbL), Cuenta (export y borrado: se activan con J5). Rutinas y Asistente: las completa S12 (`feature/frontend-rutinas-chat`). Cómo sumar una pantalla: en el PR. El JS no tiene tests automáticos (checklist manual en el PR) | PR #19; detalles en PR #26 (abierto) | J2, J7, J8 |
-| J13 | Auditoría de seguridad con checklist, por escrito | Javi | En revisión: `docs/AUDITORIA-SEGURIDAD.md`, cada punto con su archivo y su test | `docs/entrega` | J2 a J9 |
-| J14 | README general, ejemplos en Swagger, diagrama de arquitectura | Javi | En revisión: README general con arquitectura, cómo levantar, usuario demo y enlaces a la documentación | `docs/entrega` | todo |
+| J13 | Auditoría de seguridad con checklist, por escrito | Javi | Hecha: `docs/AUDITORIA-SEGURIDAD.md`, cada punto con su archivo y su test | PR #28 | J2 a J9 |
+| J14 | README general, ejemplos en Swagger, diagrama de arquitectura | Javi | Hecha: README general con arquitectura, cómo levantar, usuario demo y enlaces a la documentación | PR #28 | todo |
 | J15 | Revisar PR de Lauti y probar el recorrido completo | Javi | Pendiente | — | L1 a L12 |
 
 **Lauti**
@@ -67,7 +68,7 @@ Estados: Pendiente / En curso / En revisión / Hecha. Rama o PR: `<COMPLETAR>` c
 | L10 | Exportar historial de comidas a CSV | Lauti | Hecha (PR #12): `GET /api/meals/export?from=&to=` (hasta 366 días), CSV RFC 4180 con BOM, punto decimal, fórmulas de Excel neutralizadas con `'` | PR #12 | L4 |
 | L11 | Tests de comidas, resumen y aislamiento entre usuarios | Lauti | Hecha: inventario hecho. Ya cubrían el filtro por `UserId` los tests de Stores (`MealEntryStoreTests`: GetByDate, GetById, Update, Delete; `ResumenStoreTests`: sumas del diario y semanal, `GetRange` del CSV) y los controllers con el userId del token (mocks); Custom y recetas de otro, punta a punta en `RecetasDePuntaAPuntaTests` (PR #24). Sumado `AislamientoDeComidasTests` (caracterización, API entera sobre SQLite): la comida de otro no aparece en `GET /api/meals`, resumen diario y semanal ni CSV, no se edita ni borra (404) ni se copia | PR #24, PR #25 | L4, L6 |
 | L12 | Pantallas: buscador, registrar comida, resumen del día, historial semanal con gráficos, favoritos y recetas | Lauti | Hecha: pantallas "Mis alimentos" (`#/alimentos`: lista, alta, edición y borrado de Custom, 409 como aviso) y "Recetas" (`#/recetas`: lista, detalle con totales y por porción, alta y edición con buscador por fila y errores por índice, borrado y "Cargar al día" con `POST /api/meals/recipe`). Probado en Chrome contra Postgres. El buscador, la carga de comidas, el resumen del día, favoritos y recientes los hizo Javi en J12, y el resumen semanal y el CSV en el #21 | PR #25 | J12 (layout), L1 a L9 |
-| L13 | Revisar PR de Santi y probar el recorrido completo | Lauti | Hecha: recorrido de los 10 pasos (registro a celular y sin sesión) más el usuario demo, con las ramas abiertas mergeadas en local. Arreglado `.append` nativo en `alimentos.js` y `recetas.js`. Encontrado en archivos de Javi: sin botón de copiar día en Mi día (B2), "Ritmo semanal" visible con Mantener (B3) y "1 entrenamientos" (B4), pendientes | PR #29 | S2 a S12 |
+| L13 | Revisar PR de Santi y probar el recorrido completo | Lauti | Hecha: recorrido de los 10 pasos (registro a celular y sin sesión) más el usuario demo, con las ramas abiertas mergeadas en local. Arreglado `.append` nativo en `alimentos.js` y `recetas.js`. Encontrado en archivos de Javi: sin botón de copiar día en Mi día (B2), "Ritmo semanal" visible con Mantener (B3) y "1 entrenamientos" (B4), arreglados en `fix/recorrido-bugs` (en revisión; ver "Bugs del recorrido") | PR #29 | S2 a S12 |
 
 **Santi**
 
@@ -119,10 +120,24 @@ Estado al 2026-10-23 (todos contra `develop`, salvo el #1).
 | #22 | `fix/consentimiento-gemini` | Consentimiento `2026-10-23` con contacto y aviso de Gemini | Javi | Mergeado (23/10) |
 | #23 | `feature/asistente-lee-rutinas` | El asistente lee las rutinas reales | Javi | Mergeado (23/10) |
 | #24 | `feature/recetas-personalizados` | Alimentos personalizados (L8), recetas (L9), aislamiento (L11) | Lauti | Mergeado (23/10) |
-| #25 | `feature/pantallas-recetas` | Pantallas Mis alimentos y Recetas (L12), aislamiento de comidas (L11) | Lauti | Abierto |
-| #26 | `fix/frontend-detalles` | Perfil sin "null", error del consentimiento, tendencia del peso | Javi | Abierto |
+| #25 | `feature/pantallas-recetas` | Pantallas Mis alimentos y Recetas (L12), aislamiento de comidas (L11) | Lauti | Mergeado (23/10) |
+| #26 | `fix/frontend-detalles` | Perfil sin "null", error del consentimiento, tendencia del peso | Javi | Mergeado (23/10) |
+| #27 | `feature/datos-demo` | Datos de demo cargados por la API solo con `Demo:Enabled` (S6) | Javi | Mergeado (23/10) |
+| #28 | `docs/entrega` | CI (J11), auditoría de seguridad (J13) y README general (J14) | Javi | Mergeado (23/10) |
+| #29 | `fix/recorrido-lauti` | Mis alimentos y Recetas sin `.append` nativo, recorrido completo (L13) | Lauti | Mergeado (23/10) |
+| #30 | `feature/frontend-visual` | Mejoras visuales del frontend (incluye `[hidden]` en el CSS) | Javi | Abierto |
 
-Ramas sin PR todavía: `feature/datos-demo` (S6) y `docs/entrega` (J11, J13, J14).
+Ramas sin PR todavía: `fix/recorrido-bugs` (B2 a B4).
+
+## Bugs del recorrido
+
+Encontrados por Lauti en L13 (#29), anotados por Santi en las revisiones de #26 y #28.
+
+| # | Bug | Arreglo | Estado |
+|---|---|---|---|
+| B2 | Mi día no tiene botón para copiar el día anterior (la API ya tenía `POST /api/meals/copy`) | Tarjeta "Copiar del día anterior" (todo el día o un tipo de comida); el 409 se muestra como aviso | En revisión (`fix/recorrido-bugs`) |
+| B3 | "Ritmo semanal" visible con Mantener: el `hidden` del JS perdía contra `.field { display: grid }` | `[hidden] { display: none !important; }` en `app.css` (el #30 trae la misma regla) | En revisión (`fix/recorrido-bugs`) |
+| B4 | "1 entrenamientos" | `plural()` en `format.js`: entrenamientos, series, semanas de la proyección y racha | En revisión (`fix/recorrido-bugs`) |
 
 
 ## Decisiones tomadas
@@ -163,7 +178,7 @@ Ramas sin PR todavía: `feature/datos-demo` (S6) y `docs/entrega` (J11, J13, J14
 | ¿Se ratifica el modelo de datos (`docs/MODELO-DATOS.md`)? | Los 3, reunión de hoy | J2, J7, L1, L4, S7, S9 |
 | `contexto.md` y el archivo de n8n siguen en el historial del repo público. ¿Se pasa el repo a privado o se limpia el historial (`git filter-repo` + force push, antes de que Javi y Lauti trabajen encima)? | Santi | Seguridad del repo |
 | Hora exacta de entrega del martes 27 | Docente | Plan del lunes |
-| ~~¿Habrá CI (GitHub Actions)?~~ → sí: `.github/workflows/ci.yml` corre build y tests en cada PR (J11) | Javi | Resuelto en `docs/entrega` |
+| ~~¿Habrá CI (GitHub Actions)?~~ → sí: `.github/workflows/ci.yml` corre build y tests en cada PR (J11) | Javi | Resuelto con el PR #28 |
 | Cómo se registra la autoría con el docente, ya que el grupo figura de 5 | Javi / docente | Entrega |
 | Decisiones a ratificar de `feature/asistente-lee-rutinas`: (1) `RoutineSummary` pasa a (Name, IsPreset, Days con ejercicios); (2) consultar_rutinas no manda la descripción de la rutina (texto libre, D23); (3) sin tope de rutinas (T8) | Santi | Merge del PR |
 
@@ -184,7 +199,7 @@ Ramas sin PR todavía: `feature/datos-demo` (S6) y `docs/entrega` (J11, J13, J14
 | T1 | `.gitignore` en UTF-16: no ignoraba `bin/`, `obj/` ni `.env`; compilados en el repo | `.gitignore`, `backend/*/bin`, `backend/*/obj` | Alta → **resuelto en `fix/gitignore-utf8`** al mergear |
 | T2 | `.env`, `contexto.md` y un archivo de n8n siguen en el historial del repo **público** | commits `1d80b66` y `dd79c57` | Alta: contraseña rotada (D17); falta decidir repo privado o limpieza de historial |
 | T3 | ~~`Program.cs` sigue siendo la plantilla `weatherforecast`~~ → Swagger UI, errores ProblemDetails, `/health`, CORS | `backend/AppNutricion.Api/Program.cs` | Resuelto en `feature/api-esqueleto` |
-| T4 | ~~No hay CI~~ → `.github/workflows/ci.yml` (J11, en `docs/entrega`). Falta el Dockerfile de la API | raíz del repo | Media: S4 |
+| T4 | ~~No hay CI~~ → `.github/workflows/ci.yml` (J11, PR #28). Falta el Dockerfile de la API | raíz del repo | Media: S4 |
 | T5 | ~~Postgres publicado en todas las interfaces~~ → `127.0.0.1:5432:5432` | `docker-compose.yml` | Resuelto en `feature/db-modelo-datos` |
 | T6 | ~~`.env.example` incompleto~~ → marcadores de cadena de conexión, JWT y LLM | `.env.example` | Resuelto en `feature/db-modelo-datos` |
 | T7 | ~~`appsettings.json` sin configuración por entorno~~ → `appsettings.json` (base, segura para producción) + `appsettings.{Entorno}.json` + user-secrets (Development) + variables de entorno (Docker, p. ej. `Cors__AllowedOrigins__0`). Los tests corren en el entorno `Testing` | `backend/AppNutricion.Api/` | Resuelto en `feature/api-esqueleto` |
