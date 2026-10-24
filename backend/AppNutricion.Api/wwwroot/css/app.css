@@ -27,6 +27,7 @@
   font-size: 100%;
 }
 *, *::before, *::after { box-sizing: border-box; }
+/* El atributo hidden tiene que ganarle a los display de las clases (.field es grid): Objetivo oculta "Ritmo semanal" con Mantener. */
 [hidden] { display: none !important; }
 body {
   margin: 0;
@@ -376,6 +377,7 @@ body[data-session="guest"] .footer { padding-top: 2rem; }
 .recipes-toolbar > p { margin: 0; }
 .recipes-status:empty { display: none; }
 .recipe-list { min-width: 0; }
+.recipe-side { min-width: 0; }
 .recipe-preview .food-name { align-items: flex-start; }
 .recipe-preview h2 { margin: 0 0 0.35rem; overflow-wrap: anywhere; }
 .recipe-preview .food-name p { margin: 0; }
@@ -402,7 +404,8 @@ body[data-session="guest"] .footer { padding-top: 2rem; }
   .app[data-screen="recetas"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 1.25rem; align-content: start; align-items: start; }
   .app[data-screen="recetas"] > h1, .app[data-screen="recetas"] > .recipes-toolbar, .app[data-screen="recetas"] > .recipes-status { grid-column: 1 / -1; margin-bottom: 0; }
   .app[data-screen="recetas"] > .recipe-list { grid-column: 1; grid-row: 4; }
-  .app[data-screen="recetas"] > .recipe-detail, .app[data-screen="recetas"] > .recipe-editor { grid-column: 2; grid-row: 4; }
+  .app[data-screen="recetas"] > .recipe-side { grid-column: 2; grid-row: 4; display: grid; gap: 1.25rem; }
+  .app[data-screen="recetas"] > .recipe-side > .card { margin: 0; }
 }
 @media (max-width: 39.99rem) {
   .day-buttons { gap: 0.25rem; }

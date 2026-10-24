@@ -4,13 +4,14 @@
 // { quantity, isUnits, mealType, date }. Borrado: DELETE /api/meals/{id}.
 // Alimentos: GET /api/foods/search?q&limit, GET /api/foods/favorites, GET /api/foods/recent,
 // POST y DELETE /api/foods/{id}/favorite. Los de Open Food Facts traen attribution (ODbL).
+// Copiar: POST /api/meals/copy { fromDate, toDate, mealType | null } (sin tipo, el día entero; 409 si el destino ya tiene comidas de ese tipo).
 import { api } from "../api.js";
 import { foodBadge, nutritionFacts } from "../nutrition.js";
 import { icon } from "../icons.js";
 import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
 import { download } from "../download.js";
-import { MEAL_TYPES, addDays, dateText, num, today } from "../format.js";
+import { MEAL_TYPES, addDays, dateText, num, plural, today } from "../format.js";
 import { profileTimeZone } from "../profile.js";
 
 const SEARCH_LIMIT = 20;
@@ -67,6 +68,7 @@ export async function render(container) {
     status,
     summary,
     mealsCard,
+    copyCard(state, reload, status),
     await foodPicker(state, reload, status),
     weekCard,
     activity,
@@ -85,7 +87,7 @@ function renderWeek(card, weekly, selectDate) {
   setChildren(card,
     el("h2", {}, "Semana"),
     el("div", { class: "stats" },
-      stat(`${weekly.streak} ${weekly.streak === 1 ? "día" : "días"}`, "Racha (días seguidos con comidas)"),
+      stat(plural(weekly.streak, "día", "días"), "Racha (días seguidos con comidas)"),
       stat(`${weekly.daysLogged} de ${weekly.days.length}`, "Días con comidas"),
       stat(averages ? `${num(averages.calories, 0)} kcal` : "—", "Promedio por día cargado"),
       stat(target === null ? "—" : `${num(target, 0)} kcal`, "Meta diaria")),
@@ -105,6 +107,41 @@ function renderWeek(card, weekly, selectDate) {
 
 function stat(value, label) {
   return el("div", { class: "stat" }, el("span", { class: "value" }, value), el("span", { class: "label" }, label));
+}
+
+// ---------- Copiar las comidas del día anterior a la fecha elegida (POST /api/meals/copy) ----------
+// La API no deja copiar dos veces (D20): si el día elegido ya tiene comidas de ese tipo (o alguna, con "Todo el día") da 409.
+
+function copyCard(state, reload, status) {
+  const form = el("form", { class: "inline", novalidate: true },
+    field("Qué copiar", el("select", { name: "mealType" }, options([["", "Todo el día"], ...MEAL_TYPES], ""))),
+    formError(),
+    el("button", { type: "submit", class: "button secondary" }, "Copiar del día anterior"));
+
+  onSubmit(form, async (data) => {
+    status.replaceChildren();
+    const mealType = String(data.get("mealType"));
+    const body = { fromDate: addDays(state.date, -1), toDate: state.date, mealType: mealType === "" ? null : mealType };
+    let copies;
+    try {
+      copies = await api("/api/meals/copy", { method: "POST", body });
+    } catch (error) {
+      if (error.status === 409) {
+        setChildren(status, notice("warning", error.title));
+        return;
+      }
+      throw error;
+    }
+    setChildren(status, copies.length === 0
+      ? notice("warning", `El ${dateText(body.fromDate)} no tiene comidas para copiar.`)
+      : notice("ok", `Copiadas ${plural(copies.length, "comida", "comidas")} del ${dateText(body.fromDate)}.`));
+    await reload();
+  });
+
+  return el("section", { class: "card" },
+    el("h2", {}, "Copiar del día anterior"),
+    el("p", { class: "muted small" }, "Copia las comidas del día anterior a la fecha elegida, con los mismos valores."),
+    form);
 }
 
 // ---------- Exportar comidas a CSV (GET /api/meals/export?from&to, hasta 366 días) ----------

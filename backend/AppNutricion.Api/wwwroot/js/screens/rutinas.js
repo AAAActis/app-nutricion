@@ -5,9 +5,9 @@
 // reps, weightKg }] } → { estimatedCaloriesBurned, disclaimer, … }; 409 sin peso registrado.
 // Historial: GET /api/workouts?from&to (hasta 366 días), GET y DELETE /api/workouts/{id}.
 import { api } from "../api.js";
-import { el, setChildren } from "../dom.js";
+import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options, setNotice } from "../forms.js";
-import { addDays, dateText, num, today } from "../format.js";
+import { addDays, dateText, num, plural, today } from "../format.js";
 import { profileTimeZone } from "../profile.js";
 
 const MUSCLE_GROUPS = {
@@ -33,12 +33,12 @@ export async function render(container) {
   const history = historyCard(state);
   const workout = workoutCard(state, () => history.reload());
 
-  container.append(
+  append(container, [
     el("h1", {}, "Rutinas"),
     routinesCard(routines, (id) => showRoutine(detail, id, workout)),
     detail,
     workout.card,
-    history.card);
+    history.card]);
 
   await history.reload();
 }
@@ -194,7 +194,7 @@ function workoutCard(state, onSaved) {
       },
     });
     setNotice(result, "ok",
-      `Entrenamiento guardado: ${saved.sets.length} series, ${saved.durationMinutes} min, `,
+      `Entrenamiento guardado: ${plural(saved.sets.length, "serie", "series")}, ${saved.durationMinutes} min, `,
       el("strong", {}, `${num(saved.estimatedCaloriesBurned, 0)} kcal estimadas`), ". ",
       el("span", { class: "disclaimer" }, saved.disclaimer));
     form.reset();
@@ -265,7 +265,7 @@ function renderHistory(list, workouts, reload) {
   }
   const total = workouts.reduce((sum, w) => sum + Number(w.estimatedCaloriesBurned), 0);
   setChildren(list,
-    el("p", {}, `${workouts.length} entrenamientos · ${num(total, 0)} kcal estimadas en total.`),
+    el("p", {}, `${plural(workouts.length, "entrenamiento", "entrenamientos")} · ${num(total, 0)} kcal estimadas en total.`),
     el("ul", { class: "list" }, workouts.map((workout) => workoutItem(workout, reload))),
     el("p", { class: "muted small disclaimer" }, workouts[0].disclaimer));
 }
@@ -275,7 +275,7 @@ function workoutItem(workout, reload) {
   const li = el("li", {},
     el("div", { class: "item" },
       el("span", { class: "name" }, dateText(workout.date)),
-      el("span", {}, `${workout.durationMinutes} min · ${workout.setCount} series · ${num(workout.volumeKg, 0)} kg de volumen · ${num(workout.estimatedCaloriesBurned, 0)} kcal`),
+      el("span", {}, `${workout.durationMinutes} min · ${plural(workout.setCount, "serie", "series")} · ${num(workout.volumeKg, 0)} kg de volumen · ${num(workout.estimatedCaloriesBurned, 0)} kcal`),
       el("span", { class: "row" },
         el("button", { type: "button", class: "button secondary small", onclick: toggle }, "Series"),
         el("button", { type: "button", class: "button secondary small", onclick: remove }, "Borrar"))),

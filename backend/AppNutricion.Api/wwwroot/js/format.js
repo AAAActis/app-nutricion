@@ -9,6 +9,12 @@ export function num(value, decimals = 1) {
   return numberFormats.get(decimals).format(Number(value));
 }
 
+// "1 entrenamiento", "3 entrenamientos". Decide con el número ya redondeado: 0,96 semanas se ve "1 semana" y 1,5, "1,5 semanas".
+export function plural(value, singular, pluralText, decimals = 1) {
+  const text = num(value, decimals);
+  return `${text} ${text === "1" ? singular : pluralText}`;
+}
+
 // "2026-10-21" → "21/10/2026". Sin pasar por Date para no correr el día por la zona horaria.
 export function dateText(iso) {
   if (!iso) return "—";
