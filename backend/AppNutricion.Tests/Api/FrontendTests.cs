@@ -209,6 +209,32 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Contains("weightChart(metrics, Boolean(data.trend))", peso);
     }
 
+    // Agregados del #30 en Mi día: la tira de días y la tabla semanal cambian la fecha por el mismo camino que el
+    // input (evento change), y cada comida muestra los totales que manda la API.
+    [Theory]
+    [InlineData("dateInput.dispatchEvent(new Event(\"change\"));")]
+    [InlineData("el(\"button\", { type: \"button\", class: \"link-button\", onclick: () => selectDate(day.date) }")]
+    [InlineData("        onclick: () => selectDate(day.date),")]
+    [InlineData("const totals = state.summary.byMealType?.find((m) => m.mealType === type);")]
+    public void MiDia_NavegacionYTotalesDelPulidoVisual(string texto)
+    {
+        var dia = Archivos(".js").Single(a => a.Ruta == "js/screens/dia.js").Contenido;
+
+        Assert.Contains(texto, dia);
+    }
+
+    // Open Food Facts pide atribución (licencia ODbL) en todo lugar donde se muestran sus datos.
+    [Theory]
+    [InlineData("js/screens/dia.js")]
+    [InlineData("js/screens/recetas.js")]
+    public void Buscadores_MuestranLaAtribucionDeOpenFoodFacts(string archivo)
+    {
+        var js = Archivos(".js").Single(a => a.Ruta == archivo).Contenido;
+
+        Assert.Matches(new Regex(@"food\.attribution\s*\?|if \(!food\.attribution\) return null;"), js);
+        Assert.Contains("el(\"a\", { href: \"https://world.openfoodfacts.org\", target: \"_blank\", rel: \"noopener noreferrer\" }, food.attribution)", js);
+    }
+
     // Sin CDN ni scripts externos: la demo anda sin internet.
     [Fact]
     public void Html_SinScriptsNiEstilosExternos()
