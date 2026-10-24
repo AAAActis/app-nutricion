@@ -4,7 +4,7 @@
 import { api } from "../api.js";
 import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options } from "../forms.js";
-import { dateText, num } from "../format.js";
+import { dateText, num, plural } from "../format.js";
 
 export const DISCLAIMER = "Estimación, no es consejo médico.";
 
@@ -72,7 +72,8 @@ function showTargets(slot, t) {
     setChildren(slot, notice("warning", "Todavía no tenés un objetivo. Necesitás el perfil y al menos un peso registrado."));
     return;
   }
-  setChildren(slot, el("section", { class: "card" },
+  setChildren(slot, el("section", { class: "card goal-card" },
+    el("p", { class: "eyebrow" }, "OBJETIVO ACTIVO"),
     el("h2", {}, `Tu objetivo: ${GOAL_LABEL[t.goalType] ?? t.goalType}`),
     (t.warnings ?? []).map((w) => notice("warning", w.message)),
     el("div", { class: "stats" },
@@ -85,8 +86,9 @@ function showTargets(slot, t) {
       t.goalType === "Maintain" ? null : el("li", {}, `Ritmo: ${num(t.appliedWeeklyRateKg, 2)} kg por semana`),
       t.targetWeightKg ? el("li", {}, `Peso meta: ${num(t.targetWeightKg)} kg`) : null,
       t.projection
-        ? el("li", {}, `Proyección: ${num(t.projection.weeks)} semanas, cerca del ${dateText(t.projection.estimatedDate)}`)
+        ? el("li", {}, `Proyección: ${plural(t.projection.weeks, "semana", "semanas")}, cerca del ${dateText(t.projection.estimatedDate)}`)
         : null),
+    el("p", { class: "muted small" }, "Las calorías y los macros se guardan con el objetivo. Registrar un peso nuevo no los ajusta automáticamente."),
     el("p", { class: "disclaimer" }, t.disclaimer || DISCLAIMER)));
 }
 

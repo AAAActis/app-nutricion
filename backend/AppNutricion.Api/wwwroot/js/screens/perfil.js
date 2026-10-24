@@ -58,5 +58,5 @@ export async function render(container) {
     el("h1", {}, "Perfil"),
     profile ? null : notice("warning", "Completá tu perfil para calcular tus objetivos."),
     status,
-    el("section", { class: "card" }, form)]);
+    el("section", { class: "card profile-card" }, form)]);
 }

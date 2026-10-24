@@ -117,6 +117,124 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         }
     }
 
+    // Reglas como .field { display: grid } le ganan al atributo hidden del navegador: "Ritmo semanal" seguía a la
+    // vista con Mantener (B3 del recorrido).
+    [Fact]
+    public void Css_HiddenLeGanaAlDisplay()
+    {
+        var css = Archivos(".css").Single(a => a.Ruta == "css/app.css").Contenido;
+
+        // Una sola vez: el #30 y el #31 traían la misma regla.
+        Assert.Single(Regex.Matches(css, @"\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}"));
+    }
+
+    // B2: la tarjeta se dibuja en Mi día, copia con POST y el 409 queda como aviso (no se relanza al formulario).
+    [Fact]
+    public void MiDia_CopiarDelDiaAnterior()
+    {
+        var dia = Archivos(".js").Single(a => a.Ruta == "js/screens/dia.js").Contenido;
+
+        Assert.Matches(new Regex(@"append\(container, \[[^\]]*\bcopyCard\(state, reload, status\),", RegexOptions.Singleline), dia);
+        Assert.Contains("api(\"/api/meals/copy\", { method: \"POST\", body })", dia);
+        Assert.Matches(new Regex(@"if \(error\.status === 409\) \{\s*setChildren\(status, notice\(""warning"", error\.title\)\);\s*return;\s*\}"), dia);
+    }
+
+    // "1 entrenamientos" (B4 del recorrido): un contador seguido de una palabra en plural fijo. Se usa plural() de format.js.
+    [Fact]
+    public void Js_ContadoresSinPluralFijo()
+    {
+        var js = Archivos(".js");
+
+        Assert.NotEmpty(js);
+        foreach (var (ruta, contenido) in js)
+        {
+            var match = Regex.Match(contenido, @"\$\{[^}]*(\.length|Count|weeks|streak|servings)[^}]*\}\s+[a-záéíóúñ]+s\b");
+            Assert.False(match.Success, $"{ruta} escribe \"{match.Value}\" con el plural fijo: usá plural() de format.js");
+            // La misma trampa armada con +: num(workout.setCount, 0) + " series".
+            var concatenado = Regex.Match(contenido, @"(\.length|Count|weeks|streak|servings)\b[^""\n;]*\+\s*""\s*[a-záéíóúñ]+s\b");
+            Assert.False(concatenado.Success, $"{ruta} escribe \"{concatenado.Value}\" con el plural fijo: usá plural() de format.js");
+        }
+    }
+
+    // Recetas es de Lauti: el pulido visual del #30 no puede cambiar cómo funciona la pantalla de develop.
+    [Theory]
+    [InlineData("search.addEventListener(\"input\", () => {")]
+    [InlineData("timer = setTimeout(() => runSearch()")]
+    [InlineData("if (id !== lastQuery) return;")]
+    [InlineData("const MAX_INGREDIENTS = 30;")]
+    [InlineData("addButton.disabled = rows.length >= MAX_INGREDIENTS;")]
+    [InlineData("name: \"servings\", min: 0.5, max: 20, step: \"0.5\"")]
+    [InlineData("name: String(data.get(\"name\") ?? \"\").trim() || null,")]
+    [InlineData("if (event.key === \"Enter\") event.preventDefault();")]
+    [InlineData("method: recipe ? \"PUT\" : \"POST\",")]
+    [InlineData("await api(`/api/recipes/${recipe.id}`, { method: \"DELETE\" });")]
+    [InlineData("body: { recipeId: recipe.id, servings: servings === \"\" ? 0 : Number(servings), mealType: data.get(\"mealType\"), date: date || null },")]
+    [InlineData("name: \"servings\", min: 1, max: 50, step: \"1\"")]
+    public void Recetas_ConservaElComportamientoDeDevelop(string texto)
+    {
+        var recetas = Archivos(".js").Single(a => a.Ruta == "js/screens/recetas.js").Contenido;
+
+        Assert.Contains(texto, recetas);
+    }
+
+    // El editor arranca abierto con una receta nueva (develop), y "Nueva receta" lo vuelve a abrir vacío.
+    [Fact]
+    public void Recetas_EditorDeRecetaNuevaAlEntrar()
+    {
+        var recetas = Archivos(".js").Single(a => a.Ruta == "js/screens/recetas.js").Contenido;
+
+        Assert.Matches(new Regex(@"\]\);\s*edit\(null\);\s*await reload\(\);"), recetas);
+        Assert.Matches(new Regex(@"onclick: \(\) => \{\s*edit\(null\);\s*editor\.scrollIntoView\("), recetas);
+        Assert.DoesNotMatch(new Regex(@"recipe-editor"", hidden: true"), recetas);
+    }
+
+    // Mi día carga y cambia de fecha como en develop: el pulido visual del #30 no suma guardas ni manejo de errores
+    // propios. La tarjeta "Actividad del día" del #30 pide solo los entrenamientos de la fecha elegida.
+    [Fact]
+    public void MiDia_CargaComoEnDevelop()
+    {
+        var dia = Archivos(".js").Single(a => a.Ruta == "js/screens/dia.js").Contenido;
+
+        Assert.Matches(new Regex(@"const reload = async \(\) => \{\s*const date = encodeURIComponent\(state\.date\);"), dia);
+        Assert.Matches(new Regex(@"state\.date = dateInput\.value;\s*status\.replaceChildren\(\);\s*await reload\(\);\s*\}\);"), dia);
+        Assert.Contains("api(\"/api/workouts?from=\" + date + \"&to=\" + date)", dia);
+    }
+
+    // La línea de tendencia del peso solo se dibuja si la API la calculó (#26).
+    [Fact]
+    public void Peso_TendenciaSoloConLaDeLaApi()
+    {
+        var peso = Archivos(".js").Single(a => a.Ruta == "js/screens/peso.js").Contenido;
+
+        Assert.Contains("weightChart(metrics, Boolean(data.trend))", peso);
+    }
+
+    // Agregados del #30 en Mi día: la tira de días y la tabla semanal cambian la fecha por el mismo camino que el
+    // input (evento change), y cada comida muestra los totales que manda la API.
+    [Theory]
+    [InlineData("dateInput.dispatchEvent(new Event(\"change\"));")]
+    [InlineData("el(\"button\", { type: \"button\", class: \"link-button\", onclick: () => selectDate(day.date) }")]
+    [InlineData("        onclick: () => selectDate(day.date),")]
+    [InlineData("const totals = state.summary.byMealType?.find((m) => m.mealType === type);")]
+    public void MiDia_NavegacionYTotalesDelPulidoVisual(string texto)
+    {
+        var dia = Archivos(".js").Single(a => a.Ruta == "js/screens/dia.js").Contenido;
+
+        Assert.Contains(texto, dia);
+    }
+
+    // Open Food Facts pide atribución (licencia ODbL) en todo lugar donde se muestran sus datos.
+    [Theory]
+    [InlineData("js/screens/dia.js")]
+    [InlineData("js/screens/recetas.js")]
+    public void Buscadores_MuestranLaAtribucionDeOpenFoodFacts(string archivo)
+    {
+        var js = Archivos(".js").Single(a => a.Ruta == archivo).Contenido;
+
+        Assert.Matches(new Regex(@"food\.attribution\s*\?|if \(!food\.attribution\) return null;"), js);
+        Assert.Contains("el(\"a\", { href: \"https://world.openfoodfacts.org\", target: \"_blank\", rel: \"noopener noreferrer\" }, food.attribution)", js);
+    }
+
     // Sin CDN ni scripts externos: la demo anda sin internet.
     [Fact]
     public void Html_SinScriptsNiEstilosExternos()
@@ -183,6 +301,8 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("js/screens/dia.js", "`/api/summary/weekly?endDate=${")]
     [InlineData("js/screens/dia.js", ".streak")]
     [InlineData("js/screens/dia.js", "`/api/meals/export?from=${")]
+    [InlineData("js/screens/dia.js", "\"/api/meals/copy\"")]
+    [InlineData("js/screens/dia.js", "Copiar del día anterior")]
     [InlineData("js/screens/alimentos.js", "\"/api/foods/custom\"")]
     [InlineData("js/screens/alimentos.js", "`/api/foods/custom/${")]
     [InlineData("js/screens/alimentos.js", "error.status === 409")]
@@ -231,6 +351,11 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("js/screens/chat.js", "if (reply.degraded)")]
     [InlineData("js/api.js", "response.headers.get(\"Retry-After\")")]
     [InlineData("js/screens/rutinas.js", "num(saved.estimatedCaloriesBurned, 0)")]
+    [InlineData("js/screens/dia.js", "fromDate: addDays(state.date, -1), toDate: state.date")]
+    [InlineData("js/screens/dia.js", "error.status === 409")]
+    [InlineData("js/screens/objetivo.js", "rateField.hidden = type.value === \"Maintain\"")]
+    [InlineData("js/format.js", "export function plural(")]
+    [InlineData("js/screens/rutinas.js", "plural(workouts.length, \"entrenamiento\", \"entrenamientos\")")]
     public void Js_UsoPuntual(string archivo, string texto)
     {
         var js = Archivos(".js").Single(a => a.Ruta == archivo);

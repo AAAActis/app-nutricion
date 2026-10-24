@@ -7,8 +7,9 @@
 import { api } from "../api.js";
 import { append, el, setChildren } from "../dom.js";
 import { field, formError, notice, onSubmit, options, setNotice } from "../forms.js";
-import { MEAL_TYPES, num, today } from "../format.js";
+import { MEAL_TYPES, num, plural, today } from "../format.js";
 import { profileTimeZone } from "../profile.js";
+import { foodBadge, nutritionFacts } from "../nutrition.js";
 
 const MAX_INGREDIENTS = 30;
 const SEARCH_LIMIT = 10;
@@ -19,10 +20,10 @@ const DISCLAIMER = "Estimación, no es consejo médico.";
 
 export async function render(container) {
   const state = { today: today(await profileTimeZone()) };
-  const status = el("div");
-  const list = el("section", { class: "card" });
-  const detail = el("section", { class: "card", hidden: true });
-  const editor = el("section", { class: "card" });
+  const status = el("div", { class: "recipes-status" });
+  const list = el("div", { class: "recipe-list" });
+  const detail = el("section", { class: "card recipe-detail", hidden: true });
+  const editor = el("section", { class: "card recipe-editor" });
 
   const reload = async () => renderList(list, await api("/api/recipes"), { open, edit });
 
@@ -59,22 +60,39 @@ export async function render(container) {
     }
   }
 
-  append(container, [el("h1", {}, "Recetas"), status, list, detail, editor]);
+  // El detalle y el editor comparten la columna derecha en pantallas anchas (ver .recipe-side en app.css).
+  append(container, [
+    el("h1", {}, "Recetas"),
+    el("div", { class: "recipes-toolbar item" },
+      el("p", { class: "muted" }, "Tus ingredientes, tus porciones, tus recetas."),
+      el("button", {
+        type: "button",
+        class: "button",
+        onclick: () => {
+          edit(null);
+          editor.scrollIntoView({ behavior: "smooth", block: "start" });
+        },
+      }, "Nueva receta")),
+    status,
+    list,
+    el("div", { class: "recipe-side" }, detail, editor)]);
   edit(null);
   await reload();
 }
 
 // ---------- Lista ----------
 
-function renderList(card, recipes, { open }) {
-  setChildren(card,
-    el("h2", {}, "Mis recetas"),
-    recipes.length === 0 ? el("p", { class: "muted" }, "Todavía no creaste recetas.") : null,
-    el("ul", { class: "list" }, recipes.map((recipe) => el("li", {},
-      el("div", { class: "item" },
-        el("span", { class: "name" }, recipe.name),
-        el("span", {}, `${num(recipe.perServing.calories, 0)} kcal por porción · ${recipe.servings} ${recipe.servings === 1 ? "porción" : "porciones"}`),
-        el("button", { type: "button", class: "button secondary small", onclick: () => open(recipe.id) }, "Ver"))))));
+function renderList(slot, recipes, { open }) {
+  setChildren(slot, recipes.length === 0
+    ? el("section", { class: "card empty-recipes" }, foodBadge(true), el("h2", {}, "Mis recetas"),
+      el("p", { class: "muted" }, "Todavía no creaste recetas."))
+    : recipes.map((recipe) => el("article", { class: "card recipe-preview" },
+      el("div", { class: "food-name" }, foodBadge(true),
+        el("div", {}, el("h2", {}, recipe.name),
+          el("p", { class: "muted small" }, `${num(recipe.perServing.calories, 0)} kcal por porción · ${plural(recipe.servings, "porción", "porciones")}`))),
+      el("p", { class: "eyebrow" }, "POR PORCIÓN"),
+      nutritionFacts(recipe.perServing, true),
+      el("button", { type: "button", class: "button secondary", onclick: () => open(recipe.id) }, "Ver"))));
 }
 
 // ---------- Detalle y cargar al día ----------
@@ -86,11 +104,13 @@ function renderDetail(card, recipe, state, { edit, remove }) {
   ];
   setChildren(card,
     el("div", { class: "item" },
-      el("h2", {}, recipe.name),
+      el("div", { class: "food-name" }, foodBadge(true), el("h2", {}, recipe.name)),
       el("span", { class: "row" },
         el("button", { type: "button", class: "button secondary small", onclick: () => edit(recipe) }, "Editar"),
         el("button", { type: "button", class: "button secondary small", onclick: () => remove(recipe) }, "Borrar"))),
-    el("p", { class: "muted small" }, `${recipe.servings} ${recipe.servings === 1 ? "porción" : "porciones"} · ${num(recipe.totalGrams)} g en total`),
+    el("p", { class: "muted small" }, `${plural(recipe.servings, "porción", "porciones")} · ${num(recipe.totalGrams)} g en total`),
+    el("p", { class: "eyebrow" }, "POR PORCIÓN"),
+    nutritionFacts(recipe.perServing),
     el("table", {},
       el("thead", {}, el("tr", {}, el("th", {}, "Ingrediente"), el("th", {}, "g"), el("th", {}, "kcal"), el("th", {}, "P / C / G (g)"))),
       el("tbody", {}, recipe.ingredients.map((i) => el("tr", {},
@@ -118,7 +138,7 @@ function loadForm(recipe, state) {
       method: "POST",
       body: { recipeId: recipe.id, servings: servings === "" ? 0 : Number(servings), mealType: data.get("mealType"), date: date || null },
     });
-    setNotice(result, "ok", `Cargada: ${num(servings)} ${Number(servings) === 1 ? "porción" : "porciones"} de ${recipe.name}. `,
+    setNotice(result, "ok", `Cargada: ${plural(servings, "porción", "porciones")} de ${recipe.name}. `,
       el("a", { href: "#/dia" }, "Ver en Mi día"));
   });
 
@@ -211,7 +231,7 @@ function ingredientRow(row, i, renderRows, removeRow) {
 }
 
 function foodSearch(i, pick) {
-  const results = el("ul", { class: "list" });
+  const results = el("ul", { class: "list recipe-search-results", "aria-live": "polite" });
   const search = el("input", { type: "search", id: `receta-buscar-${i}`, placeholder: "Ej.: arroz, harina, huevo", autocomplete: "off" });
   let timer = null;
   let lastQuery = 0;
@@ -229,9 +249,15 @@ function foodSearch(i, pick) {
       ? el("li", { class: "muted" }, "No se encontraron alimentos.")
       : foods.map((food) => el("li", {},
         el("div", { class: "item" },
-          el("span", {}, el("span", { class: "name" }, food.name), food.brand ? el("span", { class: "muted" }, ` · ${food.brand}`) : null),
+          el("span", { class: "food-name" }, foodBadge(),
+            el("span", {}, el("span", { class: "name" }, food.name), food.brand ? el("span", { class: "muted" }, ` · ${food.brand}`) : null)),
           el("button", { type: "button", class: "button small", onclick: () => pick(food) }, "Elegir")),
-        el("div", { class: "muted small" }, `${num(food.caloriesPer100g, 0)} kcal cada 100 g`))));
+        el("div", { class: "muted small" }, `${num(food.caloriesPer100g, 0)} kcal cada 100 g`),
+        // Open Food Facts pide atribución (licencia ODbL), como en Mi día.
+        food.attribution
+          ? el("div", { class: "muted small" }, "Fuente: ",
+            el("a", { href: "https://world.openfoodfacts.org", target: "_blank", rel: "noopener noreferrer" }, food.attribution))
+          : null)));
   };
 
   search.addEventListener("input", () => {

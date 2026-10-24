@@ -4,14 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#596747">
   <title>Nutrición Inteligente</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+  <a class="skip-link" href="#app">Ir al contenido</a>
   <header class="topbar">
-    <a class="brand" href="#/">Nutrición Inteligente</a>
+    <a class="brand" href="#/" aria-label="Nutrición Inteligente, inicio">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M16 24C5 24 5 15 5 11c7 0 11 3 11 10M16 24c0-12 4-16 12-17 0 10-3 17-12 17Z" fill="currentColor"/><path d="M16 25V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <span class="brand-text">Nutrición <span>Inteligente</span></span>
+    </a>
+    <p class="nav-caption">MI BIENESTAR</p>
     <nav id="nav" class="nav" aria-label="Secciones"></nav>
+    <div class="sidebar-note">
+      <span class="note-sprout" aria-hidden="true">✦</span>
+      <p>Tu nutrición,<br><strong>día a día.</strong></p>
+    </div>
   </header>
   <main id="app" class="app" tabindex="-1"></main>
   <footer class="footer">Los valores son estimaciones, no consejo médico.</footer>
