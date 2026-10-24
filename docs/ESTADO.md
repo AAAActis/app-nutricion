@@ -1,7 +1,8 @@
 # ESTADO · Nutrición Inteligente (Grupo G)
 
 > Única fuente de verdad para los 3. Se actualiza antes de cada push. Reemplaza a `ESTADO-santi.md` y `ESTADO-lauti.md` (eran el mismo archivo con distinta "Próxima sesión"; ahora están las tres al final).
-> Última actualización: 2026-10-23 (Javi, rama `fix/recorrido-bugs`): bugs del recorrido de Lauti (L13) en revisión: B2 "Copiar del día anterior" en Mi día, B3 "Ritmo semanal" oculto con Mantener (`[hidden]` en `app.css`) y B4 plurales de los contadores (`plural()` de `format.js`). Tablas al día: S6 (#27), L11 y L12 (#25), L13 (#29) y J11, J13 y J14 (#28) hechas; #25 a #30 en "PR del repositorio".
+> Última actualización: 2026-10-24 (Javi, rama `feature/frontend-visual`): el #30 trae develop y el #31 (merge, sin rebase) y se adapta a ellos: `append()`/`setChildren()` de `dom.js`, perfil sin "null", tendencia del peso solo con la de la API, "Copiar del día anterior", `plural()` y una sola regla `[hidden]`. Recetas parte de la versión de develop con solo lo visual del #30. Pendiente de prueba en navegador el lunes.
+> 2026-10-23 (Javi, rama `fix/recorrido-bugs`): bugs del recorrido de Lauti (L13) en revisión: B2 "Copiar del día anterior" en Mi día, B3 "Ritmo semanal" oculto con Mantener (`[hidden]` en `app.css`) y B4 plurales de los contadores (`plural()` de `format.js`). Tablas al día: S6 (#27), L11 y L12 (#25), L13 (#29) y J11, J13 y J14 (#28) hechas; #25 a #30 en "PR del repositorio".
 > 2026-10-23 (Javi, rama `docs/entrega`): estado de las tareas al día con los PR #1 a #26 (tabla "PR del repositorio"); README general (J14), `docs/AUDITORIA-SEGURIDAD.md` (J13) y CI con GitHub Actions (J11).
 > 2026-10-23 (Javi, rama `feature/datos-demo`): S6 datos de demo cargados por la API (managers) solo con `Demo:Enabled`; usuario y contraseña de demo en el README.
 > 2026-10-23 (Javi, rama `fix/frontend-detalles`): detalles de la prueba en el navegador: el perfil ya no muestra "null" (`append` de `dom.js` en todo el frontend; `FrontendTests` prohíbe el `.append(` nativo), el error del consentimiento se borra al tildarlo y la línea de tendencia del peso (y su leyenda) solo aparece con 14 registros. Con el #25 en develop, Mis alimentos y Recetas también pasan a `append` (el mismo cambio que el #29 de Lauti).
@@ -125,7 +126,7 @@ Estado al 2026-10-23 (todos contra `develop`, salvo el #1).
 | #27 | `feature/datos-demo` | Datos de demo cargados por la API solo con `Demo:Enabled` (S6) | Javi | Mergeado (23/10) |
 | #28 | `docs/entrega` | CI (J11), auditoría de seguridad (J13) y README general (J14) | Javi | Mergeado (23/10) |
 | #29 | `fix/recorrido-lauti` | Mis alimentos y Recetas sin `.append` nativo, recorrido completo (L13) | Lauti | Mergeado (23/10) |
-| #30 | `feature/frontend-visual` | Mejoras visuales del frontend (incluye `[hidden]` en el CSS) | Javi | Abierto |
+| #30 | `feature/frontend-visual` | Pulido visual: navegación lateral con íconos, colores oliva, tarjetas; Mi día con tira de días, macros con barras, totales por comida, "Actividad del día" y fechas de la semana clickeables; Recetas con tarjetas, íconos y macros por porción (lógica de develop); Peso con el último registro destacado; Objetivo con "Objetivo activo". Trae develop y el #31 por merge | Javi | Abierto: pendiente de prueba en navegador el lunes (Lauti repite Mi día y Recetas) |
 
 Ramas sin PR todavía: `fix/recorrido-bugs` (B2 a B4).
 
