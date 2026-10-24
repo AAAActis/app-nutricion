@@ -124,7 +124,8 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     {
         var css = Archivos(".css").Single(a => a.Ruta == "css/app.css").Contenido;
 
-        Assert.Matches(new Regex(@"\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}"), css);
+        // Una sola vez: el #30 y el #31 traían la misma regla.
+        Assert.Single(Regex.Matches(css, @"\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}"));
     }
 
     // B2: la tarjeta se dibuja en Mi día, copia con POST y el 409 queda como aviso (no se relanza al formulario).
@@ -147,9 +148,43 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.NotEmpty(js);
         foreach (var (ruta, contenido) in js)
         {
-            var match = Regex.Match(contenido, @"\$\{[^}]*(\.length|Count|weeks|streak)[^}]*\}\s+[a-záéíóúñ]+s\b");
+            var match = Regex.Match(contenido, @"\$\{[^}]*(\.length|Count|weeks|streak|servings)[^}]*\}\s+[a-záéíóúñ]+s\b");
             Assert.False(match.Success, $"{ruta} escribe \"{match.Value}\" con el plural fijo: usá plural() de format.js");
+            // La misma trampa armada con +: num(workout.setCount, 0) + " series".
+            var concatenado = Regex.Match(contenido, @"(\.length|Count|weeks|streak|servings)\b[^""\n;]*\+\s*""\s*[a-záéíóúñ]+s\b");
+            Assert.False(concatenado.Success, $"{ruta} escribe \"{concatenado.Value}\" con el plural fijo: usá plural() de format.js");
         }
+    }
+
+    // Recetas es de Lauti: el pulido visual del #30 no puede cambiar cómo funciona la pantalla de develop.
+    [Theory]
+    [InlineData("search.addEventListener(\"input\", () => {")]
+    [InlineData("timer = setTimeout(() => runSearch()")]
+    [InlineData("if (id !== lastQuery) return;")]
+    [InlineData("const MAX_INGREDIENTS = 30;")]
+    [InlineData("addButton.disabled = rows.length >= MAX_INGREDIENTS;")]
+    [InlineData("name: \"servings\", min: 0.5, max: 20, step: \"0.5\"")]
+    [InlineData("name: String(data.get(\"name\") ?? \"\").trim() || null,")]
+    [InlineData("if (event.key === \"Enter\") event.preventDefault();")]
+    [InlineData("method: recipe ? \"PUT\" : \"POST\",")]
+    [InlineData("await api(`/api/recipes/${recipe.id}`, { method: \"DELETE\" });")]
+    [InlineData("body: { recipeId: recipe.id, servings: servings === \"\" ? 0 : Number(servings), mealType: data.get(\"mealType\"), date: date || null },")]
+    public void Recetas_ConservaElComportamientoDeDevelop(string texto)
+    {
+        var recetas = Archivos(".js").Single(a => a.Ruta == "js/screens/recetas.js").Contenido;
+
+        Assert.Contains(texto, recetas);
+    }
+
+    // El editor arranca abierto con una receta nueva (develop), y "Nueva receta" lo vuelve a abrir vacío.
+    [Fact]
+    public void Recetas_EditorDeRecetaNuevaAlEntrar()
+    {
+        var recetas = Archivos(".js").Single(a => a.Ruta == "js/screens/recetas.js").Contenido;
+
+        Assert.Matches(new Regex(@"\]\);\s*edit\(null\);\s*await reload\(\);"), recetas);
+        Assert.Matches(new Regex(@"onclick: \(\) => \{\s*edit\(null\);\s*editor\.scrollIntoView\("), recetas);
+        Assert.DoesNotMatch(new Regex(@"recipe-editor"", hidden: true"), recetas);
     }
 
     // Sin CDN ni scripts externos: la demo anda sin internet.
