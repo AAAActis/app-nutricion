@@ -169,6 +169,7 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
     [InlineData("method: recipe ? \"PUT\" : \"POST\",")]
     [InlineData("await api(`/api/recipes/${recipe.id}`, { method: \"DELETE\" });")]
     [InlineData("body: { recipeId: recipe.id, servings: servings === \"\" ? 0 : Number(servings), mealType: data.get(\"mealType\"), date: date || null },")]
+    [InlineData("name: \"servings\", min: 1, max: 50, step: \"1\"")]
     public void Recetas_ConservaElComportamientoDeDevelop(string texto)
     {
         var recetas = Archivos(".js").Single(a => a.Ruta == "js/screens/recetas.js").Contenido;
@@ -185,6 +186,27 @@ public class FrontendTests(ApiFactory factory) : IClassFixture<ApiFactory>
         Assert.Matches(new Regex(@"\]\);\s*edit\(null\);\s*await reload\(\);"), recetas);
         Assert.Matches(new Regex(@"onclick: \(\) => \{\s*edit\(null\);\s*editor\.scrollIntoView\("), recetas);
         Assert.DoesNotMatch(new Regex(@"recipe-editor"", hidden: true"), recetas);
+    }
+
+    // Mi día carga y cambia de fecha como en develop: el pulido visual del #30 no suma guardas ni manejo de errores
+    // propios. La tarjeta "Actividad del día" del #30 pide solo los entrenamientos de la fecha elegida.
+    [Fact]
+    public void MiDia_CargaComoEnDevelop()
+    {
+        var dia = Archivos(".js").Single(a => a.Ruta == "js/screens/dia.js").Contenido;
+
+        Assert.Matches(new Regex(@"const reload = async \(\) => \{\s*const date = encodeURIComponent\(state\.date\);"), dia);
+        Assert.Matches(new Regex(@"state\.date = dateInput\.value;\s*status\.replaceChildren\(\);\s*await reload\(\);\s*\}\);"), dia);
+        Assert.Contains("api(\"/api/workouts?from=\" + date + \"&to=\" + date)", dia);
+    }
+
+    // La línea de tendencia del peso solo se dibuja si la API la calculó (#26).
+    [Fact]
+    public void Peso_TendenciaSoloConLaDeLaApi()
+    {
+        var peso = Archivos(".js").Single(a => a.Ruta == "js/screens/peso.js").Contenido;
+
+        Assert.Contains("weightChart(metrics, Boolean(data.trend))", peso);
     }
 
     // Sin CDN ni scripts externos: la demo anda sin internet.
